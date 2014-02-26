@@ -237,8 +237,8 @@ keneanung.bashing.nextAttack = function()
 				svo.givewarning_multi({initialmsg = "You are about to die... Better run or get ready to die! (" .. avg .. " vs " .. (gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing) .. ")"})
 
 			end
-			
-			local attack = (keneanung.bashing.shield and keneanung.bashing.autoraze) and keneanung.bashing.configuration.razecommand or "kill"
+		
+			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and keneanung.bashing.configuration.razecommand or "kill"
 			send(attack .. " " .. keneanung.bashing.targetList[1].id)
 			keneanung.bashing.attacking = 1
 			keneanung.bashing.shield = false
@@ -417,6 +417,7 @@ keneanung.bashing.roomMessageCallback = function()
 	keneanung.bashing.damage = 0
 	keneanung.bashing.attacks = 0
 	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
+	keneanung.bashing.shield = false
 
 	local exits = getRoomExits(gmcp.Room.Info.num)
 	local found = false
