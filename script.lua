@@ -238,7 +238,7 @@ keneanung.bashing.nextAttack = function()
 
 			end
 			
-			local attack = keneanung.bashing.shield and keneanung.bashing.config.razecommand or "kill"
+			local attack = (keneanung.bashing.shield and keneanung.bashing.autoraze) and keneanung.bashing.configuration.razecommand or "kill"
 			send(attack .. " " .. keneanung.bashing.targetList[1].id)
 			keneanung.bashing.attacking = 1
 			keneanung.bashing.shield = false
