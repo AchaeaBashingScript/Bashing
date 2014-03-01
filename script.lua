@@ -1,4 +1,3 @@
-
 keneanung.bashing.configuration.enabled = false
 keneanung.bashing.attacking = 0
 keneanung.bashing.roomDamage = 0
@@ -419,7 +418,7 @@ keneanung.bashing.roomMessageCallback = function()
 	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
 	keneanung.bashing.shield = false
 
-	local exits = getRoomExits(gmcp.Room.Info.num)
+	local exits = getRoomExits(gmcp.Room.Info.num) or gmcp.Room.Info.exits
 	local found = false
 
 	if exits ~= {} then
