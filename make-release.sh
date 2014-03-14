@@ -4,7 +4,7 @@ echo "Making version" $VERSION
 echo "return '$VERSION'" > version.lua 
 
 API_STRING='{"tag_name": "v%s","target_commitish": "master","name": '\
-'"v%s","body": "Release of version %s","draft": true,"prerelease": true}'
+'"v%s","body": "Release of version %s","draft": false,"prerelease": true}'
 API_JSON=$(printf "$API_STRING" "$VERSION" "$VERSION" "$VERSION")
 
 API_URL=$(printf \
