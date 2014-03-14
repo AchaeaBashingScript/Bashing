@@ -199,7 +199,9 @@ else
 	_sep = &quot;\\&quot; 
 end -- if
 local scriptFile = getMudletHomeDir() .. _sep .. &quot;Bashing&quot; .. _sep ..&quot;script.lua&quot;
+local versionFile = getMudletHomeDir() .. _sep .. &quot;Bashing&quot; .. _sep ..&quot;version.lua&quot;
 dofile(scriptFile)
+keneanung.bashing.version = dofile(versionFile)
 </script>
                     <eventHandlerList/>
                 </Script>

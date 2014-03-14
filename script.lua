@@ -169,6 +169,8 @@ keneanung.bashing.showConfig = function()
 	echoLink(keneanung.bashing.configuration.razecommand, "clearCmdLine() appendCmdLine('kconfig bashing razecommand ')", "Set attack to raze shields.", true)
 	resetFormat()
 	echo("\n")
+	echo("\n")
+	cecho("<green>keneanung<reset>: Version: <red>" .. keneanung.bashing.version .. "<reset>\n")
 end
 
 keneanung.bashing.toggle = function(what, print)
