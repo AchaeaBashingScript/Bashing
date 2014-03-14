@@ -1,13 +1,18 @@
 language: c
+
 install:
 - sudo apt-get install jq
+
 before_script:
 - chmod +x make-release.sh
+
 script:
 - ./make-release.sh
+
 notifications:
   email:
     on_failure: always
     on_success: change
+
 env:
   secure: DGBC1v2vTB5KdF1x5pC1HPeEUGRkKIlDlLwotm4Tlk6sb1ypuz7C4GLtkX8kPjEeQW9QEfbCWbkW1J2VQ4DBolZPnUWPCRUYG/l+HmlxvRhVdFHcUDiN4lfuqxCBRplRreUuklDoSRTt1iyrFMQkLsndQXA6A9GR2Y9qd3qAQFA=
