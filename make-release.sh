@@ -5,8 +5,8 @@ if [ "$out" = "0" ]
 then
   echo "Abort creating release for release tag."
   exit 0
-fi
-VERSION=$(printf "%s-pre-%s (%s)" `cat .version` "$TRAVIS_COMMIT" "$TRAVIS_BRANCH")
+fioCOMMIT= ${TRAVIS_COMMIT:0:7}
+VERSION=$(printf "%s-pre-%s-%s" `cat .version` "$COMMIT" "$TRAVIS_BRANCH")
 echo "Making version $VERSION"
 echo "return '$VERSION'" > version.lua 
 
