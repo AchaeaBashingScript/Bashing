@@ -6,7 +6,7 @@ then
   echo "Abort creating release for release tag."
   exit 0
 fi
-COMMIT= ${TRAVIS_COMMIT:0:7}
+COMMIT= expr substr $TRAVIS_COMMIT 1 7
 VERSION=$(printf "%s-pre-%s-%s" `cat .version` "$COMMIT" "$TRAVIS_BRANCH")
 echo "Making version $VERSION"
 echo "return '$VERSION'" > version.lua 
