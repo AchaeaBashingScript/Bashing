@@ -1,10 +1,12 @@
 #!/usr/bin/env sh
-if `echo "$TRAVIS_BRANCH" | egrep -q "^v\d+\.\d+"`
+echo "$TRAVIS_BRANCH" | egrep -q "^v[1-9][0-9]*\.[1-9][0-9]*"
+out=$?
+if [ "$out" = "0" ]
 then
   echo "Abort creating release for release tag."
   exit 0
 fi
-VERSION=$(printf "%s-pre%s(%s)" `cat .version` "$TRAVIS_COMMIT" "$TRAVIS_BRANCH")
+VERSION=$(printf "%s-pre-%s(%s)" `cat .version` "$TRAVIS_COMMIT" "$TRAVIS_BRANCH")
 echo "Making version" $VERSION
 echo "return '$VERSION'" > version.lua 
 
@@ -18,8 +20,7 @@ API_URL=$(printf \
 
 http_code=`curl -s -w "%{http_code}" --data "$API_JSON" -o output.txt "$API_URL"` 
 out=$?
-http_code=201
-if [ $out -ne 0 ]
+if [ "$out" != "0" ]
 then
   echo "Ceating release failed:" "$out"
   exit 1
@@ -32,7 +33,7 @@ fi
 
 zip Bashing.mpackage config.lua script.lua Bashing.xml version.lua
 out=$?
-if [ $out -ne 0 ]
+if [ "$out" != "0" ]
 then
   echo "Zip failed:" "$out"
   exit 1
@@ -40,7 +41,7 @@ fi
 
 UPLOADS_URL=`cat output.txt | jq ".upload_url" | egrep -o '[^"]+'`
 out=$?
-if [ $out -ne 0 ]
+if [ "$out" != "0" ]
 then
   echo "Grep failed:" "$out"
   exit 1
@@ -53,7 +54,7 @@ http_code=`curl -s -w "%{http_code}" \
 --data-binary "@Bashing.mpackage" -H "Content-Type: application/octet-stream" \
 -o output.txt "$UPLOADS_URL"`
 out=$?
-if [ $out -ne 0 ]
+if [ "$out" != "0" ]
 then
   echo "Ceating asset failed:" "$out"
   exit 1
