@@ -6,8 +6,8 @@ then
   echo "Abort creating release for release tag."
   exit 0
 fi
-VERSION=$(printf "%s-pre-%s(%s)" `cat .version` "$TRAVIS_COMMIT" "$TRAVIS_BRANCH")
-echo "Making version" $VERSION
+VERSION=$(printf "%s-pre-%s (%s)" `cat .version` "$TRAVIS_COMMIT" "$TRAVIS_BRANCH")
+echo "Making version $VERSION"
 echo "return '$VERSION'" > version.lua 
 
 API_STRING='{"tag_name": "v%s","target_commitish": "%s","name": '\
