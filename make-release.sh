@@ -10,9 +10,10 @@ VERSION=$(printf "%s-pre-%s(%s)" `cat .version` "$TRAVIS_COMMIT" "$TRAVIS_BRANCH
 echo "Making version" $VERSION
 echo "return '$VERSION'" > version.lua 
 
-API_STRING='{"tag_name": "v%s","target_commitish": "master","name": '\
+API_STRING='{"tag_name": "v%s","target_commitish": "%s","name": '\
 '"v%s","body": "Release of version %s","draft": false,"prerelease": true}'
-API_JSON=$(printf "$API_STRING" "$VERSION" "$VERSION" "$VERSION")
+API_JSON=$(printf "$API_STRING" \
+"$VERSION" "$TRAVIS_BRANCH" "$VERSION" "$VERSION")
 
 API_URL=$(printf \
 "https://api.github.com/repos/keneanung/Bashing/releases?access_token=%s" \
