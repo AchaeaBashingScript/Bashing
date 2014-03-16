@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+echo "TRAVIS_BRANCH $TRAVIS_BRANCH"
+echo "TRAVIS_COMMIT $TRAVIS_COMMIT"
 VERSION=$(printf "%s-pre%s" `cat .version` `date -I`)
 echo "Making version" $VERSION
 echo "return '$VERSION'" > version.lua 
