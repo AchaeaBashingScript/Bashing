@@ -1,7 +1,10 @@
 #!/usr/bin/env sh
-echo "TRAVIS_BRANCH $TRAVIS_BRANCH"
-echo "TRAVIS_COMMIT $TRAVIS_COMMIT"
-VERSION=$(printf "%s-pre%s" `cat .version` `date -I`)
+if `echo "$TRAVIS_BRANCH" | egrep -q "^v\d+\.\d+"`
+then
+  echo "Abort creating release for release tag."
+  exit 0
+fi
+VERSION=$(printf "%s-pre%s(%s)" `cat .version` "$TRAVIS_COMMIT" "$TRAVIS_BRANCH")
 echo "Making version" $VERSION
 echo "return '$VERSION'" > version.lua 
 
