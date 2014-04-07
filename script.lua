@@ -21,12 +21,14 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 	if not table.contains(prios[area], targetName) then
 		table.insert(prios[area], targetName)
 		cecho("\n<green>keneanung<reset>: Added the new possible target <red>" .. targetName .. "<reset> to the end of the priority list.")
+		keneanung.bashing.configuration.priorities = prios
+
+		keneanung.bashing.save()
+
+		for _, item in ipairs(keneanung.bashing.room) do
+			keneanung.bashing.addTarget(item)
+		end
 	end
-
-	keneanung.bashing.configuration.priorities = prios
-
-	keneanung.bashing.save()
-
 end
 
 keneanung.bashing.showAreas = function()
@@ -281,18 +283,28 @@ keneanung.bashing.roomItemCallback = function(event)
 	local before = keneanung.bashing.idOnly(keneanung.bashing.targetList)
 
 	if(event == "gmcp.Char.Items.Add") then
-		keneanung.bashing.addTarget(gmcp.Char.Items.Add.item)
+		local item = gmcp.Char.Items.Add.item
+		keneanung.bashing.room[#keneanung.bashing.room + 1] = item
+		keneanung.bashing.addTarget(item)
 	end
 
 	if(event == "gmcp.Char.Items.List") then
 		keneanung.bashing.targetList = {}
 		keneanung.bashing.room = {}
 		for _, item in ipairs(gmcp.Char.Items.List.items) do
+			keneanung.bashing.room[#keneanung.bashing.room + 1] = item
 			keneanung.bashing.addTarget(item)
 		end
 	end
 
 	if(event == "gmcp.Char.Items.Remove") then
+		for num, itemRoom in ipairs(keneanung.bashing.room) do
+			if (itemRoom.id * 1) == (item.id * 1) then
+				table.remove(keneanung.bashing.room, num)
+				break
+			end
+		end
+
 		keneanung.bashing.removeTarget(gmcp.Char.Items.Remove.item)
 	end
 
@@ -315,7 +327,7 @@ keneanung.bashing.difference = function( list1, list2 )
 	end
 
 	for num, value in ipairs(list1) do
-		if value ~= list1[num] then return true end
+		if value ~= list2[num] then return true end
 	end
 
 	return false
@@ -338,7 +350,6 @@ end
 
 keneanung.bashing.addTarget = function(item)
 
-	keneanung.bashing.room[#keneanung.bashing.room + 1] = item
 
 	local targets = keneanung.bashing.targetList
 	local prios = keneanung.bashing.configuration.priorities[gmcp.Room.Info.area]
@@ -358,26 +369,26 @@ keneanung.bashing.addTarget = function(item)
 		table.insert(targets, { id = item.id, name = item.name } )
 	else
 
-      local iStart,iEnd,iMid = 1,#targets,0
+		local iStart,iEnd,iMid = 1,#targets,0
 		local found = false
-      -- Binary Search
-      while iStart <= iEnd do
-         -- calculate middle
-         iMid = math.floor( (iStart+iEnd)/2 )
-         -- get compare value
-         local existingPrio = table.index_of(prios, targets[iMid].name)
-         -- get all values that match
-         if targetPrio == existingPrio then
+		-- Binary Search
+		while iStart <= iEnd do
+			-- calculate middle
+			iMid = math.floor( (iStart+iEnd)/2 )
+			-- get compare value
+			local existingPrio = table.index_of(prios, targets[iMid].name)
+			-- get all values that match
+			if targetPrio == existingPrio then
 				insertAt = iMid
 				found = true
 				break
-         elseif targetPrio < existingPrio then
-            iEnd = iMid - 1
-         else
-            iStart = iMid + 1
-         end
+			elseif targetPrio < existingPrio then
+				iEnd = iMid - 1
+			else
+				iStart = iMid + 1
+			end
 
-      end
+		end
 
 		if not found then
 			insertAt = iStart
@@ -403,13 +414,6 @@ keneanung.bashing.removeTarget = function(item)
 	for num, itemTarget in ipairs(targets) do
 		if (itemTarget.id * 1) == (item.id * 1) then
 			number = num
-			break
-		end
-	end
-
-	for num, itemRoom in ipairs(keneanung.bashing.room) do
-		if (itemRoom.id * 1) == (item.id * 1) then
-			table.remove(keneanung.bashing.room, num)
 			break
 		end
 	end
