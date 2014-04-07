@@ -247,6 +247,25 @@ keneanung.bashing.nextAttack = function()
 
 	end
 
+	local tar
+
+	if target ~= nil and target ~='' then
+		tar = target
+	elseif gmcp.Char.Status.target ~= "None" then
+		tar = gmcp.Char.Status.target
+	end
+
+	if tar ~= nil then
+
+		for _, item in ipairs(keneanung.bashing.room) do
+			if item.attrib and item.attrib:find("m") and item.name:lower():find(tar:lower()) then
+				keneanung.bashing.targetList[1] = item
+				return keneanung.bashing.nextAttack()
+			end
+		end
+
+	end
+
 	svo.removebalanceful("do next attack")
 	keneanung.bashing.attacking = 0
 	return false
@@ -267,6 +286,7 @@ keneanung.bashing.roomItemCallback = function(event)
 
 	if(event == "gmcp.Char.Items.List") then
 		keneanung.bashing.targetList = {}
+		keneanung.bashing.room = {}
 		for _, item in ipairs(gmcp.Char.Items.List.items) do
 			keneanung.bashing.addTarget(item)
 		end
@@ -317,6 +337,8 @@ keneanung.bashing.idOnly = function( list )
 end
 
 keneanung.bashing.addTarget = function(item)
+
+	keneanung.bashing.room[#keneanung.bashing.room + 1] = item
 
 	local targets = keneanung.bashing.targetList
 	local prios = keneanung.bashing.configuration.priorities[gmcp.Room.Info.area]
@@ -381,6 +403,13 @@ keneanung.bashing.removeTarget = function(item)
 	for num, itemTarget in ipairs(targets) do
 		if (itemTarget.id * 1) == (item.id * 1) then
 			number = num
+			break
+		end
+	end
+
+	for num, itemRoom in ipairs(keneanung.bashing.room) do
+		if (itemRoom.id * 1) == (item.id * 1) then
+			table.remove(keneanung.bashing.room, num)
 			break
 		end
 	end
