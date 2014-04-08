@@ -289,6 +289,7 @@ keneanung.bashing.roomItemCallback = function(event)
 		return
 	end
 
+	local backup = keneanung.bashing.targetList
 	local before = keneanung.bashing.idOnly(keneanung.bashing.targetList)
 
 	if(event == "gmcp.Char.Items.Add") then
@@ -319,6 +320,11 @@ keneanung.bashing.roomItemCallback = function(event)
 	end
 
 	local after = keneanung.bashing.idOnly(keneanung.bashing.targetList)
+
+	if #before == #after and #table.intersection(before, after) == #before then
+		keneanung.bashing.targetList = backup
+		return
+	end
 
 	keneanung.bashing.emitEventsIfChanged(before, after)
 end
