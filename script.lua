@@ -307,6 +307,7 @@ keneanung.bashing.roomItemCallback = function(event)
 	end
 
 	if(event == "gmcp.Char.Items.Remove") then
+		local item = gmcp.Char.Items.Remove.item
 		for num, itemRoom in ipairs(keneanung.bashing.room) do
 			if (itemRoom.id * 1) == (item.id * 1) then
 				table.remove(keneanung.bashing.room, num)
@@ -314,7 +315,7 @@ keneanung.bashing.roomItemCallback = function(event)
 			end
 		end
 
-		keneanung.bashing.removeTarget(gmcp.Char.Items.Remove.item)
+		keneanung.bashing.removeTarget(item)
 	end
 
 	local after = keneanung.bashing.idOnly(keneanung.bashing.targetList)
