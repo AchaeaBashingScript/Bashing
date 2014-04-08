@@ -382,6 +382,13 @@ keneanung.bashing.addTarget = function(item)
 		table.insert(targets, { id = item.id, name = item.name } )
 	else
 
+		-- Small safeguard against adding something twice
+		for _, tar in ipairs(targets) do
+			if tar.id == item.id then
+				return
+			end
+		end
+		
 		local iStart,iEnd,iMid = 1,#targets,0
 		local found = false
 		-- Binary Search
