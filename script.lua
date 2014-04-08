@@ -19,6 +19,9 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 	end
 
 	if not table.contains(prios[area], targetName) then
+		
+		local before = keneanung.bashing.idOnly(keneanung.bashing.targetList)
+		
 		table.insert(prios[area], targetName)
 		cecho("\n<green>keneanung<reset>: Added the new possible target <red>" .. targetName .. "<reset> to the end of the priority list.")
 		keneanung.bashing.configuration.priorities = prios
@@ -28,6 +31,10 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 		for _, item in ipairs(keneanung.bashing.room) do
 			keneanung.bashing.addTarget(item)
 		end
+		
+		local after = keneanung.bashing.idOnly(keneanung.bashing.targetList)
+
+		keneanung.bashing.emitEventsIfChanged(before, after)
 	end
 end
 
@@ -37,12 +44,12 @@ keneanung.bashing.showAreas = function()
 
 	cecho("<green>keneanung<reset>: Which area would you like to configure:\n")
 	for area, _ in pairs(prios) do
-     echo("   (")
-     setUnderline(true)
-     fg("orange")
-     echoLink(string.format("%s", area),[[keneanung.bashing.managePrios("]]..area..[[")]],"Show priority list for '" .. area .."",true)
-     resetFormat()
-     echo(")\n")
+		echo("   (")
+		setUnderline(true)
+		fg("orange")
+		echoLink(string.format("%s", area),[[keneanung.bashing.managePrios("]]..area..[[")]],"Show priority list for '" .. area .."",true)
+		resetFormat()
+		echo(")\n")
 	end
 end
 
@@ -312,9 +319,12 @@ keneanung.bashing.roomItemCallback = function(event)
 
 	local after = keneanung.bashing.idOnly(keneanung.bashing.targetList)
 
+	keneanung.bashing.emitEventsIfChanged(before, after)
+end
+
+keneanung.bashing.emitEventsIfChanged = function( before, after)
 	if keneanung.bashing.difference(before, after) then
 		raiseEvent("keneanung.bashing.targetList.changed")
-
 		if before[1] ~= after[1] then
 			raiseEvent("keneanung.bashing.targetList.firstChanged", after[1])
 		end
