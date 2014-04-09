@@ -39,11 +39,13 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 end
 
 keneanung.bashing.showAreas = function()
+	keneanung.bashing.showAreasFiltered(keneanung.bashing.configuration.priorities)
+end
 
-	local prios = keneanung.bashing.configuration.priorities
+keneanung.bashing.showAreasFiltered = function(filtered)
 
 	cecho("<green>keneanung<reset>: Which area would you like to configure:\n")
-	for area, _ in pairs(prios) do
+	for area, _ in pairs(filtered) do
 		echo("   (")
 		setUnderline(true)
 		fg("orange")
@@ -54,12 +56,31 @@ keneanung.bashing.showAreas = function()
 end
 
 keneanung.bashing.managePrios = function(area)
-	local prios = keneanung.bashing.configuration.priorities[area]
 
-	if prios == nil then
+	local possibleMatches = {}
+	for areaName, _ in pairs(keneanung.bashing.configuration.priorities) do
+		if areaName:lower() == area:lower() then
+			possibleMatches[areaName] = true
+			break
+		end
+		if areaName:lower():find(area:lower()) then
+			possibleMatches[areaName] = true
+		end
+	end
+
+	if table.is_empty(possibleMatches) then
 		cecho("<green>keneanung<reset>: No targets for <red>" .. area .. "<reset> found yet!\n")
 		return
+	elseif table.size(possibleMatches) == 1 then
+		for areaName, _ in pairs(possibleMatches) do
+			area = areaName
+		end
+	else
+		keneanung.bashing.showAreasFiltered(possibleMatches)
+		return
 	end
+
+	local prios = keneanung.bashing.configuration.priorities[area]
 
 	cecho("<green>keneanung<reset>: Possible targets for <red>" .. area .. "<reset>:\n")
 	for num, item in ipairs(prios) do
