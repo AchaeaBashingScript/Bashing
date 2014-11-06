@@ -224,6 +224,7 @@ end
 
 keneanung.bashing.attackButton = function()
 	if keneanung.bashing.attacking == 0 then
+		keneanung.bashing.setTarget()
 		svo.addbalanceful("do next attack", keneanung.bashing.nextAttack)
 		svo.donext()
 		cecho("<green>keneanung<reset>: Nothing will stand in our way.\n")
@@ -270,30 +271,10 @@ keneanung.bashing.nextAttack = function()
 			end
 		
 			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and keneanung.bashing.configuration.razecommand or "kill"
-			send(attack .. " " .. keneanung.bashing.targetList[1].id)
-			keneanung.bashing.attacking = 1
+			send(attack)
 			keneanung.bashing.shield = false
 			return true
 
-		end
-
-	end
-
-	local tar
-
-	if target ~= nil and target ~='' then
-		tar = target
-	elseif gmcp.Char.Status.target ~= "None" then
-		tar = gmcp.Char.Status.target
-	end
-
-	if tar ~= nil then
-
-		for _, item in ipairs(keneanung.bashing.room) do
-			if item.attrib and item.attrib:find("m") and item.name:lower():find(tar:lower()) then
-				keneanung.bashing.targetList[1] = item
-				return keneanung.bashing.nextAttack()
-			end
 		end
 
 	end
@@ -322,6 +303,7 @@ keneanung.bashing.roomItemCallback = function(event)
 	if(event == "gmcp.Char.Items.List") then
 		keneanung.bashing.targetList = {}
 		keneanung.bashing.room = {}
+		keneanung.bashing.setTarget()
 		for _, item in ipairs(gmcp.Char.Items.List.items) do
 			keneanung.bashing.room[#keneanung.bashing.room + 1] = item
 			keneanung.bashing.addTarget(item)
@@ -389,7 +371,6 @@ keneanung.bashing.idOnly = function( list )
 end
 
 keneanung.bashing.addTarget = function(item)
-
 
 	local targets = keneanung.bashing.targetList
 	local prios = keneanung.bashing.configuration.priorities[gmcp.Room.Info.area]
@@ -469,6 +450,7 @@ keneanung.bashing.removeTarget = function(item)
 		table.remove(targets, number)
 		if number <= keneanung.bashing.attacking then
 			keneanung.bashing.attacking = keneanung.bashing.attacking - 1
+			keneanung.bashing.setTarget()
 		end
 	end
 
@@ -534,6 +516,41 @@ keneanung.bashing.setRazeCommand = function(what)
 	keneanung.bashing.configuration.razecommand = what
 	cecho("<green>keneanung<reset>: Razing shields with <red>" .. keneanung.bashing.configuration.razecommand .. "<reset>\n" )
 	keneanung.bashing.save()
+end
+
+keneanung.bashing.setTarget = function()
+	if #keneanung.bashing.targetList == 0 then 
+		local tar
+		local targetSet = false
+
+		if target ~= nil and target ~='' then
+			tar = target
+		elseif gmcp.Char.Status.target ~= "None" then
+			tar = gmcp.Char.Status.target
+		end
+
+		if tar ~= nil then
+
+			for _, item in ipairs(keneanung.bashing.room) do
+				if item.attrib and item.attrib:find("m") and item.name:lower():find(tar:lower()) then
+					keneanung.bashing.targetList[1]= { 
+						id = item.id,
+						name = item.name
+					}
+					targetSet = true
+				end
+			end
+		end
+		if not targetSet then
+			if gmcp.Char.Status.target ~= "None" then 
+				send("st none", false) 
+			end
+			keneanung.bashing.attacking = 0
+			return
+		end
+	end
+	send("st " .. keneanung.bashing.targetList[1].id)
+	keneanung.bashing.attacking = 1
 end
 
 keneanung.bashing.load()
