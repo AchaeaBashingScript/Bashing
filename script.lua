@@ -261,7 +261,7 @@ keneanung.bashing.nextAttack = function()
 
 			svo.givewarning_multi({initialmsg = "Running as you have not enough health left. (" .. avg .. " vs " .. gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing .. ")"})
 
-			send(keneanung.bashing.fleeDirection)
+			send(keneanung.bashing.fleeDirection, false)
 
 		else
 			if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.warning then
@@ -271,7 +271,7 @@ keneanung.bashing.nextAttack = function()
 			end
 		
 			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and keneanung.bashing.configuration.razecommand or "kill"
-			send(attack)
+			send(attack, false)
 			keneanung.bashing.shield = false
 			return true
 
@@ -549,7 +549,7 @@ keneanung.bashing.setTarget = function()
 			return
 		end
 	end
-	send("st " .. keneanung.bashing.targetList[1].id)
+	send("st " .. keneanung.bashing.targetList[1].id, false)
 	keneanung.bashing.attacking = 1
 end
 
