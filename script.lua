@@ -1,12 +1,44 @@
-keneanung.bashing.configuration.enabled = false
+keneanung = keneanung or {}
+keneanung.bashing = {}
+keneanung.bashing.configuration = {}
+keneanung.bashing.systems = {}
+
 keneanung.bashing.attacking = 0
 keneanung.bashing.roomDamage = 0
 keneanung.bashing.attacks = 0
+
+keneanung.bashing.configuration.enabled = false
 keneanung.bashing.configuration.warning = 500
 keneanung.bashing.configuration.fleeing = 300
 keneanung.bashing.configuration.autoflee = true
 keneanung.bashing.configuration.autoraze = false
 keneanung.bashing.configuration.razecommand = "none"
+
+keneanung.bashing.systems.svo = {
+
+	startAttack = function()
+		svo.addbalanceful("do next attack", keneanung.bashing.nextAttack)
+		svo.donext()
+	end,
+	
+	stopAttack = function()
+		svo.removebalanceful("do next attack")
+	end,
+	
+	flee = function()
+		svo.dofreefirst(keneanung.bashing.fleeDirection)
+		svo.removebalanceful("do next attack")
+	end,
+	
+	warnFlee = function()
+		svo.givewarning_multi({initialmsg = "You are about to die... Better run or get ready to die! (" .. avg .. " vs " .. (gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing) .. ")"})
+	end,
+	
+	notifyFlee = function()
+		svo.givewarning_multi({initialmsg = "Running as you have not enough health left. (" .. avg .. " vs " .. gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing .. ")"})
+	end,
+	
+}
 
 keneanung.bashing.addPossibleTarget = function(targetName)
 
@@ -216,8 +248,7 @@ keneanung.bashing.shielded = function(what)
 end
 
 keneanung.bashing.flee = function()
-	svo.dofreefirst(keneanung.bashing.fleeDirection)
-	svo.removebalanceful("do next attack")
+	keneanung.bashing.systems.svo.flee()
 	keneanung.bashing.attacking = 0
 	cecho("<green>keneanung<reset>: New order. Tactical retreat.\n")
 end
@@ -225,11 +256,10 @@ end
 keneanung.bashing.attackButton = function()
 	if keneanung.bashing.attacking == 0 then
 		keneanung.bashing.setTarget()
-		svo.addbalanceful("do next attack", keneanung.bashing.nextAttack)
-		svo.donext()
+		keneanung.bashing.systems.svo.startAttack()
 		cecho("<green>keneanung<reset>: Nothing will stand in our way.\n")
 	else
-		svo.removebalanceful("do next attack")
+		keneanung.bashing.systems.svo.stopAttack()
 		keneanung.bashing.attacking = 0
 		cecho("<green>keneanung<reset>: Lets save them for later.\n")
 	end
@@ -259,14 +289,14 @@ keneanung.bashing.nextAttack = function()
 
 		if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing and keneanung.bashing.configuration.autoflee then
 
-			svo.givewarning_multi({initialmsg = "Running as you have not enough health left. (" .. avg .. " vs " .. gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing .. ")"})
+			keneanung.bashing.systems.svo.notifyFlee()
 
 			send(keneanung.bashing.fleeDirection, false)
 
 		else
 			if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.warning then
 
-				svo.givewarning_multi({initialmsg = "You are about to die... Better run or get ready to die! (" .. avg .. " vs " .. (gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing) .. ")"})
+				keneanung.bashing.systems.svo.warnFlee()
 
 			end
 		
@@ -279,7 +309,7 @@ keneanung.bashing.nextAttack = function()
 
 	end
 
-	svo.removebalanceful("do next attack")
+	keneanung.bashing.systems.svo.stopAttack()
 	keneanung.bashing.attacking = 0
 	return false
 
