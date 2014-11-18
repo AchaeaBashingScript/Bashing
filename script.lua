@@ -40,6 +40,11 @@ keneanung.bashing.systems.svo = {
 	
 }
 
+keneanung.bashing.getSystem = function()
+	local systemName = "svo"
+	return keneanung.bashing.systems[systemName]
+end
+
 keneanung.bashing.addPossibleTarget = function(targetName)
 
 	local prios = keneanung.bashing.configuration.priorities
@@ -248,18 +253,20 @@ keneanung.bashing.shielded = function(what)
 end
 
 keneanung.bashing.flee = function()
-	keneanung.bashing.systems.svo.flee()
+	local system = keneanung.bashing.getSystem()
+	system.flee()
 	keneanung.bashing.attacking = 0
 	cecho("<green>keneanung<reset>: New order. Tactical retreat.\n")
 end
 
 keneanung.bashing.attackButton = function()
+	local system = keneanung.bashing.getSystem()
 	if keneanung.bashing.attacking == 0 then
 		keneanung.bashing.setTarget()
-		keneanung.bashing.systems.svo.startAttack()
+		system.startAttack()
 		cecho("<green>keneanung<reset>: Nothing will stand in our way.\n")
 	else
-		keneanung.bashing.systems.svo.stopAttack()
+		system.stopAttack()
 		keneanung.bashing.attacking = 0
 		cecho("<green>keneanung<reset>: Lets save them for later.\n")
 	end
@@ -280,6 +287,8 @@ keneanung.bashing.nextAttack = function()
 	if keneanung.bashing.configuration.enabled == false then
 		return false
 	end
+	
+	local system = keneanung.bashing.getSystem()
 
 	keneanung.bashing.attacks = keneanung.bashing.attacks + 1
 
@@ -289,14 +298,14 @@ keneanung.bashing.nextAttack = function()
 
 		if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing and keneanung.bashing.configuration.autoflee then
 
-			keneanung.bashing.systems.svo.notifyFlee()
+			system.notifyFlee()
 
 			send(keneanung.bashing.fleeDirection, false)
 
 		else
 			if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.warning then
 
-				keneanung.bashing.systems.svo.warnFlee()
+				system.warnFlee()
 
 			end
 		
@@ -309,7 +318,7 @@ keneanung.bashing.nextAttack = function()
 
 	end
 
-	keneanung.bashing.systems.svo.stopAttack()
+	system.stopAttack()
 	keneanung.bashing.attacking = 0
 	return false
 
