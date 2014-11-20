@@ -1,6 +1,8 @@
 keneanung = keneanung or {}
 keneanung.bashing = {}
 keneanung.bashing.configuration = {}
+keneanung.bashing.configuration.priorities = {}
+keneanung.bashing.targetList = {}
 keneanung.bashing.systems = {}
 
 keneanung.bashing.attacking = 0
@@ -39,8 +41,35 @@ keneanung.bashing.systems.svo = {
 	
 }
 
+keneanung.bashing.systems.wundersys = {
+
+	startAttack = function()
+		if keneanung.bashing.attacking > 0 then
+		 	doradd("kill")
+ 	 	end
+	end,
+	
+	stopAttack = function()
+		dorclear()
+	end,
+	
+	flee = function()
+		dorclear()
+		dofreeadd(keneanung.bashing.fleeDirection)
+	end,
+	
+	warnFlee = function()
+		report("You are about to die... Better run or get ready to die! (" .. avg .. " vs " .. (gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing) .. ")")
+	end,
+	
+	notifyFlee = function()
+		report("Running as you have not enough health left. (" .. avg .. " vs " .. gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing .. ")")
+	end,
+	
+}
+
 keneanung.bashing.getSystem = function()
-	local systemName = "svo"
+	local systemName = "wundersys"
 	return keneanung.bashing.systems[systemName]
 end
 
@@ -148,7 +177,7 @@ keneanung.bashing.shuffleDown = function(area, num)
 
 	local prios = keneanung.bashing.configuration.priorities[area]
 
-	if num < #prios then 
+	if num < #prios then
 		prios[num], prios[num+1] =  prios[num+1], prios[num]
 	end
 	keneanung.bashing.save()
@@ -182,10 +211,10 @@ keneanung.bashing.delete = function(area, num)
 end
 
 keneanung.bashing.save = function()
-  if string.char(getMudletHomeDir():byte()) == "/" then 
-		_sep = "/" 
+  if string.char(getMudletHomeDir():byte()) == "/" then
+		_sep = "/"
   	else
-		_sep = "\\" 
+		_sep = "\\"
    end -- if
   local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
   table.save(savePath, keneanung.bashing.configuration)
@@ -193,9 +222,9 @@ keneanung.bashing.save = function()
 end -- func
 
 keneanung.bashing.load = function()
-  if string.char(getMudletHomeDir():byte()) == "/" 
-   then _sep = "/" 
-    else _sep = "\\" 
+  if string.char(getMudletHomeDir():byte()) == "/"
+   then _sep = "/"
+    else _sep = "\\"
      end -- if
   local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
   if (io.exists(savePath)) then
@@ -501,8 +530,8 @@ keneanung.bashing.prioListChangedCallback = function()
 end
 
 keneanung.bashing.roomMessageCallback = function()
-	if keneanung.bashing.lastRoom == nil then 
-		keneanung.bashing.lastRoom = gmcp.Room.Info.num 
+	if keneanung.bashing.lastRoom == nil then
+		keneanung.bashing.lastRoom = gmcp.Room.Info.num
 		keneanung.bashing.fleeDirection = "north"
 	end
 
@@ -514,7 +543,9 @@ keneanung.bashing.roomMessageCallback = function()
 	keneanung.bashing.attacks = 0
 	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
 	keneanung.bashing.shield = false
-	keneanung.bashing.clearTarget()
+	if keneanung.bashing.attacking > 0 then
+		keneanung.bashing.clearTarget()
+	end
 
 	local exits = getRoomExits(gmcp.Room.Info.num) or gmcp.Room.Info.exits
 	local found = false
@@ -555,7 +586,7 @@ keneanung.bashing.setRazeCommand = function(what)
 end
 
 keneanung.bashing.setTarget = function()
-	if #keneanung.bashing.targetList == 0 then 
+	if #keneanung.bashing.targetList == 0 then
 		local tar
 		local targetSet = false
 
@@ -569,7 +600,7 @@ keneanung.bashing.setTarget = function()
 
 			for _, item in ipairs(keneanung.bashing.room) do
 				if item.attrib and item.attrib:find("m") and item.name:lower():find(tar:lower()) then
-					keneanung.bashing.targetList[#keneanung.bashing.targetList + 1]= { 
+					keneanung.bashing.targetList[#keneanung.bashing.targetList + 1]= {
 						id = item.id,
 						name = item.name
 					}
@@ -589,8 +620,8 @@ keneanung.bashing.setTarget = function()
 end
 
 keneanung.bashing.clearTarget = function()
-	if gmcp.Char.Status.target ~= "None" then 
-		send("st none", false) 
+	if gmcp.Char.Status.target ~= "None" then
+		send("st none", false)
 	end
 	keneanung.bashing.attacking = 0
 	local system = keneanung.bashing.getSystem()
