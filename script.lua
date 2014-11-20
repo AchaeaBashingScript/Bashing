@@ -27,7 +27,6 @@ keneanung.bashing.systems.svo = {
 	
 	flee = function()
 		svo.dofreefirst(keneanung.bashing.fleeDirection)
-		svo.removebalanceful("do next attack")
 	end,
 	
 	warnFlee = function()
@@ -247,7 +246,7 @@ keneanung.bashing.toggle = function(what, print)
 end
 
 keneanung.bashing.shielded = function(what)
-	if what == keneanung.bashing.targetList[1].name then
+	if what == keneanung.bashing.targetList[keneanung.bashing.attacking].name then
 		keneanung.bashing.shield = true
 	end
 end
@@ -255,7 +254,7 @@ end
 keneanung.bashing.flee = function()
 	local system = keneanung.bashing.getSystem()
 	system.flee()
-	keneanung.bashing.attacking = 0
+	keneanung.bashing.clearTarget()
 	cecho("<green>keneanung<reset>: New order. Tactical retreat.\n")
 end
 
@@ -266,8 +265,7 @@ keneanung.bashing.attackButton = function()
 		system.startAttack()
 		cecho("<green>keneanung<reset>: Nothing will stand in our way.\n")
 	else
-		system.stopAttack()
-		keneanung.bashing.attacking = 0
+		keneanung.bashing.clearTarget()
 		cecho("<green>keneanung<reset>: Lets save them for later.\n")
 	end
 end
@@ -318,8 +316,7 @@ keneanung.bashing.nextAttack = function()
 
 	end
 
-	system.stopAttack()
-	keneanung.bashing.attacking = 0
+	keneanung.bashing.clearTarget()
 	return false
 
 end
@@ -342,7 +339,6 @@ keneanung.bashing.roomItemCallback = function(event)
 	if(event == "gmcp.Char.Items.List") then
 		keneanung.bashing.targetList = {}
 		keneanung.bashing.room = {}
-		keneanung.bashing.setTarget()
 		for _, item in ipairs(gmcp.Char.Items.List.items) do
 			keneanung.bashing.room[#keneanung.bashing.room + 1] = item
 			keneanung.bashing.addTarget(item)
@@ -449,7 +445,7 @@ keneanung.bashing.addTarget = function(item)
 				insertAt = iMid
 				found = true
 				break
-			elseif targetPrio < existingPrio then
+			elseif existingPrio == nil or targetPrio < existingPrio then
 				iEnd = iMid - 1
 			else
 				iStart = iMid + 1
@@ -461,7 +457,7 @@ keneanung.bashing.addTarget = function(item)
 			insertAt = iStart
 		end
 
-		if insertAt <= keneanung.bashing.attacking then
+		if insertAt <= keneanung.bashing.attacking and #keneanung.bashing.targetList >= keneanung.bashing.attacking then
 			insertAt = keneanung.bashing.attacking + 1
 		end
 
@@ -518,6 +514,7 @@ keneanung.bashing.roomMessageCallback = function()
 	keneanung.bashing.attacks = 0
 	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
 	keneanung.bashing.shield = false
+	keneanung.bashing.clearTarget()
 
 	local exits = getRoomExits(gmcp.Room.Info.num) or gmcp.Room.Info.exits
 	local found = false
@@ -572,7 +569,7 @@ keneanung.bashing.setTarget = function()
 
 			for _, item in ipairs(keneanung.bashing.room) do
 				if item.attrib and item.attrib:find("m") and item.name:lower():find(tar:lower()) then
-					keneanung.bashing.targetList[1]= { 
+					keneanung.bashing.targetList[#keneanung.bashing.targetList + 1]= { 
 						id = item.id,
 						name = item.name
 					}
@@ -581,15 +578,23 @@ keneanung.bashing.setTarget = function()
 			end
 		end
 		if not targetSet then
-			if gmcp.Char.Status.target ~= "None" then 
-				send("st none", false) 
-			end
-			keneanung.bashing.attacking = 0
+				keneanung.bashing.clearTarget()
 			return
 		end
 	end
-	send("st " .. keneanung.bashing.targetList[1].id, false)
-	keneanung.bashing.attacking = 1
+	if keneanung.bashing.attacking == 0 or keneanung.bashing.targetList[keneanung.bashing.attacking].id ~= gmcp.Char.Status.target then
+		keneanung.bashing.attacking = keneanung.bashing.attacking + 1
+	end
+	send("st " .. keneanung.bashing.targetList[keneanung.bashing.attacking].id, false)
+end
+
+keneanung.bashing.clearTarget = function()
+	if gmcp.Char.Status.target ~= "None" then 
+		send("st none", false) 
+	end
+	keneanung.bashing.attacking = 0
+	local system = keneanung.bashing.getSystem()
+	system.stopAttack()
 end
 
 keneanung.bashing.load()
