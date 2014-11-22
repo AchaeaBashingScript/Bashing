@@ -336,7 +336,7 @@ keneanung.bashing.nextAttack = function()
 
 			end
 		
-			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and keneanung.bashing.configuration.razecommand or "kill"
+			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and keneanung.bashing.configuration.razecommand or "keneanungkill"
 			send(attack, false)
 			keneanung.bashing.shield = false
 			return true
@@ -616,16 +616,21 @@ keneanung.bashing.setTarget = function()
 	if keneanung.bashing.attacking == 0 or keneanung.bashing.targetList[keneanung.bashing.attacking].id ~= gmcp.Char.Status.target then
 		keneanung.bashing.attacking = keneanung.bashing.attacking + 1
 	end
-	send("st " .. keneanung.bashing.targetList[keneanung.bashing.attacking].id, false)
+	sendGMCP('IRE.Target.Set "' .. keneanung.bashing.targetList[keneanung.bashing.attacking].id .. '"')
 end
 
 keneanung.bashing.clearTarget = function()
-	if gmcp.Char.Status.target ~= "None" then
-		send("st none", false)
+	if gmcp.IRE.Target.Set ~= "" then
+		sendGMCP('IRE.Target.Set "0"')
 	end
 	keneanung.bashing.attacking = 0
 	local system = keneanung.bashing.getSystem()
 	system.stopAttack()
+end
+
+keneanung.bashing.login = function()
+	gmod.enableModule("keneanung.bashing", "IRE.Target")
+	send("setalias keneanungkill kill &tar", false)
 end
 
 keneanung.bashing.load()
