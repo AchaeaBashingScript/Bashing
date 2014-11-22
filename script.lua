@@ -45,7 +45,7 @@ keneanung.bashing.systems.wundersys = {
 
 	startAttack = function()
 		if keneanung.bashing.attacking > 0 then
-		 	doradd("kill")
+		 	doradd("kill &tar")
  	 	end
 	end,
 	
@@ -336,7 +336,7 @@ keneanung.bashing.nextAttack = function()
 
 			end
 		
-			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and keneanung.bashing.configuration.razecommand or "keneanungkill"
+			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and keneanung.bashing.configuration.razecommand or "keneanungki"
 			send(attack, false)
 			keneanung.bashing.shield = false
 			return true
@@ -630,7 +630,7 @@ end
 
 keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Target")
-	send("setalias keneanungkill kill &tar", false)
+	send("setalias keneanungki kill &tar", false)
 end
 
 keneanung.bashing.load()
