@@ -33,7 +33,7 @@ then
   exit 1
 fi
 
-zip Bashing.mpackage config.lua script.lua Bashing.xml version.lua
+zip Bashing.mpackage config.lua script.lua Bashing.xml version.lua License.md
 out=$?
 if [ "$out" != "0" ]
 then
