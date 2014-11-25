@@ -22,7 +22,7 @@ Downloads and Releases
 The bashing script can be downloaded on the [github release page of the project](https://github.com/keneanung/Bashing/releases).
 
 Stable releases are versioned with the versioning scheme `vXX.XX` where each XX stands for a number. The latest official
-stable release has a green tag on the right side.
+stable release has a green tag on the left side.
 
 Releases with an orange tag are pre-releases for testing. *Those are automatically generated and not guaranteed to work.*
 Additional to a numeric version number, the versioning scheme contains a short commit hash and a branch name. If you notice a
@@ -33,9 +33,10 @@ Quickstart
 
 1. Download the Bashing.mpackage
 2. Import the package into Mudlet
-3. Use the alias `kconfig bashing toggle` to enable the script
-4. Start killing things. Acceptable targets must be killed at least once in an area to register them with the bashing script.
-5. Keep bashing away.
+3. Deactivate or delete the keybinding of F2 that comes with svo.
+4. Use the alias `kconfig bashing toggle` to enable the script
+5. Start killing things. Acceptable targets must be killed at least once in an area to register them with the bashing script.
+6. Keep bashing away using the F2 keybinding to work yourself down the list.
 
 Priority management
 -------------------
