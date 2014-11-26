@@ -60,7 +60,7 @@ var Base64 = {
 			enc3 = this._keyStr.indexOf(input.charAt(i++));
 			enc4 = this._keyStr.indexOf(input.charAt(i++));
  
-			chr1 = (enc1 << 2) | (enc2 >>; 4);
+			chr1 = (enc1 << 2) | (enc2 >> 4);
 			chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
 			chr3 = ((enc3 & 3) << 6) | enc4;
  
