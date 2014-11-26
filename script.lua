@@ -38,6 +38,10 @@ keneanung.bashing.systems.svo = {
 	notifyFlee = function()
 		svo.givewarning_multi({initialmsg = "Running as you have not enough health left. (" .. avg .. " vs " .. gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing .. ")"})
 	end,
+
+	handleShield = function()
+		keneanung.bashing.shield = true
+	end,
 	
 }
 
@@ -64,6 +68,12 @@ keneanung.bashing.systems.wundersys = {
 	
 	notifyFlee = function()
 		report("Running as you have not enough health left. (" .. avg .. " vs " .. gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing .. ")")
+	end,
+
+	handleShield = function()
+		if keneanung.bashing.configuration.autoraze then
+			dofirst(keneanung.bashing.configuration.razecommand .. " &tar")
+		end
 	end,
 	
 }
@@ -276,7 +286,8 @@ end
 
 keneanung.bashing.shielded = function(what)
 	if what == keneanung.bashing.targetList[keneanung.bashing.attacking].name then
-		keneanung.bashing.shield = true
+		local system = keneanung.bashing.getSystem()
+		system.handleShield()
 	end
 end
 
