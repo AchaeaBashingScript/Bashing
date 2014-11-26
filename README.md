@@ -55,3 +55,14 @@ lowest priority.
 
 To change the position of an item in the list, click the `(vv)` and `(^^)` arrons to lower or raise the priority
 respectively. You can also click on the `(DD)` to delete that NPC as an acceptable target.
+
+Acknowledgements
+================
+
+Tool creators
+-------------
+
+- GitHub user @bradrhodes for his [GithubDocSync project](http://bradrhodes.github.io/GithubDocSync/)
+- Webtoolkit for their [Base64 Javascript implementation](http://www.webtoolkit.info/javascript-base64.html) (used in
+  GithubDocSnc)
+- Github user @chjj for the [marked Project](https://github.com/chjj/marked) (used in GithubDocSync)
