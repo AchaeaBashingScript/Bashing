@@ -25,7 +25,7 @@ var Base64 = {
 			chr3 = input.charCodeAt(i++);
  
 			enc1 = chr1 >> 2;
-			enc2 = ((chr1 & 3) <<; 4) | (chr2 >> 4);
+			enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
 			enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
 			enc4 = chr3 & 63;
  
