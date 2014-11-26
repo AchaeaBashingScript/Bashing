@@ -7,6 +7,27 @@
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    
+    <script src="javascripts/base64.js"></script>
+    <script src="javascripts/marked.js"></script>
+    <script type="text/javascript">
+      var githubApiUrl = 'https://api.github.com/repos/keneanung/Bashing/contents/README.md';
+      var contentContainerId = "readmeContent";
+      var callbackFunctionName = "handleApiResponse";
+
+      function handleApiResponse(response)
+      {
+        var encodedContent = response.data.content;
+        var markdownText = Base64.decode(encodedContent);
+        var renderedHtml = marked(markdownText);
+
+        document.getElementById(contentContainerId).innerHTML = renderedHtml;
+      }
+
+      var newScript = document.createElement('script');
+      newScript.src = githubApiUrl + "?callback=" + callbackFunctionName;
+      document.getElementsByTagName('head')[0].appendChild(newScript);
+    </script>
 
     <title>Bashing by keneanung</title>
   </head>
@@ -28,67 +49,7 @@
 
     <div class="container">
       <section id="main_content">
-        <h1>
-<a id="a-bashing-script-achaea" class="anchor" href="#a-bashing-script-achaea" aria-hidden="true"><span class="octicon octicon-link"></span></a>A bashing script Achaea</h1>
-
-<h2>
-<a id="whats-this" class="anchor" href="#whats-this" aria-hidden="true"><span class="octicon octicon-link"></span></a>What's this?</h2>
-
-<p>While bashing (or hunting NPCs) in Achaea is not overly complicated, it is sometimes useful to handle targets in a certain
-order instead of going through the seemingly random list from top to bottom. Different types of targets in an area make
-basing even more cumbersome. To avoid having to target specific NPCs by number (which is error prone and slow), this project
-was born.</p>
-
-<h2>
-<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Requirements</h2>
-
-<ul>
-<li>Mudlet</li>
-<li>gmcp enabled</li>
-<li><strong>svo</strong></li>
-</ul>
-
-<h2>
-<a id="downloads-and-releases" class="anchor" href="#downloads-and-releases" aria-hidden="true"><span class="octicon octicon-link"></span></a>Downloads and Releases</h2>
-
-<p>The bashing script can be downloaded on the <a href="https://github.com/keneanung/Bashing/releases">github release page of the project</a>.</p>
-
-<p>Stable releases are versioned with the versioning scheme <code>vXX.XX</code> where each XX stands for a number. The latest official
-stable release has a green tag on the left side.</p>
-
-<p>Releases with an orange tag are pre-releases for testing. <em>Those are automatically generated and not guaranteed to work.</em>
-Additional to a numeric version number, the versioning scheme contains a short commit hash and a branch name. If you notice a
-problem with a pre-release, please include this information in your bug report.</p>
-
-<h2>
-<a id="quickstart" class="anchor" href="#quickstart" aria-hidden="true"><span class="octicon octicon-link"></span></a>Quickstart</h2>
-
-<ol>
-<li>Download the Bashing.mpackage</li>
-<li>Import the package into Mudlet</li>
-<li>Deactivate or delete the keybinding of F2 that comes with svo.</li>
-<li>Use the alias <code>kconfig bashing toggle</code> to enable the script</li>
-<li>Start killing things. Acceptable targets must be killed at least once in an area to register them with the bashing script.</li>
-<li>Keep bashing away using the F2 keybinding to work yourself down the list.</li>
-</ol>
-
-<h2>
-<a id="priority-management" class="anchor" href="#priority-management" aria-hidden="true"><span class="octicon octicon-link"></span></a>Priority management</h2>
-
-<p>New acceptable targets are always added to the end of a priority list of an area. To change this, you will need to change the
-order manually.</p>
-
-<p>Use <code>kconfig bashing prios</code> to bring up the list of areas with priority lists. You can then click on an area name to bring
-the priority list for that area. To filter the list of areas, you can use <code>kconfig bashing prios &lt;partial area name&gt;</code>. If
-only one match is found, the list for that area is shown instead.</p>
-
-<p>By using <code>kconfig bashing prios &lt;area name&gt;</code> or clicking on an area name in the area list, the script will bring up the
-priority list for the area. If you are in that area and have one of these denizen in your room, the script will order them
-from top to bottom. That means the topmost NPC type has the highest priority and the one at the lower end of the list the
-lowest priority.</p>
-
-<p>To change the position of an item in the list, click the <code>(vv)</code> and <code>(^^)</code> arrons to lower or raise the priority
-respectively. You can also click on the <code>(DD)</code> to delete that NPC as an acceptable target.</p>
+        <div id="readmeContent"></div>
       </section>
     </div>
 
