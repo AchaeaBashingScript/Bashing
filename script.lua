@@ -15,6 +15,7 @@ keneanung.bashing.configuration.fleeing = 300
 keneanung.bashing.configuration.autoflee = true
 keneanung.bashing.configuration.autoraze = false
 keneanung.bashing.configuration.razecommand = "none"
+keneanung.bashing.configuration.system = "auto"
 
 keneanung.bashing.systems.svo = {
 
@@ -79,7 +80,16 @@ keneanung.bashing.systems.wundersys = {
 }
 
 keneanung.bashing.getSystem = function()
-	local systemName = "wundersys"
+	local systemName
+	if keneanung.bashing.configuration.system == "auto" then
+		if svo then
+			systemName = "svo"
+		elseif sys and sys.myVersion then
+			systemName = "wundersys"
+		end
+	else
+		systemName = keneanung.bashing.configuration.system
+	end
 	return keneanung.bashing.systems[systemName]
 end
 
@@ -272,6 +282,11 @@ keneanung.bashing.showConfig = function()
 	cecho("<green>keneanung<reset>: Special attack on shielding is set to ")
 	fg("red")
 	echoLink(keneanung.bashing.configuration.razecommand, "clearCmdLine() appendCmdLine('kconfig bashing razecommand ')", "Set attack to raze shields.", true)
+	resetFormat()
+	echo("\n")
+	cecho("<green>keneanung<reset>: Currently using this system: ")
+	fg("red")
+	echoLink(keneanung.bashing.configuration.system, "clearCmdLine() appendCmdLine('kconfig bashing system ')", "Set system to use.", true)
 	resetFormat()
 	echo("\n")
 	echo("\n")
@@ -642,6 +657,12 @@ end
 keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Target")
 	send("setalias keneanungki kill &tar", false)
+end
+
+keneanung.bashing.setSystem = function(system)
+	keneanung.bashing.configuration.system = system
+	cecho("<green>keneanung<reset>: Using <red>" .. keneanung.bashing.configuration.system .. "<reset> as queuing system.\n" )
+	keneanung.bashing.save()
 end
 
 keneanung.bashing.load()

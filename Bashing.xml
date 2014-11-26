@@ -181,6 +181,13 @@
                     <packageName></packageName>
                     <regex>^kconfig bashing raze$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>set system</name>
+                    <script>keneanung.bashing.setSystem(matches[2])</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing system (\w+)$</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
