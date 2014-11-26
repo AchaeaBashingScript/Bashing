@@ -185,6 +185,12 @@ hr {
   color: #b5e853;
 }
 
+code {
+background-color: white;
+color: black;
+padding: 2px;
+}
+
 /* Buttons
 */
 
