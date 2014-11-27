@@ -6,8 +6,9 @@ keneanung.bashing.targetList = {}
 keneanung.bashing.systems = {}
 
 keneanung.bashing.attacking = 0
-keneanung.bashing.roomDamage = 0
+keneanung.bashing.damage = 0
 keneanung.bashing.attacks = 0
+keneanung.bashing.healing = 0
 
 keneanung.bashing.configuration.enabled = false
 keneanung.bashing.configuration.warning = 500
@@ -32,16 +33,24 @@ keneanung.bashing.systems.svo = {
 		svo.dofreefirst(keneanung.bashing.fleeDirection)
 	end,
 	
-	warnFlee = function()
+	warnFlee = function(avg)
 		svo.givewarning_multi({initialmsg = "You are about to die... Better run or get ready to die! (" .. avg .. " vs " .. (gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing) .. ")"})
 	end,
 	
-	notifyFlee = function()
+	notifyFlee = function(avg)
 		svo.givewarning_multi({initialmsg = "Running as you have not enough health left. (" .. avg .. " vs " .. gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing .. ")"})
 	end,
 
 	handleShield = function()
 		keneanung.bashing.shield = true
+	end,
+	
+	setup = function()
+		
+	end,
+	
+	teardown = function()
+		
 	end,
 	
 }
@@ -63,17 +72,48 @@ keneanung.bashing.systems.wundersys = {
 		dofreeadd(keneanung.bashing.fleeDirection)
 	end,
 	
-	warnFlee = function()
+	warnFlee = function(avg)
 		report("You are about to die... Better run or get ready to die! (" .. avg .. " vs " .. (gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing) .. ")")
 	end,
 	
-	notifyFlee = function()
+	notifyFlee = function(avg)
 		report("Running as you have not enough health left. (" .. avg .. " vs " .. gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing .. ")")
 	end,
 
 	handleShield = function()
 		if keneanung.bashing.configuration.autoraze then
 			dofirst(keneanung.bashing.configuration.razecommand .. " &tar")
+		end
+	end,
+	
+	setup = function()
+		keneanung.bashing.systems.wundersys.queueTrigger = tempRegexTrigger("^\[System\]:",
+			[[
+			local system = keneanung.bashing.getSystem()
+			local avgDmg = keneanung.bashing.damage / keneanung.bashing.attacks
+			local avgHeal = keneanung.bashing.healing / keneanung.bashing.attacks
+			
+			local estimatedDmg = avgDmg * 2 - avgHeal
+
+			if estimatedDmg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing and keneanung.bashing.configuration.autoflee then
+
+				system.notifyFlee(estimatedDmg)
+
+				dofreeadd(keneanung.bashing.fleeDirection)
+
+			else
+				if estimatedDmg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.warning then
+
+					system.warnFlee(estimatedDmg)
+
+				end
+			end
+			]])
+	end,
+	
+	teardown = function()
+		if keneanung.bashing.systems.wundersys.queueTrigger then
+			killTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
 		end
 	end,
 	
@@ -351,14 +391,14 @@ keneanung.bashing.nextAttack = function()
 
 		if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing and keneanung.bashing.configuration.autoflee then
 
-			system.notifyFlee()
+			system.notifyFlee(avg)
 
 			send(keneanung.bashing.fleeDirection, false)
 
 		else
 			if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.warning then
 
-				system.warnFlee()
+				system.warnFlee(avg)
 
 			end
 		
@@ -566,6 +606,7 @@ keneanung.bashing.roomMessageCallback = function()
 	end
 
 	keneanung.bashing.damage = 0
+	keneanung.bashing.healing = 0
 	keneanung.bashing.attacks = 0
 	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
 	keneanung.bashing.shield = false
@@ -597,8 +638,12 @@ keneanung.bashing.vitalsChangeRecord = function()
 
 	if keneanung.bashing.attacking == 0 then return end
 
-	if keneanung.bashing.lastHealth - gmcp.Char.Vitals.hp > 0 then
-		keneanung.bashing.damage = keneanung.bashing.damage + keneanung.bashing.lastHealth - gmcp.Char.Vitals.hp
+	local difference = keneanung.bashing.lastHealth - gmcp.Char.Vitals.hp
+
+	if difference > 0 then
+		keneanung.bashing.damage = keneanung.bashing.damage + difference
+	elseif difference < 0 then
+		keneanung.bashing.healing = keneanung.bashing.healing + math.abs(difference)
 	end
 
 	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
@@ -659,10 +704,16 @@ keneanung.bashing.login = function()
 	send("setalias keneanungki kill &tar", false)
 end
 
-keneanung.bashing.setSystem = function(system)
-	keneanung.bashing.configuration.system = system
+keneanung.bashing.setSystem = function(systemName)
+	local system = keneanung.bashing.getSystem()
+	system.teardown()
+	keneanung.bashing.configuration.system = systemName
 	cecho("<green>keneanung<reset>: Using <red>" .. keneanung.bashing.configuration.system .. "<reset> as queuing system.\n" )
 	keneanung.bashing.save()
+	local system = keneanung.bashing.getSystem()
+	system.setup()
 end
 
 keneanung.bashing.load()
+local system = keneanung.bashing.getSystem()
+system.setup()
