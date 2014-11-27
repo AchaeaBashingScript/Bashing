@@ -9,6 +9,7 @@ keneanung.bashing.attacking = 0
 keneanung.bashing.damage = 0
 keneanung.bashing.attacks = 0
 keneanung.bashing.healing = 0
+keneanung.bashing.lastHealth = 0
 
 keneanung.bashing.configuration.enabled = false
 keneanung.bashing.configuration.warning = 500
@@ -30,6 +31,7 @@ keneanung.bashing.systems.svo = {
 	end,
 	
 	flee = function()
+		svo.removebalanceful("do next attack")
 		svo.dofreefirst(keneanung.bashing.fleeDirection)
 	end,
 	
@@ -87,9 +89,10 @@ keneanung.bashing.systems.wundersys = {
 	end,
 	
 	setup = function()
-		keneanung.bashing.systems.wundersys.queueTrigger = tempRegexTrigger("^\[System\]:",
+		keneanung.bashing.systems.wundersys.queueTrigger = tempTrigger("[System]: Running queued eqbal command: DOR",
 			[[
 			local system = keneanung.bashing.getSystem()
+			keneanung.bashing.attacks = keneanung.bashing.attacks + 1
 			local avgDmg = keneanung.bashing.damage / keneanung.bashing.attacks
 			local avgHeal = keneanung.bashing.healing / keneanung.bashing.attacks
 			
@@ -99,7 +102,7 @@ keneanung.bashing.systems.wundersys = {
 
 				system.notifyFlee(estimatedDmg)
 
-				dofreeadd(keneanung.bashing.fleeDirection)
+				system.flee()
 
 			else
 				if estimatedDmg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.warning then
@@ -393,7 +396,7 @@ keneanung.bashing.nextAttack = function()
 
 			system.notifyFlee(avg)
 
-			send(keneanung.bashing.fleeDirection, false)
+			system.flee()
 
 		else
 			if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.warning then
@@ -691,7 +694,7 @@ keneanung.bashing.setTarget = function()
 end
 
 keneanung.bashing.clearTarget = function()
-	if gmcp.IRE.Target.Set ~= "" then
+	if gmcp.IRE.Target and gmcp.IRE.Target.Set ~= "" then
 		sendGMCP('IRE.Target.Set "0"')
 	end
 	keneanung.bashing.attacking = 0
@@ -702,6 +705,8 @@ end
 keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Target")
 	send("setalias keneanungki kill &tar", false)
+	local system = keneanung.bashing.getSystem()
+	system.setup()
 end
 
 keneanung.bashing.setSystem = function(systemName)
@@ -715,5 +720,3 @@ keneanung.bashing.setSystem = function(systemName)
 end
 
 keneanung.bashing.load()
-local system = keneanung.bashing.getSystem()
-system.setup()
