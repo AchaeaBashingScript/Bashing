@@ -90,6 +90,91 @@ Configuration
 The current configuration can be shown with the alias `kconfig bashing`. All items in red are clickable and will either
 toggle the item or set the alias to the command line, so you only need the add the value you want to set.
 
+Scripting
+---------
+
+### Events ###
+The script fires two events that can be used to extend the bashing script.
+
+The `keneanung.bashing.targetList.changed` event gets raised whenever anything in the list changes. That may be a new target
+gets added, a target removed or the list got reordered. To access the current target list, use
+`keneanung.bashing.targetList`.
+
+The `keneanung.bashing.targetList.firstChanged` event is raised whenever the first item of the target list changes. That
+means a new taget is used. This event also gives the new target as argument to the event handlers. To access the first item
+of the target list directly, you can access `keneanung.bashing.targetList[1]`.
+
+Features in development
+=======================
+
+Support WunderSys
+-----------------
+
+[WunderSys](https://dl.dropboxusercontent.com/u/6980966/ServersideSystem/index.html) is a freely available curing system that
+is developed by Nemutaur. It is built around the server side curing and queues built into Achaea and enhances the handling,
+supports automatic curing priority switcing as well as easy configuration of used defenses.
+
+This the current development concentrates on supporting WunderSys out of the box as it is a widely used system. The
+development version now supports all feature that are supported under svo, but need to be more thoroughly tested.
+
+Support for other systems
+-------------------------
+
+While two often used systems are supported by the bashing script, there are a multitude of other systems (private and public)
+out there. To allow integration of the bashing script into these systems, an interface was designed.
+
+To interface the system, create a table with the following structure:
+
+~~~~~~~
+{
+	startAttack = function()
+		-- code that should be run, whenever the user wants to start attacking.
+	end,
+	
+	stopAttack = function()
+		-- code that should be run, whenever the user (or system) wants to stop attacking
+	end,
+	
+	flee = function()
+		-- code that is run when fleeing is needed
+	end,
+	
+	warnFlee = function(avg)
+		-- code that prints a warning at the "warn" threshold. The variable "avg" contains the
+		-- average damage taken between attacks
+	end,
+	
+	notifyFlee = function(avg)
+		-- code that prints a warning at the "flee" threshold. The variable "avg" contains the
+		-- average damage taken between attacks
+	end,
+
+	handleShield = function()
+		-- code that is called, whenever the current target uses the shield tattoo
+	end,
+	
+	setup = function()
+		-- code that is run whenever the user connects to Achaea or the user configures the basher
+		-- to use this system
+	end,
+	
+	teardown = function()
+		-- code that is run whenever the user switches from this system to another. Should be used
+		-- to undo actions of setup()
+	end,
+}
+~~~~~~~
+
+This table can be added to the `keneanung.bashing.systems` table, using your systemname as a key. The user must then
+configure the basher to use the system by choosing the name *exactly* like the key you used to add the interface table.
+
+Some further hints:
+- If your queueing supports running functions instead of sending things diresctly to the mud, queue the
+   `keneanung.bashing.nextAttack()` function and keep similar the svo implementation
+- If your queueing uses the Achaean server side queue, keep close to the WunderSys implementation
+- If your queueing is neither of those two possibilities, think about a way you can register attacks. If you have a way, you
+   can check the WunderSys implementation for tings needed to flee.
+
 Acknowledgements
 ================
 
