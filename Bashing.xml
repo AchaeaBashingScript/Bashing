@@ -144,14 +144,14 @@
                     <script>keneanung.bashing.setThreshold(matches[2], &quot;fleeing&quot;)</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>^kconfig bashing fleeat (\d+)$</regex>
+                    <regex>^kconfig bashing fleeat (\d+[%d]?)$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>set warning threshhold</name>
                     <script>keneanung.bashing.setThreshold(matches[2], &quot;warning&quot;)</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>^kconfig bashing warnat (\d+)$</regex>
+                    <regex>^kconfig bashing warnat (\d+[%d]?)$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>toggle automatic fleeing</name>

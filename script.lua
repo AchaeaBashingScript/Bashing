@@ -36,7 +36,7 @@ keneanung.bashing.systems.svo = {
 	end,
 	
 	warnFlee = function(avg)
-		svo.boxDisplay("You are about to die... Better run or get ready to die!", "orange")
+		svo.boxDisplay("Better run or get ready to die!", "orange")
 	end,
 	
 	notifyFlee = function(avg)
@@ -77,10 +77,12 @@ keneanung.bashing.systems.wundersys = {
 	end,
 	
 	warnFlee = function(avg)
-		boxDisplay("You are about to die... Better run or get ready to die!", "orange")
+      display(avg)
+		boxDisplay("Better run or get ready to die!", "orange")
 	end,
 	
 	notifyFlee = function(avg)
+      display(avg)
 		boxDisplay("Running as you have not enough health left.", "red")
 	end,
 
@@ -90,7 +92,7 @@ keneanung.bashing.systems.wundersys = {
 			if keneanung.bashing.configuration.razecommand:find("&tar") then
 				command = keneanung.bashing.configuration.razecommand
 			else
-				command = keneanung.bashing.configuration.razecommand .. "&tar"	
+				command = keneanung.bashing.configuration.razecommand .. " &tar"	
 			end
 			dofirst(command)
 		end
@@ -106,14 +108,18 @@ keneanung.bashing.systems.wundersys = {
 			
 			local estimatedDmg = avgDmg * 2 - avgHeal
 
-			if estimatedDmg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing and keneanung.bashing.configuration.autoflee then
+			local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
+
+			local warnat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.warning)
+
+			if estimatedDmg > gmcp.Char.Vitals.hp - fleeat and keneanung.bashing.configuration.autoflee then
 
 				system.notifyFlee(estimatedDmg)
 
 				system.flee()
 
 			else
-				if estimatedDmg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.warning then
+				if estimatedDmg > gmcp.Char.Vitals.hp - warnat then
 
 					system.warnFlee(estimatedDmg)
 
@@ -383,7 +389,7 @@ keneanung.bashing.setFlee = function(where)
 end
 
 keneanung.bashing.setThreshold = function(newValue, what)
-	keneanung.bashing.configuration[what] = matches[2] * 1
+	keneanung.bashing.configuration[what] = matches[2]
 	cecho("<green>keneanung<reset>: "..what:title().." with a security threshhold of <red>" .. keneanung.bashing.configuration[what] .. "<reset> health\n" )
 	keneanung.bashing.save()
 end
@@ -401,14 +407,18 @@ keneanung.bashing.nextAttack = function()
 
 		local avg = keneanung.bashing.damage / keneanung.bashing.attacks
 
-		if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing and keneanung.bashing.configuration.autoflee then
+		local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
+
+		local warnat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.warning)
+
+		if avg > gmcp.Char.Vitals.hp - fleeat and keneanung.bashing.configuration.autoflee then
 
 			system.notifyFlee(avg)
 
 			system.flee()
 
 		else
-			if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.warning then
+			if avg > gmcp.Char.Vitals.hp - warnat then
 
 				system.warnFlee(avg)
 
@@ -725,7 +735,7 @@ keneanung.bashing.setRazeAlias = function()
 	if keneanung.bashing.configuration.razecommand:find("&tar") then
 		razeCommand = keneanung.bashing.configuration.razecommand
 	else
-		razeCommand = keneanung.bashing.configuration.razecommand .. "&tar"	
+		razeCommand = keneanung.bashing.configuration.razecommand .. " &tar"	
 	end
 	send("setalias keneanungra " .. razeCommand, false)	
 end
@@ -738,6 +748,16 @@ keneanung.bashing.setSystem = function(systemName)
 	keneanung.bashing.save()
 	local system = keneanung.bashing.getSystem()
 	system.setup()
+end
+
+keneanung.bashing.calcFleeValue = function(configValue)
+	if configValue:ends("%") then
+		return configValue:match("%d+") * gmcp.Char.Vitals.maxhp / 100
+	elseif configValue:ends("d") then
+		return configValue:match("%d+") * keneanung.bashing.damage / keneanung.bashing.attacks
+	else
+		return configValue * 1
+	end
 end
 
 keneanung.bashing.load()
