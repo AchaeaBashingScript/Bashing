@@ -31,16 +31,16 @@ keneanung.bashing.systems.svo = {
 	end,
 	
 	flee = function()
-		svo.removebalanceful("do next attack")
+		keneanung.bashing.systems.svo.stopAttack()
 		svo.dofreefirst(keneanung.bashing.fleeDirection)
 	end,
 	
 	warnFlee = function(avg)
-		svo.givewarning_multi({initialmsg = "You are about to die... Better run or get ready to die! (" .. avg .. " vs " .. (gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing) .. ")"})
+		svo.boxDisplay("You are about to die... Better run or get ready to die!", "orange")
 	end,
 	
 	notifyFlee = function(avg)
-		svo.givewarning_multi({initialmsg = "Running as you have not enough health left. (" .. avg .. " vs " .. gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing .. ")"})
+		svo.boxDisplay("Running as you have not enough health left.", "red")
 	end,
 
 	handleShield = function()
@@ -61,30 +61,38 @@ keneanung.bashing.systems.wundersys = {
 
 	startAttack = function()
 		if keneanung.bashing.attacking > 0 then
+			enableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
 		 	doradd("kill &tar")
  	 	end
 	end,
 	
 	stopAttack = function()
+		disableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
 		dorclear()
 	end,
 	
 	flee = function()
-		dorclear()
+		keneanung.bashing.systems.wundersys.stopAttack()
 		dofreeadd(keneanung.bashing.fleeDirection)
 	end,
 	
 	warnFlee = function(avg)
-		report("You are about to die... Better run or get ready to die! (" .. avg .. " vs " .. (gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing) .. ")")
+		boxDisplay("You are about to die... Better run or get ready to die!", "orange")
 	end,
 	
 	notifyFlee = function(avg)
-		report("Running as you have not enough health left. (" .. avg .. " vs " .. gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing .. ")")
+		boxDisplay("Running as you have not enough health left.", "red")
 	end,
 
 	handleShield = function()
 		if keneanung.bashing.configuration.autoraze then
-			dofirst(keneanung.bashing.configuration.razecommand .. " &tar")
+			local command
+			if keneanung.bashing.configuration.razecommand:find("&tar") then
+				command = keneanung.bashing.configuration.razecommand
+			else
+				command = keneanung.bashing.configuration.razecommand .. "&tar"	
+			end
+			dofirst(command)
 		end
 	end,
 	
@@ -112,6 +120,7 @@ keneanung.bashing.systems.wundersys = {
 				end
 			end
 			]])
+		disableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
 	end,
 	
 	teardown = function()
@@ -405,7 +414,7 @@ keneanung.bashing.nextAttack = function()
 
 			end
 		
-			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and keneanung.bashing.configuration.razecommand or "keneanungki"
+			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and "keneanungra" or "keneanungki"
 			send(attack, false)
 			keneanung.bashing.shield = false
 			return true
@@ -656,6 +665,7 @@ end
 keneanung.bashing.setRazeCommand = function(what)
 	keneanung.bashing.configuration.razecommand = what
 	cecho("<green>keneanung<reset>: Razing shields with <red>" .. keneanung.bashing.configuration.razecommand .. "<reset>\n" )
+	keneanung.bashing.setRazeAlias()
 	keneanung.bashing.save()
 end
 
@@ -705,8 +715,19 @@ end
 keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Target")
 	send("setalias keneanungki kill &tar", false)
+	keneanung.bashing.setRazeAlias()
 	local system = keneanung.bashing.getSystem()
 	system.setup()
+end
+
+keneanung.bashing.setRazeAlias = function()
+	local razeCommand
+	if keneanung.bashing.configuration.razecommand:find("&tar") then
+		razeCommand = keneanung.bashing.configuration.razecommand
+	else
+		razeCommand = keneanung.bashing.configuration.razecommand .. "&tar"	
+	end
+	send("setalias keneanungra " .. razeCommand, false)	
 end
 
 keneanung.bashing.setSystem = function(systemName)
