@@ -754,7 +754,7 @@ keneanung.bashing.calcFleeValue = function(configValue)
 	if configValue:ends("%") then
 		return configValue:match("%d+") * gmcp.Char.Vitals.maxhp / 100
 	elseif configValue:ends("d") then
-		return configValue:match("%d+") * keneanung.bashing.damage / keneanung.bashing.attacks
+		return configValue:match("(.-)d") * keneanung.bashing.damage / keneanung.bashing.attacks
 	else
 		return configValue * 1
 	end
