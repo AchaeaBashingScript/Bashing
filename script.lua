@@ -18,6 +18,7 @@ keneanung.bashing.configuration.autoflee = true
 keneanung.bashing.configuration.autoraze = false
 keneanung.bashing.configuration.razecommand = "none"
 keneanung.bashing.configuration.system = "auto"
+keneanung.bashing.configuration.filesToLoad = {}
 
 keneanung.bashing.systems.svo = {
 
@@ -346,6 +347,20 @@ keneanung.bashing.showConfig = function()
 	resetFormat()
 	echo("\n")
 	echo("\n")
+	cecho("<green>keneanung<reset>: Loading these additional files on startup:    (")
+	fg("yellow")
+	echoLink("Add new file", "keneanung.bashing.addFile()", "Add a new file to load on startup", true)
+	resetFormat()
+	echo(")")
+	for num, path in ipairs(keneanung.bashing.configuration.filesToLoad) do
+		echo("\n             " .. path .. " (")
+		fg("red")
+		echoLink("Delete", "keneanung.bashing.deleteFile(" .. num .. ")", "Don't load this file anymore", true)
+		resetFormat()
+		echo(")")
+	end
+	echo("\n")
+	echo("\n")
 	cecho("<green>keneanung<reset>: Version: <red>" .. keneanung.bashing.version .. "<reset>\n")
 end
 
@@ -377,6 +392,7 @@ keneanung.bashing.attackButton = function()
 		cecho("<green>keneanung<reset>: Nothing will stand in our way.\n")
 	else
 		keneanung.bashing.clearTarget()
+		system.stopAttack()
 		cecho("<green>keneanung<reset>: Lets save them for later.\n")
 	end
 end
@@ -432,6 +448,7 @@ keneanung.bashing.nextAttack = function()
 	end
 
 	keneanung.bashing.clearTarget()
+	system.stopAttack()
 	return false
 
 end
@@ -632,6 +649,8 @@ keneanung.bashing.roomMessageCallback = function()
 	keneanung.bashing.shield = false
 	if keneanung.bashing.attacking > 0 then
 		keneanung.bashing.clearTarget()
+		local system = keneanung.bashing.getSystem()
+		system.stopAttack()
 	end
 
 	local exits = getRoomExits(gmcp.Room.Info.num) or gmcp.Room.Info.exits
@@ -701,7 +720,9 @@ keneanung.bashing.setTarget = function()
 			end
 		end
 		if not targetSet then
-				keneanung.bashing.clearTarget()
+			keneanung.bashing.clearTarget()
+			local system = keneanung.bashing.getSystem()
+			system.stopAttack()
 			return
 		end
 	end
@@ -716,8 +737,6 @@ keneanung.bashing.clearTarget = function()
 		sendGMCP('IRE.Target.Set "0"')
 	end
 	keneanung.bashing.attacking = 0
-	local system = keneanung.bashing.getSystem()
-	system.stopAttack()
 end
 
 keneanung.bashing.login = function()
@@ -758,4 +777,21 @@ keneanung.bashing.calcFleeValue = function(configValue)
 	end
 end
 
+keneanung.bashing.addFile = function()
+	local path = invokeFileDialog(true, "Which file do you want to add?")
+	if path ~= "" then
+		keneanung.bashing.configuration.filesToLoad[#keneanung.bashing.configuration.filesToLoad + 1] = path
+	end
+	keneanung.bashing.save()
+end
+
+keneanung.bashing.deleteFile = function(num)
+	table.remove(keneanung.bashing.configuration.filesToLoad, num)
+	keneanung.bashing.save()
+end
+
 keneanung.bashing.load()
+for _, file in ipairs(keneanung.bashing.configuration.filesToLoad) do
+	dofile(file)
+end
+tempTimer(0, [[raiseEvent("keneanung.bashing.loaded")]])
