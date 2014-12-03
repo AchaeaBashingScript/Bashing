@@ -500,9 +500,6 @@ keneanung.bashing.roomMessageCallback = function()
 
 	local exits = getRoomExits(gmcp.Room.Info.num) or gmcp.Room.Info.exits
 	local found = false
-	-- Magic! Wilderness exits connect to room '0', so we want to recognize that.
-	-- But we only want it to fire if we have exits at all, so we set it to 1 here and reset it later.
-	local exitConnectionSum = 1
 
 	if exits ~= {} then
 		exitConnectionSum = 0
@@ -512,11 +509,10 @@ keneanung.bashing.roomMessageCallback = function()
 				found = true
 				break
 			end
-			exitConnectionSum = exitConnectionSum + num
 		end
 	end
 
-	if not found and exitConnectionSum > 0 then
+	if not found and not gmcp.Room.Info.ohmap then
 		cecho("\n<green>keneanung<reset>: <red>WARNING:<reset> No exit to flee found, reusing <red>" .. keneanung.bashing.fleeDirection .. "<reset>.\n")
 	end
 
