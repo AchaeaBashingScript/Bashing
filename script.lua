@@ -77,12 +77,10 @@ keneanung.bashing.systems.wundersys = {
 	end,
 	
 	warnFlee = function(avg)
-      display(avg)
 		boxDisplay("Better run or get ready to die!", "orange")
 	end,
 	
 	notifyFlee = function(avg)
-      display(avg)
 		boxDisplay("Running as you have not enough health left.", "red")
 	end,
 
