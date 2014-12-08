@@ -502,7 +502,6 @@ keneanung.bashing.roomMessageCallback = function()
 	local found = false
 
 	if exits ~= {} then
-		exitConnectionSum = 0
 		for direction, num in pairs(exits) do
 			if num == keneanung.bashing.lastRoom then
 				keneanung.bashing.fleeDirection = direction
