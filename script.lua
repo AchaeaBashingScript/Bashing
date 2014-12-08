@@ -511,7 +511,7 @@ keneanung.bashing.roomMessageCallback = function()
 		end
 	end
 
-	if not found then
+	if not found and not gmcp.Room.Info.ohmap then
 		cecho("\n<green>keneanung<reset>: <red>WARNING:<reset> No exit to flee found, reusing <red>" .. keneanung.bashing.fleeDirection .. "<reset>.\n")
 	end
 
