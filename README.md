@@ -14,7 +14,7 @@ Requirements
 
 - Mudlet
 - gmcp enabled
-- **svo**
+- svo, WunderSys or a queuing system with a [custom plugin](#OwnSystem)
 
 Downloads and Releases
 ----------------------
@@ -33,11 +33,12 @@ Quickstart
 
 1. Download the Bashing.mpackage
 2. Import the package into Mudlet
-3. Deactivate or delete the keybinding of F2 that comes with svo.
-4. Use the alias `kconfig bashing toggle` to enable the script
-5. Start killing things. Acceptable targets must be killed at least once in an area to register them with the bashing script.
+3. If using svo: Deactivate or delete the keybinding of F2 that comes with svo
+4. If using a custom system: [setup the system table](#OwnSystem) and configure `kconfig basing system <name>`
+5. Use the alias `kconfig bashing toggle` to enable the script
+6. Start killing things. Acceptable targets must be killed at least once in an area to register them with the bashing script.
    The basher will use the "target" variable or the in game target as a fallback, if there is no item in the prio list.
-6. Keep bashing away using the F2 keybinding to work yourself down the list.
+7. Keep bashing away using the F2 keybinding to work yourself down the list.
 
 Priority management
 -------------------
@@ -62,9 +63,10 @@ Shield handling
 
 For classes with a quick and easy way to handle shielding NPCs, the basher has a very simple way to use it.
 
-First turn the autoraze option on, using the alias `kconfig bashing raze`. This will enable switching the command used when
-the denizen you attack shields. Additionally you need to configure the command used for autorazing. That can be done with
-`kconfig bashing razecommand <command>`.
+First turn the auto raze option on, using the alias `kconfig bashing raze`. This will enable switching the command used when
+the denizen you attack shields. Additionally you need to configure the command used for auto razing. That can be done with
+`kconfig bashing razecommand <command>`. You may use `/` as a separator for multiple commands. Use `&tar` as the place holder
+for the target, if it needs to be somewhere within the command.
 
 Congratulations, you will now raze the shield of NPCs whenever needed.
 
@@ -78,11 +80,15 @@ will issue a warning in that case. You can use the alias `flee <command>` to set
 
 The first way is the manual way. Simple press the keybinding `F3` to stop attacking and move ASAP.
 
-The second way is automated and may be activiated, if the **average** damage you have taken in this room between 2 attacks is
+The second way is automated and may be activated, if the **average** damage you have taken in this room between 2 attacks is
 higher than you have at the next attack with an configurable threshold. The basher will also issue a warning, if average the
-damage between 2 attacks is higher than your current health and another theshold. You can enable and disable that with the
+damage between 2 attacks is higher than your current health and another threshold. You can enable and disable that with the
 alias `kconfig bashing autoflee` and the configure thresholds with `kconfig bashing fleeat <health amount>` and 
 `kconfig bashing warnat <health amount>`.
+
+You may specify values as a flat amount, a percentage of the maximum health (ending the config value with a `%`) or as a 
+multiple of the damage taken in the room (ending the config value with a `d`) as the security threshold (amount of health
+left after subtracting the current damage from the current health).
 
 Configuration
 -------------
@@ -104,21 +110,15 @@ The `keneanung.bashing.targetList.firstChanged` event is raised whenever the fir
 means a new taget is used. This event also gives the new target as argument to the event handlers. To access the first item
 of the target list directly, you can access `keneanung.bashing.targetList[1]`.
 
-Features in development
-=======================
+### Plugins ###
+Additions to the script can now be loaded in two ways:
+- register to the `keneanung.bashing.loaded` event and run your integration logic there. Use this approach if you need to
+   load a package/xml due to triggers/aliases/other scripts
+- the user can specify lua files that should be run after the bashing script is loaded. These scripts can be anywhere mudlet
+   can reach them. The additional files are run using the lua `dofile`.
 
-Support WunderSys
------------------
-
-[WunderSys](https://dl.dropboxusercontent.com/u/6980966/ServersideSystem/index.html) is a freely available curing system that
-is developed by Nemutaur. It is built around the server side curing and queues built into Achaea and enhances the handling,
-supports automatic curing priority switcing as well as easy configuration of used defenses.
-
-This the current development concentrates on supporting WunderSys out of the box as it is a widely used system. The
-development version now supports all feature that are supported under svo, but need to be more thoroughly tested.
-
-Support for other systems
--------------------------
+### Support for other systems ### {#OwnSystem}
+A special case of plugins is the support of custom systems.
 
 While two often used systems are supported by the bashing script, there are a multitude of other systems (private and public)
 out there. To allow integration of the bashing script into these systems, an interface was designed.
@@ -165,42 +165,16 @@ To interface the system, create a table with the following structure:
 }
 ~~~~~~~
 
-This table can be added to the `keneanung.bashing.systems` table, using your systemname as a key. The user must then
+This table can be added to the `keneanung.bashing.systems` table, using your system name as a key. The user must then
 configure the basher to use the system by choosing the name *exactly* like the key you used to add the interface table.
 
 Some further hints:
-- If your queueing supports running functions instead of sending things diresctly to the mud, queue the
+- If your queueing supports running functions instead of sending things directly to the mud, queue the
    `keneanung.bashing.nextAttack()` function and keep similar the svo implementation
 - If your queueing uses the Achaean server side queue, keep close to the WunderSys implementation
 - If your queueing is neither of those two possibilities, think about a way you can register attacks. If you have a way, you
-   can check the WunderSys implementation for tings needed to flee.
+   can check the WunderSys implementation for things needed to flee.
 
-Use server side targeting
--------------------------
-
-Server side targeting has multiple advantages:
-- Show the % of health left for the target on prompt and gmcp
-- Allow client independent target (e.g. using server side systems)
-- Use other (in game) aliases on the same target
-
-Allow other bases for the values to flee or warn
-------------------------------------------------
-
-Setting flat health values proved as not flexible enough. Especially low level characters change base health and denizen
-strength too quickly to adjust those values every time a change occured.
-
-The user may specify values as a percentage of the maximum health (ending the config value with a `%`) or as a multiple of
-the damage taken in the room (ending the config value with a `d`) as the security threshold (amount of health left after
-subtracting the current damage from the current health).
-
-Plugins
--------
-
-Additions to the script can now be loaded in two ways:
-- register to the `keneanung.bashing.loaded` event and run your integration logic there. Use this approach if you need to
-   load a package/xml due to triggers/aliases/other scripts
-- the user can specify lua files tha should be run after the bashing script is loaded. These scripts can be anywhere mudlet
-   can reach them. The additional files are run using the lua `dofile`.
 
 Acknowledgements
 ================
