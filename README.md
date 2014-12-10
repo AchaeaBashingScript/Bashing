@@ -73,8 +73,8 @@ Fleeing
 
 The basher supports 2 ways to flee from dire situations, be it a stronger NPC entering your room, a tell you need to
 concentrate to answer or luring NPCs into another room. The basher will always try to recognize the direction you entered a
-room from and flee into that direction. *If that exit is not available, it will the direction it recorded before.* It will
-issue a warning in that case. You can use the alias `flee <command>` to set that manually.
+room from and flee into that direction. *If that exit is not available, it will use the direction it recorded before.* It
+will issue a warning in that case. You can use the alias `flee <command>` to set that manually.
 
 The first way is the manual way. Simple press the keybinding `F3` to stop attacking and move ASAP.
 
@@ -174,6 +174,33 @@ Some further hints:
 - If your queueing uses the Achaean server side queue, keep close to the WunderSys implementation
 - If your queueing is neither of those two possibilities, think about a way you can register attacks. If you have a way, you
    can check the WunderSys implementation for tings needed to flee.
+
+Use server side targeting
+-------------------------
+
+Server side targeting has multiple advantages:
+- Show the % of health left for the target on prompt and gmcp
+- Allow client independent target (e.g. using server side systems)
+- Use other (in game) aliases on the same target
+
+Allow other bases for the values to flee or warn
+------------------------------------------------
+
+Setting flat health values proved as not flexible enough. Especially low level characters change base health and denizen
+strength too quickly to adjust those values every time a change occured.
+
+The user may specify values as a percentage of the maximum health (ending the config value with a `%`) or as a multiple of
+the damage taken in the room (ending the config value with a `d`) as the security threshold (amount of health left after
+subtracting the current damage from the current health).
+
+Plugins
+-------
+
+Additions to the script can now be loaded in two ways:
+- register to the `keneanung.bashing.loaded` event and run your integration logic there. Use this approach if you need to
+   load a package/xml due to triggers/aliases/other scripts
+- the user can specify lua files tha should be run after the bashing script is loaded. These scripts can be anywhere mudlet
+   can reach them. The additional files are run using the lua `dofile`.
 
 Acknowledgements
 ================
