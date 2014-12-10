@@ -14,7 +14,7 @@ Requirements
 
 - Mudlet
 - gmcp enabled
-- svo, WunderSys or a queuing system with a [custom plugin](#OwnSystem)
+- svo, WunderSys or a queuing system with a [custom plugin](#support-for-other-systems)
 
 Downloads and Releases
 ----------------------
@@ -34,7 +34,7 @@ Quickstart
 1. Download the Bashing.mpackage
 2. Import the package into Mudlet
 3. If using svo: Deactivate or delete the keybinding of F2 that comes with svo
-4. If using a custom system: [setup the system table](#OwnSystem) and configure `kconfig basing system <name>`
+4. If using a custom system: [setup the system table](#support-for-other-systems) and configure `kconfig basing system <name>`
 5. Use the alias `kconfig bashing toggle` to enable the script
 6. Start killing things. Acceptable targets must be killed at least once in an area to register them with the bashing script.
    The basher will use the "target" variable or the in game target as a fallback, if there is no item in the prio list.
@@ -117,7 +117,7 @@ Additions to the script can now be loaded in two ways:
 - the user can specify lua files that should be run after the bashing script is loaded. These scripts can be anywhere mudlet
    can reach them. The additional files are run using the lua `dofile`.
 
-### Support for other systems ### {#OwnSystem}
+### Support for other systems ###
 A special case of plugins is the support of custom systems.
 
 While two often used systems are supported by the bashing script, there are a multitude of other systems (private and public)
