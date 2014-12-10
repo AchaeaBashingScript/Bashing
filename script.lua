@@ -1,12 +1,154 @@
-keneanung.bashing.configuration.enabled = false
+keneanung = keneanung or {}
+keneanung.bashing = {}
+keneanung.bashing.configuration = {}
+keneanung.bashing.configuration.priorities = {}
+keneanung.bashing.targetList = {}
+keneanung.bashing.systems = {}
+
 keneanung.bashing.attacking = 0
-keneanung.bashing.roomDamage = 0
+keneanung.bashing.damage = 0
 keneanung.bashing.attacks = 0
+keneanung.bashing.healing = 0
+keneanung.bashing.lastHealth = 0
+
+keneanung.bashing.configuration.enabled = false
 keneanung.bashing.configuration.warning = 500
 keneanung.bashing.configuration.fleeing = 300
 keneanung.bashing.configuration.autoflee = true
 keneanung.bashing.configuration.autoraze = false
 keneanung.bashing.configuration.razecommand = "none"
+keneanung.bashing.configuration.system = "auto"
+keneanung.bashing.configuration.filesToLoad = {}
+
+keneanung.bashing.systems.svo = {
+
+	startAttack = function()
+		svo.addbalanceful("do next attack", keneanung.bashing.nextAttack)
+		svo.donext()
+	end,
+	
+	stopAttack = function()
+		svo.removebalanceful("do next attack")
+	end,
+	
+	flee = function()
+		keneanung.bashing.systems.svo.stopAttack()
+		svo.dofreefirst(keneanung.bashing.fleeDirection)
+	end,
+	
+	warnFlee = function(avg)
+		svo.boxDisplay("Better run or get ready to die!", "orange")
+	end,
+	
+	notifyFlee = function(avg)
+		svo.boxDisplay("Running as you have not enough health left.", "red")
+	end,
+
+	handleShield = function()
+		keneanung.bashing.shield = true
+	end,
+	
+	setup = function()
+		
+	end,
+	
+	teardown = function()
+		
+	end,
+	
+}
+
+keneanung.bashing.systems.wundersys = {
+
+	startAttack = function()
+		if keneanung.bashing.attacking > 0 then
+			enableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
+		 	doradd("kill &tar")
+ 	 	end
+	end,
+	
+	stopAttack = function()
+		disableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
+		dorclear()
+	end,
+	
+	flee = function()
+		keneanung.bashing.systems.wundersys.stopAttack()
+		dofreeadd(keneanung.bashing.fleeDirection)
+	end,
+	
+	warnFlee = function(avg)
+		boxDisplay("Better run or get ready to die!", "orange")
+	end,
+	
+	notifyFlee = function(avg)
+		boxDisplay("Running as you have not enough health left.", "red")
+	end,
+
+	handleShield = function()
+		if keneanung.bashing.configuration.autoraze then
+			local command
+			if keneanung.bashing.configuration.razecommand:find("&tar") then
+				command = keneanung.bashing.configuration.razecommand
+			else
+				command = keneanung.bashing.configuration.razecommand .. " &tar"	
+			end
+			dofirst(command)
+		end
+	end,
+	
+	setup = function()
+		keneanung.bashing.systems.wundersys.queueTrigger = tempTrigger("[System]: Running queued eqbal command: DOR",
+			[[
+			local system = keneanung.bashing.getSystem()
+			keneanung.bashing.attacks = keneanung.bashing.attacks + 1
+			local avgDmg = keneanung.bashing.damage / keneanung.bashing.attacks
+			local avgHeal = keneanung.bashing.healing / keneanung.bashing.attacks
+			
+			local estimatedDmg = avgDmg * 2 - avgHeal
+
+			local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
+
+			local warnat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.warning)
+
+			if estimatedDmg > gmcp.Char.Vitals.hp - fleeat and keneanung.bashing.configuration.autoflee then
+
+				system.notifyFlee(estimatedDmg)
+
+				system.flee()
+
+			else
+				if estimatedDmg > gmcp.Char.Vitals.hp - warnat then
+
+					system.warnFlee(estimatedDmg)
+
+				end
+			end
+			]])
+		disableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
+	end,
+	
+	teardown = function()
+		if keneanung.bashing.systems.wundersys.queueTrigger then
+			killTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
+		end
+	end,
+	
+}
+
+keneanung.bashing.getSystem = function()
+	local systemName
+	if keneanung.bashing.configuration.system == "auto" then
+		if svo then
+			systemName = "svo"
+		elseif sys and sys.myVersion then
+			systemName = "wundersys"
+		end
+	else
+		systemName = keneanung.bashing.configuration.system
+	end
+	return keneanung.bashing.systems[systemName]
+end
 
 keneanung.bashing.addPossibleTarget = function(targetName)
 
@@ -112,7 +254,7 @@ keneanung.bashing.shuffleDown = function(area, num)
 
 	local prios = keneanung.bashing.configuration.priorities[area]
 
-	if num < #prios then 
+	if num < #prios then
 		prios[num], prios[num+1] =  prios[num+1], prios[num]
 	end
 	keneanung.bashing.save()
@@ -146,10 +288,10 @@ keneanung.bashing.delete = function(area, num)
 end
 
 keneanung.bashing.save = function()
-  if string.char(getMudletHomeDir():byte()) == "/" then 
-		_sep = "/" 
+  if string.char(getMudletHomeDir():byte()) == "/" then
+		_sep = "/"
   	else
-		_sep = "\\" 
+		_sep = "\\"
    end -- if
   local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
   table.save(savePath, keneanung.bashing.configuration)
@@ -157,9 +299,9 @@ keneanung.bashing.save = function()
 end -- func
 
 keneanung.bashing.load = function()
-  if string.char(getMudletHomeDir():byte()) == "/" 
-   then _sep = "/" 
-    else _sep = "\\" 
+  if string.char(getMudletHomeDir():byte()) == "/"
+   then _sep = "/"
+    else _sep = "\\"
      end -- if
   local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
   if (io.exists(savePath)) then
@@ -199,6 +341,25 @@ keneanung.bashing.showConfig = function()
 	echoLink(keneanung.bashing.configuration.razecommand, "clearCmdLine() appendCmdLine('kconfig bashing razecommand ')", "Set attack to raze shields.", true)
 	resetFormat()
 	echo("\n")
+	cecho("<green>keneanung<reset>: Currently using this system: ")
+	fg("red")
+	echoLink(keneanung.bashing.configuration.system, "clearCmdLine() appendCmdLine('kconfig bashing system ')", "Set system to use.", true)
+	resetFormat()
+	echo("\n")
+	echo("\n")
+	cecho("<green>keneanung<reset>: Loading these additional files on startup:    (")
+	fg("yellow")
+	echoLink("Add new file", "keneanung.bashing.addFile()", "Add a new file to load on startup", true)
+	resetFormat()
+	echo(")")
+	for num, path in ipairs(keneanung.bashing.configuration.filesToLoad) do
+		echo("\n             " .. path .. " (")
+		fg("red")
+		echoLink("Delete", "keneanung.bashing.deleteFile(" .. num .. ")", "Don't load this file anymore", true)
+		resetFormat()
+		echo(")")
+	end
+	echo("\n")
 	echo("\n")
 	cecho("<green>keneanung<reset>: Version: <red>" .. keneanung.bashing.version .. "<reset>\n")
 end
@@ -210,26 +371,28 @@ keneanung.bashing.toggle = function(what, print)
 end
 
 keneanung.bashing.shielded = function(what)
-	if what == keneanung.bashing.targetList[1].name then
-		keneanung.bashing.shield = true
+	if what == keneanung.bashing.targetList[keneanung.bashing.attacking].name then
+		local system = keneanung.bashing.getSystem()
+		system.handleShield()
 	end
 end
 
 keneanung.bashing.flee = function()
-	svo.dofreefirst(keneanung.bashing.fleeDirection)
-	svo.removebalanceful("do next attack")
-	keneanung.bashing.attacking = 0
+	local system = keneanung.bashing.getSystem()
+	system.flee()
+	keneanung.bashing.clearTarget()
 	cecho("<green>keneanung<reset>: New order. Tactical retreat.\n")
 end
 
 keneanung.bashing.attackButton = function()
+	local system = keneanung.bashing.getSystem()
 	if keneanung.bashing.attacking == 0 then
-		svo.addbalanceful("do next attack", keneanung.bashing.nextAttack)
-		svo.donext()
+		keneanung.bashing.setTarget()
+		system.startAttack()
 		cecho("<green>keneanung<reset>: Nothing will stand in our way.\n")
 	else
-		svo.removebalanceful("do next attack")
-		keneanung.bashing.attacking = 0
+		keneanung.bashing.clearTarget()
+		system.stopAttack()
 		cecho("<green>keneanung<reset>: Lets save them for later.\n")
 	end
 end
@@ -240,7 +403,7 @@ keneanung.bashing.setFlee = function(where)
 end
 
 keneanung.bashing.setThreshold = function(newValue, what)
-	keneanung.bashing.configuration[what] = matches[2] * 1
+	keneanung.bashing.configuration[what] = matches[2]
 	cecho("<green>keneanung<reset>: "..what:title().." with a security threshhold of <red>" .. keneanung.bashing.configuration[what] .. "<reset> health\n" )
 	keneanung.bashing.save()
 end
@@ -249,6 +412,8 @@ keneanung.bashing.nextAttack = function()
 	if keneanung.bashing.configuration.enabled == false then
 		return false
 	end
+	
+	local system = keneanung.bashing.getSystem()
 
 	keneanung.bashing.attacks = keneanung.bashing.attacks + 1
 
@@ -256,22 +421,25 @@ keneanung.bashing.nextAttack = function()
 
 		local avg = keneanung.bashing.damage / keneanung.bashing.attacks
 
-		if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing and keneanung.bashing.configuration.autoflee then
+		local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
 
-			svo.givewarning_multi({initialmsg = "Running as you have not enough health left. (" .. avg .. " vs " .. gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing .. ")"})
+		local warnat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.warning)
 
-			send(keneanung.bashing.fleeDirection)
+		if avg > gmcp.Char.Vitals.hp - fleeat and keneanung.bashing.configuration.autoflee then
+
+			system.notifyFlee(avg)
+
+			system.flee()
 
 		else
-			if avg > gmcp.Char.Vitals.hp - keneanung.bashing.configuration.warning then
+			if avg > gmcp.Char.Vitals.hp - warnat then
 
-				svo.givewarning_multi({initialmsg = "You are about to die... Better run or get ready to die! (" .. avg .. " vs " .. (gmcp.Char.Vitals.hp - keneanung.bashing.configuration.fleeing) .. ")"})
+				system.warnFlee(avg)
 
 			end
 		
-			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and keneanung.bashing.configuration.razecommand or "kill"
-			send(attack .. " " .. keneanung.bashing.targetList[1].id)
-			keneanung.bashing.attacking = 1
+			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and "keneanungra" or "keneanungki"
+			send(attack, false)
 			keneanung.bashing.shield = false
 			return true
 
@@ -279,27 +447,8 @@ keneanung.bashing.nextAttack = function()
 
 	end
 
-	local tar
-
-	if target ~= nil and target ~='' then
-		tar = target
-	elseif gmcp.Char.Status.target ~= "None" then
-		tar = gmcp.Char.Status.target
-	end
-
-	if tar ~= nil then
-
-		for _, item in ipairs(keneanung.bashing.room) do
-			if item.attrib and item.attrib:find("m") and item.name:lower():find(tar:lower()) then
-				keneanung.bashing.targetList[1] = item
-				return keneanung.bashing.nextAttack()
-			end
-		end
-
-	end
-
-	svo.removebalanceful("do next attack")
-	keneanung.bashing.attacking = 0
+	keneanung.bashing.clearTarget()
+	system.stopAttack()
 	return false
 
 end
@@ -390,7 +539,6 @@ end
 
 keneanung.bashing.addTarget = function(item)
 
-
 	local targets = keneanung.bashing.targetList
 	local prios = keneanung.bashing.configuration.priorities[gmcp.Room.Info.area]
 	local insertAt
@@ -429,7 +577,7 @@ keneanung.bashing.addTarget = function(item)
 				insertAt = iMid
 				found = true
 				break
-			elseif targetPrio < existingPrio then
+			elseif existingPrio == nil or targetPrio < existingPrio then
 				iEnd = iMid - 1
 			else
 				iStart = iMid + 1
@@ -441,7 +589,7 @@ keneanung.bashing.addTarget = function(item)
 			insertAt = iStart
 		end
 
-		if insertAt <= keneanung.bashing.attacking then
+		if insertAt <= keneanung.bashing.attacking and #keneanung.bashing.targetList >= keneanung.bashing.attacking then
 			insertAt = keneanung.bashing.attacking + 1
 		end
 
@@ -469,6 +617,7 @@ keneanung.bashing.removeTarget = function(item)
 		table.remove(targets, number)
 		if number <= keneanung.bashing.attacking then
 			keneanung.bashing.attacking = keneanung.bashing.attacking - 1
+			keneanung.bashing.setTarget()
 		end
 	end
 
@@ -484,8 +633,8 @@ keneanung.bashing.prioListChangedCallback = function()
 end
 
 keneanung.bashing.roomMessageCallback = function()
-	if keneanung.bashing.lastRoom == nil then 
-		keneanung.bashing.lastRoom = gmcp.Room.Info.num 
+	if keneanung.bashing.lastRoom == nil then
+		keneanung.bashing.lastRoom = gmcp.Room.Info.num
 		keneanung.bashing.fleeDirection = "north"
 	end
 
@@ -494,9 +643,15 @@ keneanung.bashing.roomMessageCallback = function()
 	end
 
 	keneanung.bashing.damage = 0
+	keneanung.bashing.healing = 0
 	keneanung.bashing.attacks = 0
 	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
 	keneanung.bashing.shield = false
+	if keneanung.bashing.attacking > 0 then
+		keneanung.bashing.clearTarget()
+		local system = keneanung.bashing.getSystem()
+		system.stopAttack()
+	end
 
 	local exits = getRoomExits(gmcp.Room.Info.num) or gmcp.Room.Info.exits
 	local found = false
@@ -522,8 +677,12 @@ keneanung.bashing.vitalsChangeRecord = function()
 
 	if keneanung.bashing.attacking == 0 then return end
 
-	if keneanung.bashing.lastHealth - gmcp.Char.Vitals.hp > 0 then
-		keneanung.bashing.damage = keneanung.bashing.damage + keneanung.bashing.lastHealth - gmcp.Char.Vitals.hp
+	local difference = keneanung.bashing.lastHealth - gmcp.Char.Vitals.hp
+
+	if difference > 0 then
+		keneanung.bashing.damage = keneanung.bashing.damage + difference
+	elseif difference < 0 then
+		keneanung.bashing.healing = keneanung.bashing.healing + math.abs(difference)
 	end
 
 	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
@@ -533,7 +692,106 @@ end
 keneanung.bashing.setRazeCommand = function(what)
 	keneanung.bashing.configuration.razecommand = what
 	cecho("<green>keneanung<reset>: Razing shields with <red>" .. keneanung.bashing.configuration.razecommand .. "<reset>\n" )
+	keneanung.bashing.setRazeAlias()
+	keneanung.bashing.save()
+end
+
+keneanung.bashing.setTarget = function()
+	if #keneanung.bashing.targetList == 0 then
+		local tar
+		local targetSet = false
+
+		if target ~= nil and target ~='' then
+			tar = target
+		elseif gmcp.Char.Status.target ~= "None" then
+			tar = gmcp.Char.Status.target
+		end
+
+		if tar ~= nil then
+
+			for _, item in ipairs(keneanung.bashing.room) do
+				if item.attrib and item.attrib:find("m") and item.name:lower():find(tar:lower()) then
+					keneanung.bashing.targetList[#keneanung.bashing.targetList + 1]= {
+						id = item.id,
+						name = item.name
+					}
+					targetSet = true
+				end
+			end
+		end
+		if not targetSet then
+			keneanung.bashing.clearTarget()
+			local system = keneanung.bashing.getSystem()
+			system.stopAttack()
+			return
+		end
+	end
+	if keneanung.bashing.attacking == 0 or keneanung.bashing.targetList[keneanung.bashing.attacking].id ~= gmcp.Char.Status.target then
+		keneanung.bashing.attacking = keneanung.bashing.attacking + 1
+	end
+	sendGMCP('IRE.Target.Set "' .. keneanung.bashing.targetList[keneanung.bashing.attacking].id .. '"')
+end
+
+keneanung.bashing.clearTarget = function()
+	if gmcp.IRE.Target and gmcp.IRE.Target.Set ~= "" then
+		sendGMCP('IRE.Target.Set "0"')
+	end
+	keneanung.bashing.attacking = 0
+end
+
+keneanung.bashing.login = function()
+	gmod.enableModule("keneanung.bashing", "IRE.Target")
+	send("setalias keneanungki kill &tar", false)
+	keneanung.bashing.setRazeAlias()
+	local system = keneanung.bashing.getSystem()
+	system.setup()
+end
+
+keneanung.bashing.setRazeAlias = function()
+	local razeCommand
+	if keneanung.bashing.configuration.razecommand:find("&tar") then
+		razeCommand = keneanung.bashing.configuration.razecommand
+	else
+		razeCommand = keneanung.bashing.configuration.razecommand .. " &tar"	
+	end
+	send("setalias keneanungra " .. razeCommand, false)	
+end
+
+keneanung.bashing.setSystem = function(systemName)
+	local system = keneanung.bashing.getSystem()
+	system.teardown()
+	keneanung.bashing.configuration.system = systemName
+	cecho("<green>keneanung<reset>: Using <red>" .. keneanung.bashing.configuration.system .. "<reset> as queuing system.\n" )
+	keneanung.bashing.save()
+	local system = keneanung.bashing.getSystem()
+	system.setup()
+end
+
+keneanung.bashing.calcFleeValue = function(configValue)
+	if configValue:ends("%") then
+		return configValue:match("%d+") * gmcp.Char.Vitals.maxhp / 100
+	elseif configValue:ends("d") then
+		return configValue:match("(.-)d") * keneanung.bashing.damage / keneanung.bashing.attacks
+	else
+		return configValue * 1
+	end
+end
+
+keneanung.bashing.addFile = function()
+	local path = invokeFileDialog(true, "Which file do you want to add?")
+	if path ~= "" then
+		keneanung.bashing.configuration.filesToLoad[#keneanung.bashing.configuration.filesToLoad + 1] = path
+	end
+	keneanung.bashing.save()
+end
+
+keneanung.bashing.deleteFile = function(num)
+	table.remove(keneanung.bashing.configuration.filesToLoad, num)
 	keneanung.bashing.save()
 end
 
 keneanung.bashing.load()
+for _, file in ipairs(keneanung.bashing.configuration.filesToLoad) do
+	dofile(file)
+end
+tempTimer(0, [[raiseEvent("keneanung.bashing.loaded")]])

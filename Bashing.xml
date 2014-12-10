@@ -74,6 +74,26 @@
                         <integer>1</integer>
                     </regexCodePropertyList>
                 </Trigger>
+                <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+                    <name>login</name>
+                    <script>keneanung.bashing.login()</script>
+                    <triggerType>0</triggerType>
+                    <conditonLineDelta>0</conditonLineDelta>
+                    <mStayOpen>0</mStayOpen>
+                    <mCommand></mCommand>
+                    <packageName></packageName>
+                    <mFgColor>#ff0000</mFgColor>
+                    <mBgColor>#ffff00</mBgColor>
+                    <mSoundFile></mSoundFile>
+                    <colorTriggerFgColor>#000000</colorTriggerFgColor>
+                    <colorTriggerBgColor>#000000</colorTriggerBgColor>
+                    <regexCodeList>
+                        <string>Password correct\. Welcome to Achaea\.$</string>
+                    </regexCodeList>
+                    <regexCodePropertyList>
+                        <integer>1</integer>
+                    </regexCodePropertyList>
+                </Trigger>
             </TriggerGroup>
         </TriggerGroup>
     </TriggerPackage>
@@ -124,14 +144,14 @@
                     <script>keneanung.bashing.setThreshold(matches[2], &quot;fleeing&quot;)</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>^kconfig bashing fleeat (\d+)$</regex>
+                    <regex>^kconfig bashing fleeat (\d+[%d]?)$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>set warning threshhold</name>
                     <script>keneanung.bashing.setThreshold(matches[2], &quot;warning&quot;)</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>^kconfig bashing warnat (\d+)$</regex>
+                    <regex>^kconfig bashing warnat (\d+[%d]?)$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>toggle automatic fleeing</name>
@@ -160,6 +180,13 @@
                     <command></command>
                     <packageName></packageName>
                     <regex>^kconfig bashing raze$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>set system</name>
+                    <script>keneanung.bashing.setSystem(matches[2])</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing system (\w+)$</regex>
                 </Alias>
             </AliasGroup>
         </AliasGroup>
