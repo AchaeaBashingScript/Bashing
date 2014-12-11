@@ -768,9 +768,10 @@ keneanung.bashing.setSystem = function(systemName)
 end
 
 keneanung.bashing.calcFleeValue = function(configValue)
-	if configValue:ends("%") then
+	local isString = type(configValue) == "string"
+	if isString and configValue:ends("%") then
 		return configValue:match("%d+") * gmcp.Char.Vitals.maxhp / 100
-	elseif configValue:ends("d") then
+	elseif isString and configValue:ends("d") then
 		return configValue:match("(.-)d") * keneanung.bashing.damage / keneanung.bashing.attacks
 	else
 		return configValue * 1
