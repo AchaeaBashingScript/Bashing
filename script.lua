@@ -741,6 +741,9 @@ end
 
 keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Target")
+	sendGMCP([[Core.Supports.Add ["IRE.Target 1"] ]])   -- register the GMCP module independently from gmod.
+														-- This way we can reuse sessions (gmod won't and reenableModules
+														-- is buggy for 2.1)
 	send("setalias keneanungki kill &tar", false)
 	keneanung.bashing.setRazeAlias()
 	local system = keneanung.bashing.getSystem()
