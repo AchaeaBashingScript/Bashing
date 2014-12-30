@@ -758,6 +758,7 @@ end
 
 keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Target")
+	sendGMCP([[Core.Supports.Add ["IRE.Target 1"] ]])   -- register the GMCP module independently from gmod.
 	keneanung.bashing.setAlias("attackcommand")
 	keneanung.bashing.setAlias("razecommand")
 	local system = keneanung.bashing.getSystem()
