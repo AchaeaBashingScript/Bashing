@@ -17,6 +17,7 @@ keneanung.bashing.configuration.fleeing = 300
 keneanung.bashing.configuration.autoflee = true
 keneanung.bashing.configuration.autoraze = false
 keneanung.bashing.configuration.razecommand = "none"
+keneanung.bashing.configuration.attackcommand = "kill"
 keneanung.bashing.configuration.system = "auto"
 keneanung.bashing.configuration.filesToLoad = {}
 
@@ -63,7 +64,13 @@ keneanung.bashing.systems.wundersys = {
 	startAttack = function()
 		if keneanung.bashing.attacking > 0 then
 			enableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
-		 	doradd("kill &tar")
+			local command
+			if keneanung.bashing.configuration.attackcommand:find("&tar") then
+				command = keneanung.bashing.configuration.attackcommand
+			else
+				command = keneanung.bashing.configuration.attackcommand .. " &tar"
+			end
+			dofirst(command)
  	 	end
 	end,
 	
@@ -134,6 +141,11 @@ keneanung.bashing.systems.wundersys = {
 		end
 	end,
 	
+}
+
+local aliases = {
+	["razecommand"]   = "keneanungra",
+	["attackcommand"] = "keneanungki",
 }
 
 keneanung.bashing.getSystem = function()
@@ -331,6 +343,11 @@ keneanung.bashing.showConfig = function()
 	echoLink(keneanung.bashing.configuration.fleeing, "clearCmdLine() appendCmdLine('kconfig bashing fleeat ')", "Set flee threshold.", true)
 	resetFormat()
 	echo(" health\n" )
+	cecho("<green>keneanung<reset>: Attack on shielding is set to ")
+	fg("red")
+	echoLink(keneanung.bashing.configuration.attackcommand, "clearCmdLine() appendCmdLine('kconfig bashing attackcommand ')", "Set attack.", true)
+	resetFormat()
+	echo("\n")
 	cecho("<green>keneanung<reset>: Autoraze is ")
 	fg("red")
 	echoLink(keneanung.bashing.configuration.autoraze and "on" or "off", "keneanung.bashing.toggle('autoraze', 'Autorazing')", "Turn autorazing " .. (keneanung.bashing.configuration.autoraze and "off" or "on"), true)
@@ -689,10 +706,10 @@ keneanung.bashing.vitalsChangeRecord = function()
 
 end
 
-keneanung.bashing.setRazeCommand = function(what)
-	keneanung.bashing.configuration.razecommand = what
-	cecho("<green>keneanung<reset>: Razing shields with <red>" .. keneanung.bashing.configuration.razecommand .. "<reset>\n" )
-	keneanung.bashing.setRazeAlias()
+keneanung.bashing.setCommand = function(command, what)
+	keneanung.bashing.configuration[command] = what
+	cecho("<green>keneanung<reset>: " .. command .. " is now <red>" .. keneanung.bashing.configuration[command] .. "<reset>\n" )
+	keneanung.bashing.setAlias(command)
 	keneanung.bashing.save()
 end
 
@@ -741,20 +758,20 @@ end
 
 keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Target")
-	send("setalias keneanungki kill &tar", false)
-	keneanung.bashing.setRazeAlias()
+	keneanung.bashing.setAlias("attackcommand")
+	keneanung.bashing.setAlias("razecommand")
 	local system = keneanung.bashing.getSystem()
 	system.setup()
 end
 
-keneanung.bashing.setRazeAlias = function()
-	local razeCommand
-	if keneanung.bashing.configuration.razecommand:find("&tar") then
-		razeCommand = keneanung.bashing.configuration.razecommand
+keneanung.bashing.setAlias = function(command)
+	local attackCommand
+	if keneanung.bashing.configuration[command]:find("&tar") then
+		attackCommand = keneanung.bashing.configuration[command]
 	else
-		razeCommand = keneanung.bashing.configuration.razecommand .. " &tar"	
+		attackCommand = keneanung.bashing.configuration[command] .. " &tar"
 	end
-	send("setalias keneanungra " .. razeCommand, false)	
+	send(string.format("setalias %s %s", aliases[command], attackCommand), false)
 end
 
 keneanung.bashing.setSystem = function(systemName)
