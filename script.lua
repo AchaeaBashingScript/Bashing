@@ -107,7 +107,7 @@ keneanung.bashing.systems.wundersys = {
 	setup = function()
 		keneanung.bashing.systems.wundersys.queueTrigger = tempTrigger("[System]: Running queued eqbal command: DOR",
 			[[
-			local system = keneanung.bashing.getSystem()
+			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 			keneanung.bashing.attacks = keneanung.bashing.attacks + 1
 			local avgDmg = keneanung.bashing.damage / keneanung.bashing.attacks
 			local avgHeal = keneanung.bashing.healing / keneanung.bashing.attacks
@@ -148,19 +148,20 @@ local aliases = {
 	["attackcommand"] = "keneanungki",
 }
 
-keneanung.bashing.getSystem = function()
+local getSystem = function(tbl, index)
 	local systemName
-	if keneanung.bashing.configuration.system == "auto" then
+	if index == "auto" then
 		if svo then
-			systemName = "svo"
+			return keneanung.bashing.systems.svo
 		elseif sys and sys.myVersion then
-			systemName = "wundersys"
+			return keneanung.bashing.systems.wundersys
 		end
-	else
-		systemName = keneanung.bashing.configuration.system
 	end
-	return keneanung.bashing.systems[systemName]
+	cecho("\n<green>keneanung<reset>: <orange>Something went completely wrong: You are using an unknown system ('"..index.."'). Please use 'kconfig bashing system <name>' to correct this.")
+	return nil
 end
+
+setmetatable(keneanung.bashing.systems, { __index = getSystem } )
 
 keneanung.bashing.addPossibleTarget = function(targetName)
 
@@ -389,20 +390,20 @@ end
 
 keneanung.bashing.shielded = function(what)
 	if what == keneanung.bashing.targetList[keneanung.bashing.attacking].name then
-		local system = keneanung.bashing.getSystem()
+		local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 		system.handleShield()
 	end
 end
 
 keneanung.bashing.flee = function()
-	local system = keneanung.bashing.getSystem()
+	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.flee()
 	keneanung.bashing.clearTarget()
 	cecho("<green>keneanung<reset>: New order. Tactical retreat.\n")
 end
 
 keneanung.bashing.attackButton = function()
-	local system = keneanung.bashing.getSystem()
+	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	if keneanung.bashing.attacking == 0 then
 		keneanung.bashing.setTarget()
 		system.startAttack()
@@ -430,7 +431,7 @@ keneanung.bashing.nextAttack = function()
 		return false
 	end
 	
-	local system = keneanung.bashing.getSystem()
+	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 
 	keneanung.bashing.attacks = keneanung.bashing.attacks + 1
 
@@ -666,7 +667,7 @@ keneanung.bashing.roomMessageCallback = function()
 	keneanung.bashing.shield = false
 	if keneanung.bashing.attacking > 0 then
 		keneanung.bashing.clearTarget()
-		local system = keneanung.bashing.getSystem()
+		local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 		system.stopAttack()
 	end
 
@@ -738,7 +739,7 @@ keneanung.bashing.setTarget = function()
 		end
 		if not targetSet then
 			keneanung.bashing.clearTarget()
-			local system = keneanung.bashing.getSystem()
+			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 			system.stopAttack()
 			return
 		end
@@ -761,7 +762,7 @@ keneanung.bashing.login = function()
 	sendGMCP([[Core.Supports.Add ["IRE.Target 1"] ]])   -- register the GMCP module independently from gmod.
 	keneanung.bashing.setAlias("attackcommand")
 	keneanung.bashing.setAlias("razecommand")
-	local system = keneanung.bashing.getSystem()
+	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.setup()
 end
 
@@ -776,12 +777,18 @@ keneanung.bashing.setAlias = function(command)
 end
 
 keneanung.bashing.setSystem = function(systemName)
-	local system = keneanung.bashing.getSystem()
-	system.teardown()
+	if not rawget(keneanung.bashing.systems, systemName) and systemName ~= "auto" then
+		cecho("<green>keneanung<reset>: <orange>System not changed as '" .. systemName .. "' is unknown.")
+		return
+	end
+	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+	if system then
+		system.teardown()
+	end
 	keneanung.bashing.configuration.system = systemName
 	cecho("<green>keneanung<reset>: Using <red>" .. keneanung.bashing.configuration.system .. "<reset> as queuing system.\n" )
 	keneanung.bashing.save()
-	local system = keneanung.bashing.getSystem()
+	system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.setup()
 end
 
