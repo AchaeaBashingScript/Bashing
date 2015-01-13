@@ -21,6 +21,17 @@ keneanung.bashing.configuration.attackcommand = "kill"
 keneanung.bashing.configuration.system = "auto"
 keneanung.bashing.configuration.filesToLoad = {}
 
+local kecho = function(what, command, popup)
+
+	what = "\n<green>keneanung<reset>: " .. what
+	if command then
+		cechoLink(what, command, popup or "", true)
+	else
+		cecho(what)
+	end
+
+end
+
 keneanung.bashing.systems.svo = {
 
 	startAttack = function()
@@ -157,7 +168,7 @@ local getSystem = function(tbl, index)
 			return keneanung.bashing.systems.wundersys
 		end
 	end
-	cecho("\n<green>keneanung<reset>: <orange>Something went completely wrong: You are using an unknown system ('"..index.."'). Please use 'kconfig bashing system <name>' to correct this.")
+	kecho("<orange>Something went completely wrong: You are using an unknown system ('"..index.."'). Please use 'kconfig bashing system <name>' to correct this.")
 	return nil
 end
 
@@ -170,7 +181,7 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 
 	if prios[area] == nil then
 		prios[area] = {}
-		cecho("\n<green>keneanung<reset>: Added the new area <red>" .. area .. "<reset> to the configuration.")
+		kecho("Added the new area <red>" .. area .. "<reset> to the configuration.")
 	end
 
 	if not table.contains(prios[area], targetName) then
@@ -178,7 +189,7 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 		local before = keneanung.bashing.idOnly(keneanung.bashing.targetList)
 		
 		table.insert(prios[area], targetName)
-		cecho("\n<green>keneanung<reset>: Added the new possible target <red>" .. targetName .. "<reset> to the end of the priority list.")
+		kecho("Added the new possible target <red>" .. targetName .. "<reset> to the end of the priority list.")
 		keneanung.bashing.configuration.priorities = prios
 
 		keneanung.bashing.save()
@@ -199,14 +210,9 @@ end
 
 keneanung.bashing.showAreasFiltered = function(filtered)
 
-	cecho("<green>keneanung<reset>: Which area would you like to configure:\n")
+	kecho("Which area would you like to configure:\n")
 	for area, _ in pairs(filtered) do
-		echo("   (")
-		setUnderline(true)
-		fg("orange")
-		echoLink(string.format("%s", area),[[keneanung.bashing.managePrios("]]..area..[[")]],"Show priority list for '" .. area .."",true)
-		resetFormat()
-		echo(")\n")
+		cechoLink("   (<orange>" .. area .. "<reset>)\n",[[keneanung.bashing.managePrios("]]..area..[[")]],"Show priority list for '" .. area .."",true)
 	end
 end
 
@@ -224,7 +230,7 @@ keneanung.bashing.managePrios = function(area)
 	end
 
 	if table.is_empty(possibleMatches) then
-		cecho("<green>keneanung<reset>: No targets for <red>" .. area .. "<reset> found yet!\n")
+		kecho("No targets for <red>" .. area .. "<reset> found yet!\n")
 		return
 	elseif table.size(possibleMatches) == 1 then
 		for areaName, _ in pairs(possibleMatches) do
@@ -237,27 +243,14 @@ keneanung.bashing.managePrios = function(area)
 
 	local prios = keneanung.bashing.configuration.priorities[area]
 
-	cecho("<green>keneanung<reset>: Possible targets for <red>" .. area .. "<reset>:\n")
+	kecho("Possible targets for <red>" .. area .. "<reset>:\n")
 	for num, item in ipairs(prios) do
 		echo("     ")
-		fg("antique_white")
-		echoLink("(", [[keneanung.bashing.shuffleUp("]]..area..[[", ]] .. num .. [[)]], "Shuffle " .. item .. " one step up.", true)
-		fg("light_blue")
-		echoLink("^^", [[keneanung.bashing.shuffleUp("]]..area..[[", ]] .. num .. [[)]], "Shuffle " .. item .. " one step up.", true)
-		fg("antique_white")
-		echoLink(")", [[keneanung.bashing.shuffleUp("]]..area..[[", ]] .. num .. [[)]], "Shuffle " .. item .. " one step up.", true)
+		cechoLink("<antique_white>(<light_blue>^^<antique_white>)", [[keneanung.bashing.shuffleUp("]]..area..[[", ]] .. num .. [[)]], "Shuffle " .. item .. " one step up.", true)
 		echo(" ")
-		echoLink("(", [[keneanung.bashing.shuffleDown("]]..area..[[", ]] .. num .. [[)]], "Shuffle " .. item .. " one step down.", true)
-		fg("red")
-		echoLink("vv", [[keneanung.bashing.shuffleDown("]]..area..[[", ]] .. num .. [[)]], "Shuffle " .. item .. " one step down.", true)
-		fg("antique_white")
-		echoLink(")", [[keneanung.bashing.shuffleDown("]]..area..[[", ]] .. num .. [[)]], "Shuffle " .. item .. " one step down.", true)
+		cechoLink("<antique_white>(<red>vv<antique_white>)", [[keneanung.bashing.shuffleDown("]]..area..[[", ]] .. num .. [[)]], "Shuffle " .. item .. " one step down.", true)
 		echo(" ")
-		echoLink("(", [[keneanung.bashing.delete("]]..area..[[", ]] .. num .. [[)]], "Delete " .. item .. " from list.", true)
-		fg("gold")
-		echoLink("DD", [[keneanung.bashing.delete("]]..area..[[", ]] .. num .. [[)]], "Delete " .. item .. " from list.", true)
-		fg("antique_white")
-		echoLink(")", [[keneanung.bashing.delete("]]..area..[[", ]] .. num .. [[)]], "Delete " .. item .. " from list.", true)
+		cechoLink("<antique_white>(<gold>DD<antique_white>)", [[keneanung.bashing.delete("]]..area..[[", ]] .. num .. [[)]], "Delete " .. item .. " from list.", true)
 		resetFormat()
 		echo(" " .. item .. "\n")
 	end
@@ -324,67 +317,103 @@ keneanung.bashing.load = function()
 end -- func
 
 keneanung.bashing.showConfig = function()
-	cecho("<green>keneanung<reset>: Bashing is ")
-	fg("red")
-	echoLink(keneanung.bashing.configuration.enabled and "on" or "off", "keneanung.bashing.toggle('enabled', 'Bashing')", "Turn bashing " .. (keneanung.bashing.configuration.enabled and "off" or "on"), true)
-	resetFormat()
+	kecho(
+		string.format(
+			"Bashing is <red>%s<reset>",
+			keneanung.bashing.configuration.enabled and "on" or "off"
+		),
+		"keneanung.bashing.toggle('enabled', 'Bashing')",
+		string.format(
+			"Turn bashing %s",
+			keneanung.bashing.configuration.enabled and "off" or "on"
+		)
+	)
+
+	kecho(
+		string.format(
+			"Automatic fleeing is <red>%s<reset>",
+			keneanung.bashing.configuration.autoflee and "on" or "off"
+		),
+		"keneanung.bashing.toggle('autoflee', 'Fleeing')",
+		string.format(
+			"Turn fleeing %s",
+			keneanung.bashing.configuration.autoflee and "off" or "on"
+		)
+	)
+
+	kecho(
+		string.format(
+			"Warning at a security threshhold of <red>%s<reset> health",
+			keneanung.bashing.configuration.warning
+		),
+		"clearCmdLine() appendCmdLine('kconfig bashing warnat ')",
+		"Set warn threshold."
+	)
+
+	kecho(
+		string.format(
+			"Fleeing at a security threshhold of <red>%s<reset> health",
+			keneanung.bashing.configuration.fleeing
+		),
+		"clearCmdLine() appendCmdLine('kconfig bashing fleeat ')",
+		"Set flee threshold."
+	)
+
+	kecho(
+		string.format(
+			"Attack is set to <red>%s<reset>",
+			keneanung.bashing.configuration.attackcommand
+		),
+		"clearCmdLine() appendCmdLine('kconfig bashing attackcommand ')",
+		"Set attack."
+	)
+
+	kecho(
+		string.format(
+			"Autoraze is <red>%s<reset>",
+			keneanung.bashing.configuration.autoraze and "on" or "off"
+		),
+		"keneanung.bashing.toggle('autoraze', 'Autorazing')",
+		string.format(
+			"Turn autorazing %s",
+			keneanung.bashing.configuration.autoraze and "off" or "on"
+		)
+	)
+
+	kecho(
+		string.format(
+			"Special attack on shielding is set to <red>%s<reset>",
+			keneanung.bashing.configuration.razecommand
+		),
+		"clearCmdLine() appendCmdLine('kconfig bashing razecommand ')",
+		"Set attack to raze shields."
+	)
+
+	kecho(
+		string.format(
+			"Currently using this system: <red>%s<reset>",
+			keneanung.bashing.configuration.system
+		),
+		"clearCmdLine() appendCmdLine('kconfig bashing system ')",
+		"Set system to use."
+	)
+
 	echo("\n")
-	cecho("<green>keneanung<reset>: Automatic fleeing is ")
-	fg("red")
-	echoLink(keneanung.bashing.configuration.autoflee and "on" or "off", "keneanung.bashing.toggle('autoflee', 'Fleeing')", "Turn fleeing " .. (keneanung.bashing.configuration.autoflee and "off" or "on"), true)
-	resetFormat()
-	echo("\n")
-	cecho("<green>keneanung<reset>: Warning at a security threshhold of ")
-	fg("red")
-	echoLink(keneanung.bashing.configuration.warning, "clearCmdLine() appendCmdLine('kconfig bashing warnat ')", "Set warn threshold.", true)
-	resetFormat()
-	echo(" health\n" )
-	cecho("<green>keneanung<reset>: Fleeing at a security threshhold of ")
-	fg("red")
-	echoLink(keneanung.bashing.configuration.fleeing, "clearCmdLine() appendCmdLine('kconfig bashing fleeat ')", "Set flee threshold.", true)
-	resetFormat()
-	echo(" health\n" )
-	cecho("<green>keneanung<reset>: Attack is set to ")
-	fg("red")
-	echoLink(keneanung.bashing.configuration.attackcommand, "clearCmdLine() appendCmdLine('kconfig bashing attackcommand ')", "Set attack.", true)
-	resetFormat()
-	echo("\n")
-	cecho("<green>keneanung<reset>: Autoraze is ")
-	fg("red")
-	echoLink(keneanung.bashing.configuration.autoraze and "on" or "off", "keneanung.bashing.toggle('autoraze', 'Autorazing')", "Turn autorazing " .. (keneanung.bashing.configuration.autoraze and "off" or "on"), true)
-	resetFormat()
-	echo("\n")
-	cecho("<green>keneanung<reset>: Special attack on shielding is set to ")
-	fg("red")
-	echoLink(keneanung.bashing.configuration.razecommand, "clearCmdLine() appendCmdLine('kconfig bashing razecommand ')", "Set attack to raze shields.", true)
-	resetFormat()
-	echo("\n")
-	cecho("<green>keneanung<reset>: Currently using this system: ")
-	fg("red")
-	echoLink(keneanung.bashing.configuration.system, "clearCmdLine() appendCmdLine('kconfig bashing system ')", "Set system to use.", true)
-	resetFormat()
-	echo("\n")
-	echo("\n")
-	cecho("<green>keneanung<reset>: Loading these additional files on startup:    (")
-	fg("yellow")
-	echoLink("Add new file", "keneanung.bashing.addFile()", "Add a new file to load on startup", true)
-	resetFormat()
-	echo(")")
+
+	kecho("Loading these additional files on startup:    ")
+	cechoLink("(<yellow>Add new file<reset>)", "keneanung.bashing.addFile()", "Add a new file to load on startup", true)
 	for num, path in ipairs(keneanung.bashing.configuration.filesToLoad) do
 		echo("\n             " .. path .. " (")
-		fg("red")
-		echoLink("Delete", "keneanung.bashing.deleteFile(" .. num .. ")", "Don't load this file anymore", true)
-		resetFormat()
-		echo(")")
+		cechoLink("(<red>Delete<reset>)", "keneanung.bashing.deleteFile(" .. num .. ")", "Don't load this file anymore", true)
 	end
 	echo("\n")
-	echo("\n")
-	cecho("<green>keneanung<reset>: Version: <red>" .. keneanung.bashing.version .. "<reset>\n")
+
+	kecho("Version: <red>" .. keneanung.bashing.version .. "<reset>")
 end
 
 keneanung.bashing.toggle = function(what, print)
 	keneanung.bashing.configuration[what] = not keneanung.bashing.configuration[what]
-	cecho("<green>keneanung<reset>: " .. print .. " <red>" .. (keneanung.bashing.configuration[what] and "enabled" or "disabled") .. "\n" )
+	kecho(print .. " <red>" .. (keneanung.bashing.configuration[what] and "enabled" or "disabled") .. "\n" )
 	keneanung.bashing.save()
 end
 
@@ -399,7 +428,7 @@ keneanung.bashing.flee = function()
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.flee()
 	keneanung.bashing.clearTarget()
-	cecho("<green>keneanung<reset>: New order. Tactical retreat.\n")
+	kecho("New order. Tactical retreat.\n")
 end
 
 keneanung.bashing.attackButton = function()
@@ -407,22 +436,22 @@ keneanung.bashing.attackButton = function()
 	if keneanung.bashing.attacking == 0 then
 		keneanung.bashing.setTarget()
 		system.startAttack()
-		cecho("<green>keneanung<reset>: Nothing will stand in our way.\n")
+		kecho("Nothing will stand in our way.\n")
 	else
 		keneanung.bashing.clearTarget()
 		system.stopAttack()
-		cecho("<green>keneanung<reset>: Lets save them for later.\n")
+		kecho("Lets save them for later.\n")
 	end
 end
 
 keneanung.bashing.setFlee = function(where)
 	keneanung.bashing.fleeDirection = where
-	cecho("<green>keneanung<reset>: Fleeing to the <red>" .. keneanung.bashing.fleeDirection .. "\n" )
+	kecho("Fleeing to the <red>" .. keneanung.bashing.fleeDirection .. "\n" )
 end
 
 keneanung.bashing.setThreshold = function(newValue, what)
 	keneanung.bashing.configuration[what] = matches[2]
-	cecho("<green>keneanung<reset>: "..what:title().." with a security threshhold of <red>" .. keneanung.bashing.configuration[what] .. "<reset> health\n" )
+	kecho(what:title().." with a security threshhold of <red>" .. keneanung.bashing.configuration[what] .. "<reset> health\n" )
 	keneanung.bashing.save()
 end
 
@@ -644,7 +673,7 @@ keneanung.bashing.removeTarget = function(item)
 end
 
 keneanung.bashing.prioListChangedCallback = function()
-	cecho("\n<green>keneanung<reset>: Priority list changed to:\n")
+	kecho("Priority list changed to:\n")
 	for _, tar in ipairs(keneanung.bashing.targetList) do
 		cecho("	<red>" .. tar.name .. "<reset>\n")
 	end
@@ -685,7 +714,7 @@ keneanung.bashing.roomMessageCallback = function()
 	end
 
 	if not found and not gmcp.Room.Info.ohmap then
-		cecho("\n<green>keneanung<reset>: <red>WARNING:<reset> No exit to flee found, reusing <red>" .. keneanung.bashing.fleeDirection .. "<reset>.\n")
+		kecho("<red>WARNING:<reset> No exit to flee found, reusing <red>" .. keneanung.bashing.fleeDirection .. "<reset>.\n")
 	end
 
 	keneanung.bashing.lastRoom = gmcp.Room.Info.num
@@ -709,7 +738,7 @@ end
 
 keneanung.bashing.setCommand = function(command, what)
 	keneanung.bashing.configuration[command] = what
-	cecho("<green>keneanung<reset>: " .. command .. " is now <red>" .. keneanung.bashing.configuration[command] .. "<reset>\n" )
+	kecho(command .. " is now <red>" .. keneanung.bashing.configuration[command] .. "<reset>\n" )
 	keneanung.bashing.setAlias(command)
 	keneanung.bashing.save()
 end
@@ -778,7 +807,7 @@ end
 
 keneanung.bashing.setSystem = function(systemName)
 	if not rawget(keneanung.bashing.systems, systemName) and systemName ~= "auto" then
-		cecho("<green>keneanung<reset>: <orange>System not changed as '" .. systemName .. "' is unknown.")
+		kecho("<orange>System not changed as '" .. systemName .. "' is unknown.")
 		return
 	end
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
@@ -786,7 +815,7 @@ keneanung.bashing.setSystem = function(systemName)
 		system.teardown()
 	end
 	keneanung.bashing.configuration.system = systemName
-	cecho("<green>keneanung<reset>: Using <red>" .. keneanung.bashing.configuration.system .. "<reset> as queuing system.\n" )
+	kecho("Using <red>" .. keneanung.bashing.configuration.system .. "<reset> as queuing system.\n" )
 	keneanung.bashing.save()
 	system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.setup()
