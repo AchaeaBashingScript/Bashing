@@ -81,7 +81,7 @@ keneanung.bashing.systems.wundersys = {
 			else
 				command = keneanung.bashing.configuration.attackcommand .. " &tar"
 			end
-			dofirst(command)
+			doradd(command)
  	 	end
 	end,
 	
