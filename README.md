@@ -58,6 +58,11 @@ lowest priority.
 To change the position of an item in the list, click the `(vv)` and `(^^)` arrows to lower or raise the priority
 respectively. You can also click on the `(DD)` to delete that NPC as an acceptable target.
 
+Setting custom attacks
+----------------------
+
+The system supports the setting of custom attack command. To do so, use the alias `kconfig bashing attackcommand <your command>`. You can use the slash (`/`) to separate multiple commands that should be used at once. For example 2 handed knights might want to use `kconfig bashing attackcommand battlefury focus speed/kill`.
+
 Shield handling
 ---------------
 
@@ -83,10 +88,10 @@ The first way is the manual way. Simple press the keybinding `F3` to stop attack
 The second way is automated and may be activated, if the **average** damage you have taken in this room between 2 attacks is
 higher than you have at the next attack with an configurable threshold. The basher will also issue a warning, if average the
 damage between 2 attacks is higher than your current health and another threshold. You can enable and disable that with the
-alias `kconfig bashing autoflee` and the configure thresholds with `kconfig bashing fleeat <health amount>` and 
+alias `kconfig bashing autoflee` and the configure thresholds with `kconfig bashing fleeat <health amount>` and
 `kconfig bashing warnat <health amount>`.
 
-You may specify values as a flat amount, a percentage of the maximum health (ending the config value with a `%`) or as a 
+You may specify values as a flat amount, a percentage of the maximum health (ending the config value with a `%`) or as a
 multiple of the damage taken in the room (ending the config value with a `d`) as the security threshold (amount of health
 left after subtracting the current damage from the current health).
 
@@ -130,20 +135,20 @@ To interface the system, create a table with the following structure:
 	startAttack = function()
 		-- code that should be run, whenever the user wants to start attacking.
 	end,
-	
+
 	stopAttack = function()
 		-- code that should be run, whenever the user (or system) wants to stop attacking
 	end,
-	
+
 	flee = function()
 		-- code that is run when fleeing is needed
 	end,
-	
+
 	warnFlee = function(avg)
 		-- code that prints a warning at the "warn" threshold. The variable "avg" contains the
 		-- average damage taken between attacks
 	end,
-	
+
 	notifyFlee = function(avg)
 		-- code that prints a warning at the "flee" threshold. The variable "avg" contains the
 		-- average damage taken between attacks
@@ -152,12 +157,12 @@ To interface the system, create a table with the following structure:
 	handleShield = function()
 		-- code that is called, whenever the current target uses the shield tattoo
 	end,
-	
+
 	setup = function()
 		-- code that is run whenever the user connects to Achaea or the user configures the basher
 		-- to use this system
 	end,
-	
+
 	teardown = function()
 		-- code that is run whenever the user switches from this system to another. Should be used
 		-- to undo actions of setup()
