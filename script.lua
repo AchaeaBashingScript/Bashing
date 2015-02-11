@@ -81,26 +81,26 @@ keneanung.bashing.systems.wundersys = {
 			else
 				command = keneanung.bashing.configuration.attackcommand .. " &tar"
 			end
-			doradd(command)
+			wsys.doradd(command)
  	 	end
 	end,
 	
 	stopAttack = function()
 		disableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
-		dorclear()
+		wsys.dorclear()
 	end,
 	
 	flee = function()
 		keneanung.bashing.systems.wundersys.stopAttack()
-		dofreeadd(keneanung.bashing.fleeDirection)
+		wsys.dofreeadd(keneanung.bashing.fleeDirection)
 	end,
 	
 	warnFlee = function(avg)
-		boxDisplay("Better run or get ready to die!", "orange")
+		wsys.boxDisplay("Better run or get ready to die!", "orange")
 	end,
 	
 	notifyFlee = function(avg)
-		boxDisplay("Running as you have not enough health left.", "red")
+		wsys.boxDisplay("Running as you have not enough health left.", "red")
 	end,
 
 	handleShield = function()
@@ -111,7 +111,7 @@ keneanung.bashing.systems.wundersys = {
 			else
 				command = keneanung.bashing.configuration.razecommand .. " &tar"	
 			end
-			dofirst(command)
+			wsys.dofirst(command)
 		end
 	end,
 	
@@ -164,7 +164,7 @@ local getSystem = function(tbl, index)
 	if index == "auto" then
 		if svo then
 			return keneanung.bashing.systems.svo
-		elseif sys and sys.myVersion then
+		elseif wsys and wsys.myVersion then
 			return keneanung.bashing.systems.wundersys
 		end
 	end
