@@ -528,7 +528,15 @@ keneanung.bashing.roomItemCallback = function(event)
 	end
 
 	if(event == "gmcp.Char.Items.List") then
-		keneanung.bashing.targetList = {}
+		local targetList = {}
+		-- make sure our targets stay at the same place!
+		for index, targ in ipairs(keneanung.bashing.targetList) do
+			if index > keneanung.bashing.attacking then
+				break
+			end
+			targetList[#targetList + 1] = targ
+		end
+		keneanung.bashing.targetList = targetList
 		keneanung.bashing.room = {}
 		for _, item in ipairs(gmcp.Char.Items.List.items) do
 			keneanung.bashing.room[#keneanung.bashing.room + 1] = item
