@@ -1,3 +1,5 @@
+local debugEnabled = false
+
 keneanung = keneanung or {}
 keneanung.bashing = {}
 keneanung.bashing.configuration = {}
@@ -20,6 +22,14 @@ keneanung.bashing.configuration.razecommand = "none"
 keneanung.bashing.configuration.attackcommand = "kill"
 keneanung.bashing.configuration.system = "auto"
 keneanung.bashing.configuration.filesToLoad = {}
+
+local debug = function(message, content)
+	if not debugEnabled then return end
+	echo(string.format("[%s]: %s", (debug.getinfo(2).name or "unknown"), message))
+	if content then
+		display(content)
+	end
+end
 
 local kecho = function(what, command, popup)
 
@@ -506,6 +516,8 @@ keneanung.bashing.roomItemCallback = function(event)
 		return
 	end
 
+	debug(event, { room=keneanung.bashing.room, targetList=keneanung.bashing.targetList })
+
 	local backup = keneanung.bashing.targetList
 	local before = keneanung.bashing.idOnly(keneanung.bashing.targetList)
 
@@ -538,12 +550,15 @@ keneanung.bashing.roomItemCallback = function(event)
 
 	local after = keneanung.bashing.idOnly(keneanung.bashing.targetList)
 
+	debug("got before and after", {before=before, after=after, intersection=table.n_intersection(before, after)})
 	if #before == #after and #table.intersection(before, after) == #before then
 		keneanung.bashing.targetList = backup
 		return
 	end
 
 	keneanung.bashing.emitEventsIfChanged(before, after)
+
+	debug("after", { room=keneanung.bashing.room, targetList=keneanung.bashing.targetList })
 end
 
 keneanung.bashing.emitEventsIfChanged = function( before, after)
@@ -776,11 +791,13 @@ keneanung.bashing.setTarget = function()
 	if keneanung.bashing.attacking == 0 or keneanung.bashing.targetList[keneanung.bashing.attacking].id ~= gmcp.Char.Status.target then
 		keneanung.bashing.attacking = keneanung.bashing.attacking + 1
 	end
+	debug("setting target", keneanung.bashing.targetList[keneanung.bashing.attacking])
 	sendGMCP('IRE.Target.Set "' .. keneanung.bashing.targetList[keneanung.bashing.attacking].id .. '"')
 end
 
 keneanung.bashing.clearTarget = function()
 	if gmcp.IRE.Target and gmcp.IRE.Target.Set ~= "" then
+		debug("clearing target")
 		sendGMCP('IRE.Target.Set "0"')
 	end
 	keneanung.bashing.attacking = 0
@@ -843,6 +860,11 @@ end
 keneanung.bashing.deleteFile = function(num)
 	table.remove(keneanung.bashing.configuration.filesToLoad, num)
 	keneanung.bashing.save()
+end
+
+keneanung.bashing.toggleDebug = function()
+	debugEnabled = not debugEnabled
+	kecho("Debug " .. (debugEnabled and "enabled" or "disabled"))
 end
 
 keneanung.bashing.load()
