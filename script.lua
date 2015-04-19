@@ -551,7 +551,8 @@ keneanung.bashing.roomItemCallback = function(event)
 	local after = keneanung.bashing.idOnly(keneanung.bashing.targetList)
 
 	debug("got before and after", {before=before, after=after, intersection=table.n_intersection(before, after)})
-	if #before == #after and #table.intersection(before, after) == #before then
+
+	if #before == #after and #table.n_intersection(before, after) == #before then
 		keneanung.bashing.targetList = backup
 		return
 	end
