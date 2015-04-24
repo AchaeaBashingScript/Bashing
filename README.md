@@ -6,7 +6,7 @@ What's this?
 
 While bashing (or hunting NPCs) in Achaea is not overly complicated, it is sometimes useful to handle targets in a certain
 order instead of going through the seemingly random list from top to bottom. Different types of targets in an area make
-basing even more cumbersome. To avoid having to target specific NPCs by number (which is error prone and slow), this project
+bashing even more cumbersome. To avoid having to target specific NPCs by number (which is error prone and slow), this project
 was born.
 
 Requirements
