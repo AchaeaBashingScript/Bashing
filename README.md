@@ -104,6 +104,8 @@ toggle the item or set the alias to the command line, so you only need the add t
 Scripting
 ---------
 
+Some example scripts can be found in the [plugin repository](https://github.com/keneanung/BashingPlugins).
+
 ### Events ###
 The script fires two events that can be used to extend the bashing script.
 
