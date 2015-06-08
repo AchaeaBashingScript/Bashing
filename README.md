@@ -6,7 +6,7 @@ What's this?
 
 While bashing (or hunting NPCs) in Achaea is not overly complicated, it is sometimes useful to handle targets in a certain
 order instead of going through the seemingly random list from top to bottom. Different types of targets in an area make
-basing even more cumbersome. To avoid having to target specific NPCs by number (which is error prone and slow), this project
+bashing even more cumbersome. To avoid having to target specific NPCs by number (which is error prone and slow), this project
 was born.
 
 Requirements
@@ -104,6 +104,8 @@ toggle the item or set the alias to the command line, so you only need the add t
 Scripting
 ---------
 
+Some example scripts can be found in the [plugin repository](https://github.com/keneanung/BashingPlugins).
+
 ### Events ###
 The script fires two events that can be used to extend the bashing script.
 
@@ -180,6 +182,34 @@ Some further hints:
 - If your queueing is neither of those two possibilities, think about a way you can register attacks. If you have a way, you
    can check the WunderSys implementation for things needed to flee.
 
+Showing your appreciation
+=========================
+
+If you use this system and want to sow your appreciation or have criticism, feel free to contact me in game as Keneanung per
+message or tell.
+
+If you want to do more than giving me a fuzzy warm feeling inside (which sadly doesn't buy me anything...) you can donate one
+of the following (in order of preferences).
+
+Time
+----
+
+Huh? Time? I can't transfer my time!
+
+True, but you can use the time to create stuff. You can create code and contribute to the Basher (or any other of my
+projects), send in ideas, write tutorials, help me with support stuff, create creative assets (I have some other projects
+that heavily need a creative hand...) or do probably a great number of other things I currently can't think of. But contact
+me and I'm sure we can work something out.
+
+Money
+-----
+
+I'm currently working on something, so I hope it's comeing soon!
+
+Credits or other in game stuff
+------------------------------
+
+Just send anything my way if you think it could come in handy for me. But remember I'm not a Humgii!
 
 Acknowledgements
 ================
