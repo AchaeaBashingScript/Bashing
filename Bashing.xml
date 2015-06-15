@@ -188,6 +188,13 @@
                     <packageName></packageName>
                     <regex>^kconfig bashing system (\w+)$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>set battlerage strategy</name>
+                    <script>keneanung.bashing.setRageStrat(matches[2])</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing ragestrat (\w+)$</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
@@ -305,6 +312,32 @@ use &quot;flee &lt;direction&gt;&quot; to set a new direction.
                             <string>gmcp.Char.Items.Add</string>
                             <string>gmcp.Char.Items.List</string>
                             <string>gmcp.Char.Items.Remove</string>
+                        </eventHandlerList>
+                    </Script>
+                    <Script isActive="yes" isFolder="no">
+                        <name>keneanung.bashing.handleSkillList</name>
+                        <packageName></packageName>
+                        <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+</script>
+                        <eventHandlerList>
+                            <string>gmcp.Char.Skills.List</string>
+                        </eventHandlerList>
+                    </Script>
+                    <Script isActive="yes" isFolder="no">
+                        <name>keneanung.bashing.handleSkillInfo</name>
+                        <packageName></packageName>
+                        <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+</script>
+                        <eventHandlerList>
+                            <string>gmcp.Char.Skills.Info</string>
                         </eventHandlerList>
                     </Script>
                 </ScriptGroup>

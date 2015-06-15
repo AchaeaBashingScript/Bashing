@@ -1,4 +1,47 @@
 local debugEnabled = false
+local directTargetAccess = {}
+local afflictions = {
+	weakness = {
+		colour = "purple",
+		timer = 7
+	},
+	sensitivity = {
+		colour = "gold",
+		timer = 8
+	},
+	recklessness = {
+		colour = "gold",
+		timer = 9
+	},
+	aeon = {
+		colour = "gold",
+		timer = 6
+	},
+	feared = {
+		colour = "gold",
+		timer = 8
+	},
+	clumsy = {
+		colour = "gold",
+		timer = 7
+	},
+	inhibit = {
+		colour = "gold",
+		timer = 9
+	},
+	charm = {
+		colour = "gold",
+		timer = 5
+	},
+	stun = {
+		colour = "gold",
+		timer = 4
+	},
+}
+
+local requestSkillDetails = {}
+local battlerageSkills = {}
+local rage = 0
 
 keneanung = keneanung or {}
 keneanung.bashing = {}
@@ -6,6 +49,7 @@ keneanung.bashing.configuration = {}
 keneanung.bashing.configuration.priorities = {}
 keneanung.bashing.targetList = {}
 keneanung.bashing.systems = {}
+keneanung.bashing.battlerage = {}
 
 keneanung.bashing.attacking = 0
 keneanung.bashing.damage = 0
@@ -22,6 +66,7 @@ keneanung.bashing.configuration.razecommand = "none"
 keneanung.bashing.configuration.attackcommand = "kill"
 keneanung.bashing.configuration.system = "auto"
 keneanung.bashing.configuration.filesToLoad = {}
+keneanung.bashing.configuration.rageStrat = "simple"
 
 local debugMessage = function(message, content)
 	if not debugEnabled then return end
@@ -40,6 +85,12 @@ local kecho = function(what, command, popup)
 		cecho(what)
 	end
 
+end
+
+local requestNextSkillDetails = function()
+	if #requestSkillDetails == 0 then return end
+	sendGMCP(string.format([[Char.Skills.Get {"group": "battlerage", "name": "%s"}]], requestSkillDetails[1]))
+	table.remove(requestSkillDetails,1)
 end
 
 keneanung.bashing.systems.svo = {
@@ -163,6 +214,24 @@ keneanung.bashing.systems.wundersys = {
 	end,
 	
 }
+
+keneanung.bashing.battlerage.none = function(rage)
+end
+
+keneanung.bashing.battlerage.simple = function(rage)
+	if keneanung.bashing.attacking == 0 then return end
+
+	if keneanung.bashing.shield then
+		if keneanung.bashing.configuration.autorageraze and keneanung.bashing.rageAvailable(3) then
+			send(battlerageSkills[3].command, false)
+			keneanung.bashing.shield = false
+		end
+	elseif keneanung.bashing.rageAvailable(4) then
+		send(battlerageSkills[4].command, false)
+	elseif keneanung.bashing.rageAvailable(1) and rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage) then
+		send(battlerageSkills[1].command, false)
+	end
+end
 
 local aliases = {
 	["razecommand"]   = "keneanungra",
@@ -401,6 +470,27 @@ keneanung.bashing.showConfig = function()
 
 	kecho(
 		string.format(
+			"Razing shields with rage is <red>%s<reset>",
+			keneanung.bashing.configuration.autorageraze and "on" or "off"
+		),
+		"keneanung.bashing.toggle('autorageraze', 'Autorazing with rage')",
+		string.format(
+			"Turn autorazing with rage %s",
+			keneanung.bashing.configuration.autorageraze and "off" or "on"
+		)
+	)
+
+	kecho(
+		string.format(
+			"Currently using this battlerage strategy: <red>%s<reset>",
+			keneanung.bashing.configuration.rageStrat
+		),
+		"clearCmdLine() appendCmdLine('kconfig bashing ragestrat ')",
+		"Set battlerage strategy to use."
+	)
+
+	kecho(
+		string.format(
 			"Currently using this system: <red>%s<reset>",
 			keneanung.bashing.configuration.system
 		),
@@ -519,6 +609,7 @@ keneanung.bashing.roomItemCallback = function(event)
 	debugMessage(event, { room=keneanung.bashing.room, targetList=keneanung.bashing.targetList })
 
 	local backup = keneanung.bashing.targetList
+	local directAccessBackup = directTargetAccess
 	local before = keneanung.bashing.idOnly(keneanung.bashing.targetList)
 
 	if(event == "gmcp.Char.Items.Add") then
@@ -625,8 +716,10 @@ keneanung.bashing.addTarget = function(item)
 		return
 	end
 
+	local targetObject = { id = item.id, name = item.name, affs = {} }
+
 	if #targets == 0 then
-		table.insert(targets, { id = item.id, name = item.name } )
+		table.insert(targets, targetObject)
 	else
 
 		-- Small safeguard against adding something twice
@@ -665,9 +758,17 @@ keneanung.bashing.addTarget = function(item)
 			insertAt = keneanung.bashing.attacking + 1
 		end
 
-		table.insert(targets, insertAt, { id = item.id, name = item.name })
+		table.insert(targets, insertAt, targetObject)
 
 	end
+
+	if directTargetAccess[item.id] then
+		for aff, timer in pairs(directTargetAccess[item.id].affs) do
+			targetObject[aff] = timer
+		end
+	end
+
+	directTargetAccess[item.id] = targetObject
 
 	keneanung.bashing.targetList = targets
 
@@ -691,6 +792,10 @@ keneanung.bashing.removeTarget = function(item)
 			keneanung.bashing.attacking = keneanung.bashing.attacking - 1
 			keneanung.bashing.setTarget()
 		end
+		for _, timer in pairs(directTargetAccess[item.id].affs) do
+			killTimer(timer)
+		end
+		directTargetAccess[item.id] = nil
 	end
 
 	keneanung.bashing.targetList = targets
@@ -759,6 +864,16 @@ keneanung.bashing.vitalsChangeRecord = function()
 
 	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
 
+	for _, stat in ipairs(gmcp.Char.Vitals.charstats) do
+		local rageAmount = stat:match("^Rage: (%d+)$")
+		if rageAmount then
+			rage = tonumber(rageAmount)
+			break
+		end
+	end
+
+	keneanung.bashing.battlerage.simple(rage)
+
 end
 
 keneanung.bashing.setCommand = function(command, what)
@@ -816,6 +931,9 @@ end
 keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Target")
 	sendGMCP([[Core.Supports.Add ["IRE.Target 1"] ]])   -- register the GMCP module independently from gmod.
+	gmod.enableModule("keneanung.bashing", "IRE.Display")
+	sendGMCP([[Core.Supports.Add ["IRE.Display 3"] ]])   -- register the GMCP module independently from gmod.
+	sendGMCP([[Char.Skills.Get {"group":"battlerage"}]])
 	keneanung.bashing.setAlias("attackcommand")
 	keneanung.bashing.setAlias("razecommand")
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
@@ -848,6 +966,16 @@ keneanung.bashing.setSystem = function(systemName)
 	system.setup()
 end
 
+keneanung.bashing.setRageStrat = function(strategyName)
+	if not keneanung.bashing.battlerage[strategyName] then
+		kecho("<orange>Battlerage strategy not changed as '" .. strategyName .. "' is unknown.")
+		return
+	end
+	keneanung.bashing.configuration.rageStrat = strategyName
+	keneanung.bashing.save()
+	kecho("Using <red>" .. strategyName .. "<reset> as battlerage strategy.\n" )
+end
+
 keneanung.bashing.calcFleeValue = function(configValue)
 	local isString = type(configValue) == "string"
 	if isString and configValue:ends("%") then
@@ -875,6 +1003,123 @@ end
 keneanung.bashing.toggleDebug = function()
 	debugEnabled = not debugEnabled
 	kecho("Debug " .. (debugEnabled and "enabled" or "disabled"))
+end
+
+keneanung.bashing.addDenizenAffliction = function(denizen, affliction)
+	debugMessage("New denizen affliction.", { denizen = denizen, affliction = affliction })
+
+	local affObject = afflictions[affliction]
+	debugMessage("associated affliction object", affObject)
+	if not affObject then
+		kecho("Affliction '<red>" .. affliction .. "<reset>' is not a known denizen affliction.")
+		return
+	end
+
+	local denizenObject = directTargetAccess[denizen]
+	debugMessage("associated denizen object from direct access", denizenObject)
+	if not denizenObject then
+		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets. Fallback is not yet implemented.")
+		return
+	end
+
+	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking] == denizenObject)
+
+	denizenObject.affs[affliction] = tempTimer(affObject.timer,
+		string.format("keneanung.bashing.removeDenizenAffliction('%s', '%s')", denizenObject.id, affliction))
+
+	kecho(string.format("<%s>%s%s<reset> <green>gained<reset> <%s>%s<reset>", isTarget and "OrangeRed" or "yellow",
+		denizenObject.name, isTarget and " (your target)" or "", affObject.colour, affliction))
+end
+
+keneanung.bashing.removeDenizenAffliction = function(denizen, affliction)
+	debugMessage("Remove denizen affliction.", { denizen = denizen, affliction = affliction })
+
+	local affObject = afflictions[affliction]
+	debugMessage("associated affliction object", affObject)
+	if not affObject then
+		kecho("Affliction '<red>" .. affliction .. "<reset>' is not a known denizen affliction.")
+		return
+	end
+
+	local denizenObject = directTargetAccess[denizen]
+	debugMessage("associated denizen object from direct access", denizenObject)
+	if not denizenObject then
+		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
+		return
+	end
+
+	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking] == denizenObject)
+
+	killTimer(denizenObject.affs[affliction])
+	kecho(string.format("<%s>%s%s<reset> <red>lost<reset> <%s>%s<reset>",
+		isTarget and "OrangeRed" or "yellow", denizenObject.name, isTarget and " (your target)" or "", affObject.colour, affliction))
+	denizenObject.affs[affliction] = nil
+end
+
+keneanung.bashing.getAfflictions = function(denizen)
+	debugMessage("Returnung denizen affliction.", { denizen = denizen })
+
+	local denizenObject = directTargetAccess[denizen]
+	debugMessage("associated denizen object from direct access", denizenObject)
+	if not denizenObject then
+		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
+		return
+	end
+
+	local ret = {}
+	for aff, _ in pairs(denizenObject.affs) do
+		ret[#ret + 1] = aff
+	end
+
+	return ret
+end
+
+keneanung.bashing.handleSkillList = function()
+	local skillList = gmcp.Char.Skills.List
+	if skillList.group ~= "battlerage" then return end
+
+	for index, skill in ipairs(skillList.list) do
+		requestSkillDetails[index] = skill
+	end
+	requestNextSkillDetails()
+end
+
+keneanung.bashing.handleSkillInfo = function()
+	local skillInfo = gmcp.Char.Skills.Info
+	if skillInfo.group ~= "battlerage" then return end
+
+	local cooldown = tonumber(skillInfo.info:match("(%d+\.%d+) seconds"))
+	local rage = tonumber(skillInfo.info:match("(%d+) rage"))
+	local command = skillInfo.info:match("\n(.-) <target>")
+	local affliction = skillInfo.info:match("Gives denizen affliction: (%w+)")
+	local affsUsed = {skillInfo.info:match("Uses denizen afflictions: (%w+) or (%w+)")}
+
+	local rageObject = {
+		cooldown = cooldown,
+		rage = rage,
+		command = command,
+		affliction = affliction,
+		affsUsed = affsUsed,
+		name = skillInfo.skill
+	}
+
+	battlerageSkills[skillInfo.skill] = rageObject
+	battlerageSkills[#battlerageSkills + 1] = rageObject
+
+	debugMessage("added new battlerage skill complete list is here", battlerageSkills)
+	requestNextSkillDetails()
+end
+
+keneanung.bashing.rageAvailable = function(ability)
+	if type(ability) == "number" then
+		ability = battlerageSkills[ability].name
+	end
+	for _, button in pairs(gmcp.IRE.Display.ButtonActions) do
+		if button.text:lower() == ability:lower() then
+			return button.highlight == 1
+		end
+	end
+	return false
 end
 
 keneanung.bashing.load()
