@@ -172,8 +172,13 @@ keneanung.bashing.systems.wundersys = {
 			else
 				command = keneanung.bashing.configuration.razecommand .. " &tar"	
 			end
-			wsys.dofirst(command)
+			wsys.dofirst(command, 1)
 		end
+		keneanung.bashing.shield = true
+	end,
+
+	brokeShield = function()
+		wsys.undo(true, 1)
 	end,
 	
 	setup = function()
@@ -205,6 +210,7 @@ keneanung.bashing.systems.wundersys = {
 			end
 			]])
 		disableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
+		registerAnonymousEventHandler("do action run", "keneanung.bashing.systems.wundersys.doActionRun")
 	end,
 	
 	teardown = function()
@@ -212,7 +218,21 @@ keneanung.bashing.systems.wundersys = {
 			killTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
 		end
 	end,
-	
+
+	doActionRun = function(_, command)
+		local razecommand
+		if keneanung.bashing.configuration.razecommand:find("&tar") then
+			razecommand = keneanung.bashing.configuration.razecommand
+		else
+			razecommand = keneanung.bashing.configuration.razecommand .. " &tar"
+		end
+		display(command)
+		display(razecommand)
+		if command == razecommand then
+			keneanung.bashing.shield = false
+		end
+		display(keneanung.bashing.shield)
+	end,
 }
 
 keneanung.bashing.battlerage.none = function(rage)
@@ -225,6 +245,10 @@ keneanung.bashing.battlerage.simple = function(rage)
 		if keneanung.bashing.configuration.autorageraze and keneanung.bashing.rageAvailable(3) then
 			send(battlerageSkills[3].command, false)
 			keneanung.bashing.shield = false
+			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+			if system.brokeShield then
+				system.brokeShield()
+			end
 		end
 	elseif keneanung.bashing.rageAvailable(4) then
 		send(battlerageSkills[4].command, false)
@@ -872,7 +896,7 @@ keneanung.bashing.vitalsChangeRecord = function()
 		end
 	end
 
-	keneanung.bashing.battlerage.simple(rage)
+	keneanung.bashing.battlerage[keneanung.bashing.configuration.rageStrat](rage)
 
 end
 
