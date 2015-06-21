@@ -56,6 +56,7 @@ keneanung.bashing.damage = 0
 keneanung.bashing.attacks = 0
 keneanung.bashing.healing = 0
 keneanung.bashing.lastHealth = 0
+keneanung.bashing.usedRageAttack = false
 
 keneanung.bashing.configuration.enabled = false
 keneanung.bashing.configuration.warning = 500
@@ -235,11 +236,27 @@ keneanung.bashing.systems.wundersys = {
 	end,
 }
 
+local function sendRageAttack(attack)
+	debugMessage("sending rage attack", attack)
+	send(attack, false)
+	keneanung.bashing.usedRageAttack = true
+	tempTimer(1, "keneanung.bashing.usedRageAttack = false")
+end
+
 keneanung.bashing.battlerage.none = function(rage)
 end
 
 keneanung.bashing.battlerage.simple = function(rage)
 	if keneanung.bashing.attacking == 0 then return end
+
+	debugMessage("running 'simple' rage strategy",
+		{
+			rage = rage,
+			shield = keneanung.bashing.shield,
+			rageraze = keneanung.bashing.configuration.autorageraze,
+			rageSkills = battlerageSkills
+		}
+	)
 
 	if keneanung.bashing.shield then
 		if keneanung.bashing.configuration.autorageraze and keneanung.bashing.rageAvailable(3) then
@@ -251,9 +268,9 @@ keneanung.bashing.battlerage.simple = function(rage)
 			end
 		end
 	elseif keneanung.bashing.rageAvailable(4) then
-		send(battlerageSkills[4].command, false)
+		sendRageAttack(battlerageSkills[4].command)
 	elseif keneanung.bashing.rageAvailable(1) and rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage) then
-		send(battlerageSkills[1].command, false)
+		sendRageAttack(battlerageSkills[1].command)
 	end
 end
 
@@ -900,6 +917,10 @@ keneanung.bashing.vitalsChangeRecord = function()
 
 end
 
+keneanung.bashing.buttonActionsCallback = function()
+	keneanung.bashing.battlerage[keneanung.bashing.configuration.rageStrat](rage)
+end
+
 keneanung.bashing.setCommand = function(command, what)
 	keneanung.bashing.configuration[command] = what
 	kecho(command .. " is now <red>" .. keneanung.bashing.configuration[command] .. "<reset>\n" )
@@ -1135,6 +1156,7 @@ keneanung.bashing.handleSkillInfo = function()
 end
 
 keneanung.bashing.rageAvailable = function(ability)
+	if keneanung.bashing.usedRageAttack then return false end
 	if type(ability) == "number" then
 		ability = battlerageSkills[ability].name
 	end

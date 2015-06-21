@@ -317,12 +317,7 @@ use &quot;flee &lt;direction&gt;&quot; to set a new direction.
                     <Script isActive="yes" isFolder="no">
                         <name>keneanung.bashing.handleSkillList</name>
                         <packageName></packageName>
-                        <script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external Scripts --
--------------------------------------------------
-</script>
+                        <script>--This registers our Char.Skills.List callback. Do not remove!</script>
                         <eventHandlerList>
                             <string>gmcp.Char.Skills.List</string>
                         </eventHandlerList>
@@ -330,14 +325,17 @@ use &quot;flee &lt;direction&gt;&quot; to set a new direction.
                     <Script isActive="yes" isFolder="no">
                         <name>keneanung.bashing.handleSkillInfo</name>
                         <packageName></packageName>
-                        <script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external Scripts --
--------------------------------------------------
-</script>
+                        <script>--This registers our Char.Skills.Info callback. Do not remove!</script>
                         <eventHandlerList>
                             <string>gmcp.Char.Skills.Info</string>
+                        </eventHandlerList>
+                    </Script>
+                    <Script isActive="yes" isFolder="no">
+                        <name>keneanung.bashing.buttonActionsCallback</name>
+                        <packageName></packageName>
+                        <script>--This registers our IRE.Display.ButtonActions callback. Do not remove!</script>
+                        <eventHandlerList>
+                            <string>gmcp.IRE.Display.ButtonActions</string>
                         </eventHandlerList>
                     </Script>
                 </ScriptGroup>
