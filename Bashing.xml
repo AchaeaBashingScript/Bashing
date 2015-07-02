@@ -203,12 +203,7 @@
         <ScriptGroup isActive="yes" isFolder="yes">
             <name>keneanung</name>
             <packageName></packageName>
-            <script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external Scripts --
--------------------------------------------------
-keneanung = keneanung or { }</script>
+            <script>keneanung = keneanung or {}</script>
             <eventHandlerList/>
             <ScriptGroup isActive="yes" isFolder="yes">
                 <name>bashing</name>
@@ -336,6 +331,14 @@ use &quot;flee &lt;direction&gt;&quot; to set a new direction.
                         <script>--This registers our IRE.Display.ButtonActions callback. Do not remove!</script>
                         <eventHandlerList>
                             <string>gmcp.IRE.Display.ButtonActions</string>
+                        </eventHandlerList>
+                    </Script>
+                    <Script isActive="yes" isFolder="no">
+                        <name>keneanung.bashing.charStatusCallback</name>
+                        <packageName></packageName>
+                        <script>--This registers our Char.Status callback. Do not remove!</script>
+                        <eventHandlerList>
+                            <string>gmcp.Char.Status</string>
                         </eventHandlerList>
                     </Script>
                 </ScriptGroup>

@@ -43,6 +43,9 @@ local requestSkillDetails = {}
 local battlerageSkills = {}
 local rage = 0
 
+local race = ""
+local class = ""
+
 keneanung = keneanung or {}
 keneanung.bashing = {}
 keneanung.bashing.configuration = {}
@@ -923,6 +926,25 @@ end
 
 keneanung.bashing.buttonActionsCallback = function()
 	keneanung.bashing.battlerage[keneanung.bashing.configuration.rageStrat](rage)
+end
+
+keneanung.bashing.charStatusCallback = function()
+	local somethingChanged = false
+	if race ~= gmcp.Char.Status.race then
+		debugMessage("Race changed")
+		somethingChanged = true
+		race = gmcp.Char.Status.race
+	end
+
+	if class ~= gmcp.Char.Status.class then
+		debugMessage("Class changed")
+		somethingChanged = true
+		class = gmcp.Char.Status.class
+	end
+
+	if somethingChanged then
+		sendGMCP([[Char.Skills.Get {"group":"battlerage"}]]) -- rerequest battlerage abilities
+	end
 end
 
 keneanung.bashing.setCommand = function(command, what)
