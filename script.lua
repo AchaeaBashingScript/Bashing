@@ -269,7 +269,11 @@ keneanung.bashing.battlerage.simple = function(rage)
 		end
 	elseif keneanung.bashing.rageAvailable(4) then
 		sendRageAttack(battlerageSkills[4].command)
-	elseif keneanung.bashing.rageAvailable(1) and rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage) then
+	elseif
+		keneanung.bashing.rageAvailable(1) and
+			((not battlerageSkills[4].known) or
+			rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage))
+	then
 		sendRageAttack(battlerageSkills[1].command)
 	end
 end
@@ -1138,6 +1142,7 @@ keneanung.bashing.handleSkillInfo = function()
 	local command = skillInfo.info:match("\n(.-) <target>")
 	local affliction = skillInfo.info:match("Gives denizen affliction: (%w+)")
 	local affsUsed = {skillInfo.info:match("Uses denizen afflictions: (%w+) or (%w+)")}
+	local skillKnown = skillInfo.info:find("*** You have not yet learned this ability ***", 1, true) == nil
 
 	local rageObject = {
 		cooldown = cooldown,
@@ -1145,7 +1150,8 @@ keneanung.bashing.handleSkillInfo = function()
 		command = command,
 		affliction = affliction,
 		affsUsed = affsUsed,
-		name = skillInfo.skill
+		name = skillInfo.skill,
+		skillKnown = skillKnown
 	}
 
 	battlerageSkills[skillInfo.skill] = rageObject
