@@ -274,7 +274,7 @@ keneanung.bashing.battlerage.simple = function(rage)
 		sendRageAttack(battlerageSkills[4].command)
 	elseif
 		keneanung.bashing.rageAvailable(1) and
-			((not battlerageSkills[4].known) or
+			((not battlerageSkills[4].skillKnown) or
 			rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage))
 	then
 		sendRageAttack(battlerageSkills[1].command)
