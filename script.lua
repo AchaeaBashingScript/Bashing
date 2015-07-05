@@ -1152,6 +1152,7 @@ keneanung.bashing.handleSkillList = function()
 	for index, skill in ipairs(skillList.list) do
 		requestSkillDetails[index] = skill
 	end
+	battlerageSkills = {}
 	requestNextSkillDetails()
 end
 
@@ -1176,10 +1177,14 @@ keneanung.bashing.handleSkillInfo = function()
 		skillKnown = skillKnown
 	}
 
-	battlerageSkills[skillInfo.skill] = rageObject
-	battlerageSkills[#battlerageSkills + 1] = rageObject
+	if #battlerageSkills == 0 or skillInfo.skill ~= battlerageSkills[#battlerageSkills].name then
+		battlerageSkills[skillInfo.skill] = rageObject
+		battlerageSkills[#battlerageSkills + 1] = rageObject
+		debugMessage("added new battlerage skill complete list is here", battlerageSkills)
+	else
+		debugMessage("got double battlerage skill")
+	end
 
-	debugMessage("added new battlerage skill complete list is here", battlerageSkills)
 	requestNextSkillDetails()
 end
 
