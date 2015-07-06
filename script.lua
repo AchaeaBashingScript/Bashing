@@ -246,6 +246,22 @@ local function sendRageAttack(attack)
 	tempTimer(1, "keneanung.bashing.usedRageAttack = false")
 end
 
+local function rageRazeFunction()
+	if keneanung.bashing.shield then
+		if keneanung.bashing.configuration.autorageraze and keneanung.bashing.rageAvailable(3) then
+			send(battlerageSkills[3].command, false)
+			keneanung.bashing.shield = false
+			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+			if system.brokeShield then
+				system.brokeShield()
+			end
+			return true
+		else
+			return false
+		end
+	end
+end
+
 keneanung.bashing.battlerage.none = function(rage)
 end
 
@@ -261,23 +277,37 @@ keneanung.bashing.battlerage.simple = function(rage)
 		}
 	)
 
-	if keneanung.bashing.shield then
-		if keneanung.bashing.configuration.autorageraze and keneanung.bashing.rageAvailable(3) then
-			send(battlerageSkills[3].command, false)
-			keneanung.bashing.shield = false
-			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-			if system.brokeShield then
-				system.brokeShield()
-			end
+	if not rageRazeFunction() then
+		if keneanung.bashing.rageAvailable(4) then
+			sendRageAttack(battlerageSkills[4].command)
+		elseif
+			keneanung.bashing.rageAvailable(1) and
+				((not battlerageSkills[4].skillKnown) or
+				rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage))
+		then
+			sendRageAttack(battlerageSkills[1].command)
 		end
-	elseif keneanung.bashing.rageAvailable(4) then
-		sendRageAttack(battlerageSkills[4].command)
-	elseif
-		keneanung.bashing.rageAvailable(1) and
-			((not battlerageSkills[4].skillKnown) or
-			rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage))
-	then
-		sendRageAttack(battlerageSkills[1].command)
+	end
+end
+
+keneanung.bashing.battlerage.simplereverse = function(rage)
+	if keneanung.bashing.attacking == 0 then return end
+
+	debugMessage("running 'simplereverse' rage strategy",
+		{
+			rage = rage,
+			shield = keneanung.bashing.shield,
+			rageraze = keneanung.bashing.configuration.autorageraze,
+			rageSkills = battlerageSkills
+		}
+	)
+
+	if not rageRazeFunction() then
+		if keneanung.bashing.rageAvailable(1) then
+			sendRageAttack(battlerageSkills[1].command)
+		elseif keneanung.bashing.rageAvailable(4) then
+			sendRageAttack(battlerageSkills[4].command)
+		end
 	end
 end
 
