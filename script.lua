@@ -71,6 +71,7 @@ keneanung.bashing.configuration.attackcommand = "kill"
 keneanung.bashing.configuration.system = "auto"
 keneanung.bashing.configuration.filesToLoad = {}
 keneanung.bashing.configuration.rageStrat = "simple"
+keneanung.bashing.configuration.targetLoyals = false
 
 local debugMessage = function(message, content)
 	if not debugEnabled then return end
@@ -576,6 +577,18 @@ keneanung.bashing.showConfig = function()
 		"Set system to use."
 	)
 
+	kecho(
+		string.format(
+			"Considering loyals for fallback targets is <red>%s<reset>",
+			keneanung.bashing.configuration.targetLoyals and "on" or "off"
+		),
+		"keneanung.bashing.toggle('targetLoyals', 'Falling back to loyal targets')",
+		string.format(
+			"Turn considering loyals for fallback targets %s",
+			keneanung.bashing.configuration.targetLoyals and "off" or "on"
+		)
+	)
+
 	echo("\n")
 
 	kecho("Loading these additional files on startup:    ")
@@ -999,11 +1012,13 @@ keneanung.bashing.setTarget = function()
 
 			for _, item in ipairs(keneanung.bashing.room) do
 				if item.attrib and item.attrib:find("m") and item.name:lower():find(tar:lower()) then
-					keneanung.bashing.targetList[#keneanung.bashing.targetList + 1]= {
-						id = item.id,
-						name = item.name
-					}
-					targetSet = true
+					if keneanung.bashing.configuration.targetLoyals or not item.attrib:find("x") then
+						keneanung.bashing.targetList[#keneanung.bashing.targetList + 1]= {
+							id = item.id,
+							name = item.name
+						}
+						targetSet = true
+					end
 				end
 			end
 		end
