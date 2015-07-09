@@ -202,6 +202,13 @@
                     <packageName></packageName>
                     <regex>^kconfig bashing rageraze$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>toggle targeting loyals</name>
+                    <script>keneanung.bashing.toggle('targetLoyals', 'Falling back to loyal targets')</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing targetloyals$</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
