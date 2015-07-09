@@ -1067,6 +1067,17 @@ keneanung.bashing.setAlias = function(command)
 end
 
 keneanung.bashing.setSystem = function(systemName)
+
+	if not systemName then
+		kecho("The following systems are known:")
+		for name, _ in pairs(keneanung.bashing.systems) do
+			kecho("   " .. name, "keneanung.bashing.setSystem('" .. name .. "')", "Set '" .. name .. "' as queueing system")
+		end
+		kecho("   auto", "keneanung.bashing.setSystem('auto')", "Set 'auto' as queueing system")
+		echo("\n")
+		return
+	end
+
 	if not rawget(keneanung.bashing.systems, systemName) and systemName ~= "auto" then
 		kecho("<orange>System not changed as '" .. systemName .. "' is unknown.")
 		return
@@ -1083,6 +1094,16 @@ keneanung.bashing.setSystem = function(systemName)
 end
 
 keneanung.bashing.setRageStrat = function(strategyName)
+
+	if not strategyName then
+		kecho("The following rage strategies are known:")
+		for name, _ in pairs(keneanung.bashing.battlerage) do
+			kecho("   " .. name, "keneanung.bashing.setRageStrat('" .. name .. "')", "Set '" .. name .. "' as battlerage strategy")
+		end
+		echo("\n")
+		return
+	end
+
 	if not keneanung.bashing.battlerage[strategyName] then
 		kecho("<orange>Battlerage strategy not changed as '" .. strategyName .. "' is unknown.")
 		return

@@ -186,14 +186,14 @@
                     <script>keneanung.bashing.setSystem(matches[2])</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>^kconfig bashing system (\w+)$</regex>
+                    <regex>^kconfig bashing system(?: (\w+))?$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>set battlerage strategy</name>
                     <script>keneanung.bashing.setRageStrat(matches[2])</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>^kconfig bashing ragestrat (\w+)$</regex>
+                    <regex>^kconfig bashing ragestrat(?: (\w+))?$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>toggle razing with battlerage</name>
