@@ -186,7 +186,28 @@
                     <script>keneanung.bashing.setSystem(matches[2])</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>^kconfig bashing system (\w+)$</regex>
+                    <regex>^kconfig bashing system(?: (\w+))?$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>set battlerage strategy</name>
+                    <script>keneanung.bashing.setRageStrat(matches[2])</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing ragestrat(?: (\w+))?$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>toggle razing with battlerage</name>
+                    <script>keneanung.bashing.toggle('autorageraze', 'Autorazing with rage')</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing rageraze$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>toggle targeting loyals</name>
+                    <script>keneanung.bashing.toggle('targetLoyals', 'Falling back to loyal targets')</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing targetloyals$</regex>
                 </Alias>
             </AliasGroup>
         </AliasGroup>
@@ -196,12 +217,7 @@
         <ScriptGroup isActive="yes" isFolder="yes">
             <name>keneanung</name>
             <packageName></packageName>
-            <script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external Scripts --
--------------------------------------------------
-keneanung = keneanung or { }</script>
+            <script>keneanung = keneanung or {}</script>
             <eventHandlerList/>
             <ScriptGroup isActive="yes" isFolder="yes">
                 <name>bashing</name>
@@ -305,6 +321,38 @@ use &quot;flee &lt;direction&gt;&quot; to set a new direction.
                             <string>gmcp.Char.Items.Add</string>
                             <string>gmcp.Char.Items.List</string>
                             <string>gmcp.Char.Items.Remove</string>
+                        </eventHandlerList>
+                    </Script>
+                    <Script isActive="yes" isFolder="no">
+                        <name>keneanung.bashing.handleSkillList</name>
+                        <packageName></packageName>
+                        <script>--This registers our Char.Skills.List callback. Do not remove!</script>
+                        <eventHandlerList>
+                            <string>gmcp.Char.Skills.List</string>
+                        </eventHandlerList>
+                    </Script>
+                    <Script isActive="yes" isFolder="no">
+                        <name>keneanung.bashing.handleSkillInfo</name>
+                        <packageName></packageName>
+                        <script>--This registers our Char.Skills.Info callback. Do not remove!</script>
+                        <eventHandlerList>
+                            <string>gmcp.Char.Skills.Info</string>
+                        </eventHandlerList>
+                    </Script>
+                    <Script isActive="yes" isFolder="no">
+                        <name>keneanung.bashing.buttonActionsCallback</name>
+                        <packageName></packageName>
+                        <script>--This registers our IRE.Display.ButtonActions callback. Do not remove!</script>
+                        <eventHandlerList>
+                            <string>gmcp.IRE.Display.ButtonActions</string>
+                        </eventHandlerList>
+                    </Script>
+                    <Script isActive="yes" isFolder="no">
+                        <name>keneanung.bashing.charStatusCallback</name>
+                        <packageName></packageName>
+                        <script>--This registers our Char.Status callback. Do not remove!</script>
+                        <eventHandlerList>
+                            <string>gmcp.Char.Status</string>
                         </eventHandlerList>
                     </Script>
                 </ScriptGroup>
