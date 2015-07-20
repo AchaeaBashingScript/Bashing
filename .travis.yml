@@ -1,7 +1,6 @@
 language: c
 
-install:
-- sudo apt-get install jq
+sudo: false
 
 before_script:
 - chmod +x make-release.sh
