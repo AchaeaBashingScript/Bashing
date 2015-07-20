@@ -240,6 +240,90 @@ keneanung.bashing.systems.wundersys = {
 	end,
 }
 
+keneanung.bashing.systems.none = {
+
+	startAttack = function()
+		if keneanung.bashing.attacking > 0 then
+			enableTrigger(keneanung.bashing.systems.none.queueTrigger)
+			send("queue add eqbal keneanungki", false)
+		end
+	end,
+
+	stopAttack = function()
+		disableTrigger(keneanung.bashing.systems.none.queueTrigger)
+		send("cq all")
+	end,
+
+	flee = function()
+		keneanung.bashing.systems.none.stopAttack()
+		send("queue prepend eqbal " .. keneanung.bashing.fleeDirection)
+	end,
+
+	warnFlee = function(avg)
+		echo("Better run or get ready to die!")
+	end,
+
+	notifyFlee = function(avg)
+		echo("Running as you have not enough health left.")
+	end,
+
+	handleShield = function()
+		keneanung.bashing.shield = true
+		if keneanung.bashing.configuration.autoraze then
+			local command
+			send("queue prepend eqbal keneanungra", false)
+		end
+	end,
+
+	brokeShield = function()
+		send("cq all")
+		send("queue add eqbal keneanungki", false)
+	end,
+
+	setup = function()
+		keneanung.bashing.systems.none.queueTrigger = tempRegexTrigger("^\\[System\\]: Running queued eqbal command: (KENEANUNGKI|KENEANUNGRA)$",
+			[[
+			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+			keneanung.bashing.attacks = keneanung.bashing.attacks + 1
+			local avgDmg = keneanung.bashing.damage / keneanung.bashing.attacks
+			local avgHeal = keneanung.bashing.healing / keneanung.bashing.attacks
+
+			local estimatedDmg = avgDmg * 2 - avgHeal
+
+			local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
+
+			local warnat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.warning)
+
+			if estimatedDmg > gmcp.Char.Vitals.hp - fleeat and keneanung.bashing.configuration.autoflee then
+
+				system.notifyFlee(estimatedDmg)
+
+				system.flee()
+
+			else
+				if estimatedDmg > gmcp.Char.Vitals.hp - warnat then
+
+					system.warnFlee(estimatedDmg)
+
+				end
+				if matches[2] == "KENEANUNGKI" then
+					send("queue add eqbal keneanungki", false)
+				else
+					keneanung.bashing.shield = false
+				end
+			end
+			]])
+		disableTrigger(keneanung.bashing.systems.none.queueTrigger)
+	end,
+
+	teardown = function()
+		if keneanung.bashing.systems.none.queueTrigger then
+			killTrigger(keneanung.bashing.systems.none.queueTrigger)
+		end
+	end,
+
+}
+
 local function sendRageAttack(attack)
 	debugMessage("sending rage attack", attack)
 	send(attack, false)
@@ -324,6 +408,8 @@ local getSystem = function(tbl, index)
 			return keneanung.bashing.systems.svo
 		elseif wsys and wsys.myVersion then
 			return keneanung.bashing.systems.wundersys
+		else
+			return keneanung.bashing.systems.none
 		end
 	end
 	kecho("<orange>Something went completely wrong: You are using an unknown system ('"..index.."'). Please use 'kconfig bashing system <name>' to correct this.")
