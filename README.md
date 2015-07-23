@@ -71,6 +71,8 @@ at once. For example 2 handed knights might want to use `kconfig bashing attackc
 Shield handling
 ---------------
 
+### Normal attacks ###
+
 For classes with a quick and easy way to handle shielding NPCs, the basher has a very simple way to use it.
 
 First turn the auto raze option on, using the alias `kconfig bashing raze`. This will enable switching the command used when
@@ -79,6 +81,17 @@ the denizen you attack shields. Additionally you need to configure the command u
 for the target, if it needs to be somewhere within the command.
 
 Congratulations, you will now raze the shield of NPCs whenever needed.
+
+### Battlerage attacks ###
+
+Each class has a battlerage attack to break denizen shields. The builtin `simple` and `simplereverse` strategies
+will use that ability, if needed and configured.
+
+To configure the use of the ability, simple use the alias `kconfig bashing rageraze`. This will toggle the option.
+No other setting is needed.
+
+This setting can be used without the normal attack, in combination (it will use the first available one) or the
+normal attack without the battlerage ability.
 
 Fleeing
 -------
