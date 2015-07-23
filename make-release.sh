@@ -17,7 +17,7 @@ API_JSON=$(printf "$API_STRING" \
 "$VERSION" "$TRAVIS_BRANCH" "$VERSION" "$VERSION")
 
 API_URL=$(printf \
-"https://api.github.com/repos/keneanung/Bashing/releases?access_token=%s" \
+"https://api.github.com/repos/achaeabashingscript/Bashing/releases?access_token=%s" \
 "$ACCESS_TOKEN")
 
 http_code=`curl -s -w "%{http_code}" --data "$API_JSON" -o output.txt "$API_URL"` 
