@@ -14,12 +14,14 @@ Requirements
 
 - Mudlet
 - gmcp enabled
-- svo, WunderSys or a queuing system with a [custom plugin](#support-for-other-systems)
+- if you are not using svo, wundersys or stock server side: a queuing system with a
+  [custom plugin](#support-for-other-systems)
 
 Downloads and Releases
 ----------------------
 
-The bashing script can be downloaded on the [github release page of the project](https://github.com/keneanung/Bashing/releases).
+The bashing script can be downloaded on the
+[github release page of the project](https://github.com/achaeabashingscript/Bashing/releases).
 
 Stable releases are versioned with the versioning scheme `vXX.XX` where each XX stands for a number. The latest official
 stable release has a green tag on the left side.
@@ -34,7 +36,8 @@ Quickstart
 1. Download the Bashing.mpackage
 2. Import the package into Mudlet
 3. If using svo: Deactivate or delete the keybinding of F2 that comes with svo
-4. If using a custom system: [setup the system table](#support-for-other-systems) and configure `kconfig basing system <name>`
+4. If using a custom system: [setup the system table](#support-for-other-systems) and configure 
+   `kconfig bashing system <name>`
 5. Use the alias `kconfig bashing toggle` to enable the script
 6. Start killing things. Acceptable targets must be killed at least once in an area to register them with the bashing script.
    The basher will use the "target" variable or the in game target as a fallback, if there is no item in the prio list.
@@ -61,7 +64,9 @@ respectively. You can also click on the `(DD)` to delete that NPC as an acceptab
 Setting custom attacks
 ----------------------
 
-The system supports the setting of custom attack command. To do so, use the alias `kconfig bashing attackcommand <your command>`. You can use the slash (`/`) to separate multiple commands that should be used at once. For example 2 handed knights might want to use `kconfig bashing attackcommand battlefury focus speed/kill`.
+The system supports the setting of custom attack command. To do so, use the alias
+`kconfig bashing attackcommand <your command>`. You can use the slash (`/`) to separate multiple commands that should be used
+at once. For example 2 handed knights might want to use `kconfig bashing attackcommand battlefury focus speed/kill`.
 
 Shield handling
 ---------------
@@ -99,12 +104,33 @@ Configuration
 -------------
 
 The current configuration can be shown with the alias `kconfig bashing`. All items in red are clickable and will either
-toggle the item or set the alias to the command line, so you only need the add the value you want to set.
+toggle the item or set the alias to the command line, so you only need to add the add the value you want to set.
+
+### The battlerage strategies ###
+
+The script comes with three strategies to use battlerage abilities: `none`, `simple` and `simplereverse`. Each one will be
+described here.
+
+#### Battlerage strategy `none` ####
+
+This strategy does nothing. You can use it if you want to manually control which ability to use when.
+
+#### Battlerage strategy `simple` ####
+
+This stratey will break denizen shields first, if that is enabled. If it doesn't need to handle shields, the strategy prefers
+to use the slower, but higher damage damage battlerage strategy and will use it whenever it is available. If that ability is 
+not known or you have enough rage to follow the slow ability immediately with the fast ability, it will do so.
+
+#### Battlerage strategy `simplereverse` ####
+
+This stratey will break denizen shields first, if that is enabled. If it doesn't need to handle shields, it will use the
+faster, weaker battlerage ability whenever possible. Is enough battlerage collected to use the slow, powerful ability, it
+will use that one as well.
 
 Scripting
 ---------
 
-Some example scripts can be found in the [plugin repository](https://github.com/keneanung/BashingPlugins).
+Some example scripts can be found in the [plugin repository](https://github.com/achaeabashingscript/BashingPlugins).
 
 ### Events ###
 The script fires two events that can be used to extend the bashing script.
@@ -159,6 +185,11 @@ To interface the system, create a table with the following structure:
 	handleShield = function()
 		-- code that is called, whenever the current target uses the shield tattoo
 	end,
+	
+	brokeShield = function()
+		-- code that is called whenever the shield got broken. Currently the shield needs to be actively broken
+		-- by yourself to get this called.
+	end
 
 	setup = function()
 		-- code that is run whenever the user connects to Achaea or the user configures the basher
@@ -182,6 +213,14 @@ Some further hints:
 - If your queueing is neither of those two possibilities, think about a way you can register attacks. If you have a way, you
    can check the WunderSys implementation for things needed to flee.
 
+### Custom battlerage strategies ###
+
+To use a custom battlerage strategy, you can add a function to the `keneanung.bashing.battlerage` table und any name you
+like. That function will receive the current accumulated battlerage.
+
+The script also provides the `keneanung.bashing.rageAvailable` function which receives a name or number of a battlerage
+ability and returns a boolean if that ability is available (enough battlerage and off cooldown).
+
 Showing your appreciation
 =========================
 
@@ -204,7 +243,7 @@ me and I'm sure we can work something out.
 Money
 -----
 
-I'm currently working on something, so I hope it's comeing soon!
+You can send bitcoins to this address: 1M6DVCYeGmWN7yR3no3XjeZq3jrydKhYe7
 
 Credits or other in game stuff
 ------------------------------
