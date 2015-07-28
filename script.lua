@@ -46,6 +46,8 @@ local rage = 0
 local race = ""
 local class = ""
 
+local roomTargetStore = {}
+
 keneanung = keneanung or {}
 keneanung.bashing = {}
 keneanung.bashing.configuration = {}
@@ -774,7 +776,7 @@ keneanung.bashing.nextAttack = function()
 
 end
 
-keneanung.bashing.roomItemCallback = function(event)
+local roomItemCallbackWorker = function(event)
 
 	if gmcp.Char.Items[event:match("%w+$")].location ~= "room" or keneanung.bashing.configuration.enabled == false then
 		return
@@ -793,6 +795,14 @@ keneanung.bashing.roomItemCallback = function(event)
 	end
 
 	if(event == "gmcp.Char.Items.List") then
+
+		local storedTargets = roomTargetStore[gmcp.Room.Info.num]
+
+		if storedTargets then
+			keneanung.bashing.targetList = storedTargets.targetList
+			keneanung.bashing.attacking = storedTargets.attacked
+		end
+
 		local targetList = {}
 		-- make sure our targets stay at the same place!
 		for index, targ in ipairs(keneanung.bashing.targetList) do
@@ -834,6 +844,12 @@ keneanung.bashing.roomItemCallback = function(event)
 	keneanung.bashing.emitEventsIfChanged(before, after)
 
 	debugMessage("after", { room=keneanung.bashing.room, targetList=keneanung.bashing.targetList })
+end
+
+keneanung.bashing.roomItemCallback = function(event)
+	if event == "gmcp.Char.Items.Add" or event == "gmcp.Char.Items.Remove" then
+		roomItemCallbackWorker(event)
+	end
 end
 
 keneanung.bashing.emitEventsIfChanged = function( before, after)
@@ -993,6 +1009,11 @@ keneanung.bashing.roomMessageCallback = function()
 		return
 	end
 
+	roomTargetStore[keneanung.bashing.lastRoom] = {
+		targetList = keneanung.bashing.targetList,
+		attacked = keneanung.bashing.attacking
+	}
+
 	keneanung.bashing.damage = 0
 	keneanung.bashing.healing = 0
 	keneanung.bashing.attacks = 0
@@ -1003,7 +1024,6 @@ keneanung.bashing.roomMessageCallback = function()
 		local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 		system.stopAttack()
 	end
-
 	local exits = getRoomExits(gmcp.Room.Info.num) or gmcp.Room.Info.exits
 	local found = false
 
@@ -1022,6 +1042,9 @@ keneanung.bashing.roomMessageCallback = function()
 	end
 
 	keneanung.bashing.lastRoom = gmcp.Room.Info.num
+
+	roomItemCallbackWorker("gmcp.Char.Items.List")	-- update the room item list now, because now we know if we changed the area.
+							-- also be optimistic that there is no other items list in between
 end
 
 keneanung.bashing.vitalsChangeRecord = function()
