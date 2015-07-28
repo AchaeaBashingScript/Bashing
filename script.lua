@@ -231,12 +231,9 @@ keneanung.bashing.systems.wundersys = {
 		else
 			razecommand = keneanung.bashing.configuration.razecommand .. " &tar"
 		end
-		display(command)
-		display(razecommand)
 		if command == razecommand then
 			keneanung.bashing.shield = false
 		end
-		display(keneanung.bashing.shield)
 	end,
 }
 
