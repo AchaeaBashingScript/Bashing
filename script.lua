@@ -323,7 +323,7 @@ keneanung.bashing.systems.none = {
 
 local function sendRageAttack(attack)
 	debugMessage("sending rage attack", attack)
-	send(attack, false)
+	send(attack:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
 	keneanung.bashing.usedRageAttack = true
 	tempTimer(1, "keneanung.bashing.usedRageAttack = false")
 end
@@ -1311,7 +1311,7 @@ keneanung.bashing.handleSkillInfo = function()
 
 	local cooldown = tonumber(skillInfo.info:match("(%d+\.%d+) seconds"))
 	local rage = tonumber(skillInfo.info:match("(%d+) rage"))
-	local command = skillInfo.info:match("\n(.-) <target>")
+	local command = skillInfo.info:match("\n(.+<target>.-)\n"):gsub("<target>", "%%d")
 	local affliction = skillInfo.info:match("Gives denizen affliction: (%w+)")
 	local affsUsed = {skillInfo.info:match("Uses denizen afflictions: (%w+) or (%w+)")}
 	local skillKnown = skillInfo.info:find("*** You have not yet learned this ability ***", 1, true) == nil
