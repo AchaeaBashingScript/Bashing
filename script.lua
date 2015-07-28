@@ -1,4 +1,5 @@
 local debugEnabled = false
+local send = send
 local directTargetAccess = {}
 local afflictions = {
 	weakness = {
@@ -62,6 +63,7 @@ keneanung.bashing.attacks = 0
 keneanung.bashing.healing = 0
 keneanung.bashing.lastHealth = 0
 keneanung.bashing.usedRageAttack = false
+keneanung.bashing.usedBalanceAttack = false
 
 keneanung.bashing.configuration.enabled = false
 keneanung.bashing.configuration.warning = 500
@@ -129,11 +131,22 @@ keneanung.bashing.systems.svo = {
 	end,
 	
 	setup = function()
-		
+		send = function(command, echoback)
+			if command == "keneanungki" then
+				command = keneanung.bashing.configuration.attackcommand
+			elseif command == "keneanungra" then
+				command = keneanung.bashing.configuration.razecommand
+			end
+			command = command:gsub("&tar", keneanung.bashing.targetList[keneanung.bashing.attacking].id)
+			local commands = command:split("/")
+			for _, part in ipairs(commands) do
+				svo.sendc(part, echoback)
+			end
+		end
 	end,
 	
 	teardown = function()
-		
+		send = _G.send
 	end,
 	
 }
@@ -735,6 +748,10 @@ keneanung.bashing.nextAttack = function()
 	if keneanung.bashing.configuration.enabled == false then
 		return false
 	end
+
+	if keneanung.bashing.usedBalanceAttack then
+		return true
+	end
 	
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 
@@ -764,6 +781,8 @@ keneanung.bashing.nextAttack = function()
 			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and "keneanungra" or "keneanungki"
 			send(attack, false)
 			keneanung.bashing.shield = false
+			keneanung.bashing.usedBalanceAttack = true
+			tempTimer( 0.5, "keneanung.bashing.usedBalanceAttack = false")
 			return true
 
 		end
