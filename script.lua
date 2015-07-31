@@ -1336,6 +1336,19 @@ keneanung.bashing.getAfflictions = function(denizen)
 	return ret
 end
 
+keneanung.bashing.hasAffliction = function(denizen, affliction)
+	debugMessage("Checking for denizen affliction.", { denizen = denizen, affliction = affliction })
+
+	local denizenObject = directTargetAccess[denizen]
+	debugMessage("associated denizen object from direct access", denizenObject)
+	if not denizenObject then
+		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
+		return
+	end
+
+	return denizenObject.affs[affliction] ~= nil
+end
+
 keneanung.bashing.handleSkillList = function()
 	local skillList = gmcp.Char.Skills.List
 	if skillList.group ~= "battlerage" then return end
