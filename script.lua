@@ -3,39 +3,39 @@ local send = send
 local directTargetAccess = {}
 local afflictions = {
 	weakness = {
-		colour = "purple",
+		colour = "pale_green",
 		timer = 7
 	},
 	sensitivity = {
-		colour = "gold",
+		colour = "orange_red",
 		timer = 8
 	},
 	recklessness = {
-		colour = "gold",
-		timer = 9
+		colour = "yellow",
+		timer = 15
 	},
 	aeon = {
-		colour = "gold",
+		colour = "purple",
 		timer = 6
 	},
 	feared = {
-		colour = "gold",
+		colour = "orange",
 		timer = 8
 	},
 	clumsy = {
-		colour = "gold",
+		colour = "forest_green",
 		timer = 7
 	},
 	inhibit = {
-		colour = "gold",
+		colour = "light_coral",
 		timer = 9
 	},
 	charm = {
-		colour = "gold",
+		colour = "magenta",
 		timer = 5
 	},
 	stun = {
-		colour = "gold",
+		colour = "black:yellow",
 		timer = 4
 	},
 }
@@ -1334,6 +1334,19 @@ keneanung.bashing.getAfflictions = function(denizen)
 	end
 
 	return ret
+end
+
+keneanung.bashing.hasAffliction = function(denizen, affliction)
+	debugMessage("Checking for denizen affliction.", { denizen = denizen, affliction = affliction })
+
+	local denizenObject = directTargetAccess[denizen]
+	debugMessage("associated denizen object from direct access", denizenObject)
+	if not denizenObject then
+		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
+		return
+	end
+
+	return denizenObject.affs[affliction] ~= nil
 end
 
 keneanung.bashing.handleSkillList = function()
