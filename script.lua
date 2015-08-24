@@ -1225,6 +1225,9 @@ keneanung.bashing.login = function()
 	system.setup()
 	sessionGains.gold = 0
 	sessionGains.experience = 0
+	lastGoldChange = nil
+	lastXpChange = nil
+	lastGold = nil
 end
 
 keneanung.bashing.setAlias = function(command)
