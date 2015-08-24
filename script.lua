@@ -821,20 +821,28 @@ local roomItemCallbackWorker = function(event)
 
 	if(event == "gmcp.Char.Items.List") then
 
+		--restore targets we had when we were in the room last
 		local storedTargets = roomTargetStore[gmcp.Room.Info.num]
 
 		if storedTargets then
 			keneanung.bashing.targetList = storedTargets.targetList
-			keneanung.bashing.attacking = storedTargets.attacked
 		end
 
 		local targetList = {}
 		-- make sure our targets stay at the same place!
 		for index, targ in ipairs(keneanung.bashing.targetList) do
-			if index > keneanung.bashing.attacking then
-				break
+			-- search if that target possibly left the room
+			local found = false
+			for _, item in ipairs(gmcp.Char.Items.List.items) do
+				if item.id == targ.id then
+					found = true
+					break
+				end
 			end
-			targetList[#targetList + 1] = targ
+			-- still there? Add it in the old place
+			if found then
+				targetList[#targetList + 1] = targ
+			end
 		end
 		keneanung.bashing.targetList = targetList
 		keneanung.bashing.room = {}
@@ -1036,7 +1044,6 @@ keneanung.bashing.roomMessageCallback = function()
 
 	roomTargetStore[keneanung.bashing.lastRoom] = {
 		targetList = keneanung.bashing.targetList,
-		attacked = keneanung.bashing.attacking
 	}
 
 	keneanung.bashing.damage = 0
