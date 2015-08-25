@@ -138,12 +138,19 @@ keneanung.bashing.systems.svo = {
 	
 	setup = function()
 		send = function(command, echoback)
+			debugMessage("send got called", {command = command, echoback = echoback })
+			local useAlias = false
 			if command == "keneanungki" then
 				command = keneanung.bashing.configuration.attackcommand
+				useAlias = true
 			elseif command == "keneanungra" then
 				command = keneanung.bashing.configuration.razecommand
+				useAlias = true
 			end
-			command = command:gsub("&tar", keneanung.bashing.targetList[keneanung.bashing.attacking].id)
+			if keneanung.bashing.attacking > 0 and useAlias then
+				command = command:gsub("&tar", keneanung.bashing.targetList[keneanung.bashing.attacking].id)
+			end
+
 			local commands = command:split("/")
 			for _, part in ipairs(commands) do
 				svo.sendc(part, echoback)
@@ -713,7 +720,7 @@ keneanung.bashing.toggle = function(what, print)
 end
 
 keneanung.bashing.shielded = function(what)
-	if what == keneanung.bashing.targetList[keneanung.bashing.attacking].name then
+	if keneanung.bashing.attacking > 0 and what == keneanung.bashing.targetList[keneanung.bashing.attacking].name then
 		local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 		system.handleShield()
 	end
