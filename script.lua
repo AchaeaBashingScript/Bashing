@@ -3,42 +3,44 @@ local send = send
 local directTargetAccess = {}
 local afflictions = {
 	weakness = {
-		colour = "purple",
+		colour = "pale_green",
 		timer = 7
 	},
 	sensitivity = {
-		colour = "gold",
+		colour = "orange_red",
 		timer = 8
 	},
 	recklessness = {
-		colour = "gold",
-		timer = 9
+		colour = "yellow",
+		timer = 15
 	},
 	aeon = {
-		colour = "gold",
+		colour = "purple",
 		timer = 6
 	},
 	feared = {
-		colour = "gold",
+		colour = "orange",
 		timer = 8
 	},
 	clumsy = {
-		colour = "gold",
+		colour = "forest_green",
 		timer = 7
 	},
 	inhibit = {
-		colour = "gold",
+		colour = "light_coral",
 		timer = 9
 	},
 	charm = {
-		colour = "gold",
+		colour = "magenta",
 		timer = 5
 	},
 	stun = {
-		colour = "gold",
+		colour = "black:yellow",
 		timer = 4
 	},
 }
+local sessionGains = { }
+local tripGains = { gold = 0, experience = 0 }
 
 local requestSkillDetails = {}
 local battlerageSkills = {}
@@ -46,6 +48,9 @@ local rage = 0
 
 local race = ""
 local class = ""
+local lastGoldChange
+local lastGold
+local lastXp
 
 local roomTargetStore = {}
 
@@ -76,6 +81,7 @@ keneanung.bashing.configuration.system = "auto"
 keneanung.bashing.configuration.filesToLoad = {}
 keneanung.bashing.configuration.rageStrat = "simple"
 keneanung.bashing.configuration.targetLoyals = false
+keneanung.bashing.configuration.lifetimeGains = { gold = 0, experience = 0 }
 
 local debugMessage = function(message, content)
 	if not debugEnabled then return end
@@ -132,12 +138,19 @@ keneanung.bashing.systems.svo = {
 	
 	setup = function()
 		send = function(command, echoback)
+			debugMessage("send got called", {command = command, echoback = echoback })
+			local useAlias = false
 			if command == "keneanungki" then
 				command = keneanung.bashing.configuration.attackcommand
+				useAlias = true
 			elseif command == "keneanungra" then
 				command = keneanung.bashing.configuration.razecommand
+				useAlias = true
 			end
-			command = command:gsub("&tar", keneanung.bashing.targetList[keneanung.bashing.attacking].id)
+			if keneanung.bashing.attacking > 0 and useAlias then
+				command = command:gsub("&tar", keneanung.bashing.targetList[keneanung.bashing.attacking].id)
+			end
+
 			local commands = command:split("/")
 			for _, part in ipairs(commands) do
 				svo.sendc(part, echoback)
@@ -707,7 +720,7 @@ keneanung.bashing.toggle = function(what, print)
 end
 
 keneanung.bashing.shielded = function(what)
-	if what == keneanung.bashing.targetList[keneanung.bashing.attacking].name then
+	if keneanung.bashing.attacking > 0 and what == keneanung.bashing.targetList[keneanung.bashing.attacking].name then
 		local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 		system.handleShield()
 	end
@@ -815,20 +828,28 @@ local roomItemCallbackWorker = function(event)
 
 	if(event == "gmcp.Char.Items.List") then
 
+		--restore targets we had when we were in the room last
 		local storedTargets = roomTargetStore[gmcp.Room.Info.num]
 
 		if storedTargets then
 			keneanung.bashing.targetList = storedTargets.targetList
-			keneanung.bashing.attacking = storedTargets.attacked
 		end
 
 		local targetList = {}
 		-- make sure our targets stay at the same place!
 		for index, targ in ipairs(keneanung.bashing.targetList) do
-			if index > keneanung.bashing.attacking then
-				break
+			-- search if that target possibly left the room
+			local found = false
+			for _, item in ipairs(gmcp.Char.Items.List.items) do
+				if item.id == targ.id then
+					found = true
+					break
+				end
 			end
-			targetList[#targetList + 1] = targ
+			-- still there? Add it in the old place
+			if found then
+				targetList[#targetList + 1] = targ
+			end
 		end
 		keneanung.bashing.targetList = targetList
 		keneanung.bashing.room = {}
@@ -1030,7 +1051,6 @@ keneanung.bashing.roomMessageCallback = function()
 
 	roomTargetStore[keneanung.bashing.lastRoom] = {
 		targetList = keneanung.bashing.targetList,
-		attacked = keneanung.bashing.attacking
 	}
 
 	keneanung.bashing.damage = 0
@@ -1113,6 +1133,44 @@ keneanung.bashing.charStatusCallback = function()
 	if somethingChanged then
 		sendGMCP([[Char.Skills.Get {"group":"battlerage"}]]) -- rerequest battlerage abilities
 	end
+
+	debugMessage("Going to calculate gold gains", { lastGoldChange = lastGoldChange, lastGold = lastGold } )
+
+	local goldNumber = tonumber(gmcp.Char.Status.gold)
+	local goldChange = goldNumber - (lastGold or 0)
+
+	debugMessage("Got new gold numbers", { goldChange = goldChange, goldNumber = goldNumber } )
+
+	local lifetimeGains = keneanung.bashing.configuration.lifetimeGains
+
+	if lastGoldChange ~= nil then -- On login, skip this
+
+		if goldChange + lastGoldChange ~= 0 and goldChange > 0 then	-- We only want to count
+										-- real changes (not
+			sessionGains.gold = sessionGains.gold + goldChange	-- taking from pack) and
+			tripGains.gold = tripGains.gold + goldChange		-- gold gains.
+			lifetimeGains.gold = lifetimeGains.gold + goldChange
+
+		end
+
+	end
+
+	lastGoldChange = goldChange
+	lastGold = goldNumber
+
+	local newXp = gmcp.Char.Status.level:match("^(%d+)") * 100 + gmcp.Char.Status.xp:match("(.+)%%")
+
+	debugMessage("Calculating experience gain", { lastXp = lastXp, newXp = newXp })
+
+	if lastXp ~= nil then
+
+		sessionGains.experience = sessionGains.experience + newXp - lastXp
+		tripGains.experience = tripGains.experience + newXp - lastXp
+		lifetimeGains.experience = lifetimeGains.experience + newXp - lastXp
+
+	end
+
+	lastXp = newXp
 end
 
 keneanung.bashing.setCommand = function(command, what)
@@ -1179,6 +1237,11 @@ keneanung.bashing.login = function()
 	keneanung.bashing.setAlias("razecommand")
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.setup()
+	sessionGains.gold = 0
+	sessionGains.experience = 0
+	lastGoldChange = nil
+	lastXpChange = nil
+	lastGold = nil
 end
 
 keneanung.bashing.setAlias = function(command)
@@ -1336,6 +1399,19 @@ keneanung.bashing.getAfflictions = function(denizen)
 	return ret
 end
 
+keneanung.bashing.hasAffliction = function(denizen, affliction)
+	debugMessage("Checking for denizen affliction.", { denizen = denizen, affliction = affliction })
+
+	local denizenObject = directTargetAccess[denizen]
+	debugMessage("associated denizen object from direct access", denizenObject)
+	if not denizenObject then
+		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
+		return
+	end
+
+	return denizenObject.affs[affliction] ~= nil
+end
+
 keneanung.bashing.handleSkillList = function()
 	local skillList = gmcp.Char.Skills.List
 	if skillList.group ~= "battlerage" then return end
@@ -1390,6 +1466,49 @@ keneanung.bashing.rageAvailable = function(ability)
 		end
 	end
 	return false
+end
+
+keneanung.bashing.printGains = function(which)
+	local gainsTable
+	if which == "lifetime" then
+		gainsTable = keneanung.bashing.configuration.lifetimeGains
+	elseif which == "session" then
+		gainsTable = sessionGains
+	elseif which == "trip" then
+		gainsTable = tripGains
+	else
+		kecho(string.format("Gains for the timespan '<red>%s<reset>' are not tracked.", which))
+		return
+	end
+
+	local levels, percent = math.modf(gainsTable.experience / 100)
+	percent = percent * 100
+	kecho(string.format("You gained <red>%d<reset> levels, <red>%.1f%%<reset> towards the next level and <red>%d<reset> gold during the period '<red>%s<reset>'.", levels, percent, gainsTable.gold, which))
+	if gainsTable.stopwatch then
+		local time = getStopWatchTime(gainsTable.stopwatch)
+		kecho(string.format("The period was <red>%d<reset>h <red>%d<reset>min and <red>%.3f<reset> sec long.", math.floor(time / 3600), math.floor( math.mod(time, 3600) / 60), math.mod(time, 60)))
+	end
+end
+
+keneanung.bashing.startHuntingTrip = function()
+	if not tripGains.stopwatch then
+		tripGains = { gold = 0, experience = 0, stopwatch = createStopWatch() }
+		startStopWatch(tripGains.stopwatch)
+		kecho("Started new hunting trip. Enjoy and be careful.")
+	else
+		kecho("Ugh- Finish the running trip before starting a new one?")
+	end
+end
+
+keneanung.bashing.stopHuntingTrip = function()
+	if tripGains.stopwatch then
+		kecho("Stopped hunting trip. I hope you had fun.")
+		keneanung.bashing.printGains("trip")
+		stopStopWatch(tripGains.stopwatch)
+		tripGains.stopwatch = nil
+	else
+		kecho("You are not hunting or didn't tell me you did. Can't stop anything.")
+	end
 end
 
 keneanung.bashing.load()

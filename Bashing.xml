@@ -209,6 +209,27 @@
                     <packageName></packageName>
                     <regex>^kconfig bashing targetloyals$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>show gains</name>
+                    <script>keneanung.bashing.printGains(matches[2])</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kshow gains (lifetime|session|trip)</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>start a new hunting trip</name>
+                    <script>keneanung.bashing.startHuntingTrip()</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^ktrip start$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>stop the current hunting trip</name>
+                    <script>keneanung.bashing.stopHuntingTrip()</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^ktrip stop$</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
@@ -353,6 +374,14 @@ use &quot;flee &lt;direction&gt;&quot; to set a new direction.
                         <script>--This registers our Char.Status callback. Do not remove!</script>
                         <eventHandlerList>
                             <string>gmcp.Char.Status</string>
+                        </eventHandlerList>
+                    </Script>
+                    <Script isActive="yes" isFolder="no">
+                        <name>keneanung.bashing.save</name>
+                        <packageName></packageName>
+                        <script>--This registers our sysExitEvent callback. Do not remove!</script>
+                        <eventHandlerList>
+                            <string>sysExitEvent</string>
                         </eventHandlerList>
                     </Script>
                 </ScriptGroup>
