@@ -82,6 +82,7 @@ keneanung.bashing.configuration.filesToLoad = {}
 keneanung.bashing.configuration.rageStrat = "simple"
 keneanung.bashing.configuration.targetLoyals = false
 keneanung.bashing.configuration.lifetimeGains = { gold = 0, experience = 0 }
+keneanung.bashing.configuration.manualTargetting = false
 
 local debugMessage = function(message, content)
 	if not debugEnabled then return end
@@ -700,6 +701,18 @@ keneanung.bashing.showConfig = function()
 		)
 	)
 
+	kecho(
+		string.format(
+			"Manual targetting is <red>%s<reset>",
+			keneanung.bashing.configuration.manualTargetting and "on" or "off"
+		),
+		"keneanung.bashing.toggle('manualTargetting', 'Manual targetting')",
+		string.format(
+			"Turn manual targetting %s",
+			keneanung.bashing.configuration.manualTargetting and "off" or "on"
+		)
+	)
+
 	echo("\n")
 
 	kecho("Loading these additional files on startup:    ")
@@ -823,39 +836,46 @@ local roomItemCallbackWorker = function(event)
 	if(event == "gmcp.Char.Items.Add") then
 		local item = gmcp.Char.Items.Add.item
 		keneanung.bashing.room[#keneanung.bashing.room + 1] = item
-		keneanung.bashing.addTarget(item)
+		if not keneanung.bashing.configuration.manualTargetting then
+			keneanung.bashing.addTarget(item)
+		end
 	end
 
 	if(event == "gmcp.Char.Items.List") then
 
+		if not keneanung.bashing.configuration.manualTargetting then
 		--restore targets we had when we were in the room last
-		local storedTargets = roomTargetStore[gmcp.Room.Info.num]
+			local storedTargets = roomTargetStore[gmcp.Room.Info.num]
 
-		if storedTargets then
-			keneanung.bashing.targetList = storedTargets.targetList
-		end
+			if storedTargets then
+				keneanung.bashing.targetList = storedTargets.targetList
+			end
 
-		local targetList = {}
-		-- make sure our targets stay at the same place!
-		for index, targ in ipairs(keneanung.bashing.targetList) do
-			-- search if that target possibly left the room
-			local found = false
-			for _, item in ipairs(gmcp.Char.Items.List.items) do
-				if item.id == targ.id then
-					found = true
-					break
+			local targetList = {}
+			-- make sure our targets stay at the same place!
+			for index, targ in ipairs(keneanung.bashing.targetList) do
+				-- search if that target possibly left the room
+				local found = false
+				for _, item in ipairs(gmcp.Char.Items.List.items) do
+					if item.id == targ.id then
+						found = true
+						break
+					end
+				end
+				-- still there? Add it in the old place
+				if found then
+					targetList[#targetList + 1] = targ
 				end
 			end
-			-- still there? Add it in the old place
-			if found then
-				targetList[#targetList + 1] = targ
-			end
+			keneanung.bashing.targetList = targetList
 		end
-		keneanung.bashing.targetList = targetList
+
 		keneanung.bashing.room = {}
 		for _, item in ipairs(gmcp.Char.Items.List.items) do
 			keneanung.bashing.room[#keneanung.bashing.room + 1] = item
-			keneanung.bashing.addTarget(item)
+			if not keneanung.bashing.configuration.manualTargetting then
+				keneanung.bashing.addTarget(item)
+			end
 		end
 	end
 
@@ -868,7 +888,9 @@ local roomItemCallbackWorker = function(event)
 			end
 		end
 
-		keneanung.bashing.removeTarget(item)
+		if not keneanung.bashing.configuration.manualTargetting then
+			keneanung.bashing.removeTarget(item)
+		end
 	end
 
 	local after = keneanung.bashing.idOnly(keneanung.bashing.targetList)
@@ -1049,9 +1071,11 @@ keneanung.bashing.roomMessageCallback = function()
 		return
 	end
 
-	roomTargetStore[keneanung.bashing.lastRoom] = {
-		targetList = keneanung.bashing.targetList,
-	}
+	if not keneanung.bashing.configuration.manualTargetting then
+		roomTargetStore[keneanung.bashing.lastRoom] = {
+			targetList = keneanung.bashing.targetList,
+		}
+	end
 
 	keneanung.bashing.damage = 0
 	keneanung.bashing.healing = 0
