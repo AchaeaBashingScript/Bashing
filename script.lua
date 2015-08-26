@@ -1108,12 +1108,12 @@ keneanung.bashing.vitalsChangeRecord = function()
 		end
 	end
 
-	keneanung.bashing.battlerage[keneanung.bashing.configuration.rageStrat](rage)
+	keneanung.bashing.battlerage[keneanung.bashing.configuration.rageStrat](rage, battlerageSkills)
 
 end
 
 keneanung.bashing.buttonActionsCallback = function()
-	keneanung.bashing.battlerage[keneanung.bashing.configuration.rageStrat](rage)
+	keneanung.bashing.battlerage[keneanung.bashing.configuration.rageStrat](rage, battlerageSkills)
 end
 
 keneanung.bashing.charStatusCallback = function()
