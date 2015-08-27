@@ -18,11 +18,11 @@ local afflictions = {
 		colour = "purple",
 		timer = 6
 	},
-	feared = {
+	fear = {
 		colour = "orange",
 		timer = 8
 	},
-	clumsy = {
+	clumsiness = {
 		colour = "forest_green",
 		timer = 7
 	},
@@ -1357,8 +1357,8 @@ keneanung.bashing.toggleDebug = function()
 	kecho("Debug " .. (debugEnabled and "enabled" or "disabled"))
 end
 
-keneanung.bashing.addDenizenAffliction = function(denizen, affliction)
-	debugMessage("New denizen affliction.", { denizen = denizen, affliction = affliction })
+keneanung.bashing.addDenizenAffliction = function(denizen, affliction, own)
+	debugMessage("New denizen affliction.", { denizen = denizen, affliction = affliction, own = own })
 
 	local affObject = afflictions[affliction]
 	debugMessage("associated affliction object", affObject)
@@ -1380,14 +1380,17 @@ keneanung.bashing.addDenizenAffliction = function(denizen, affliction)
 	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking] == denizenObject)
 
 	denizenObject.affs[affliction] = tempTimer(affObject.timer,
-		string.format("keneanung.bashing.removeDenizenAffliction('%s', '%s')", denizenObject.id, affliction))
+		string.format("keneanung.bashing.removeDenizenAffliction('%s', '%s', %s)", denizenObject.id, affliction, own and "true" or false))
 
 	kecho(string.format("<%s>%s%s<reset> <green>gained<reset> <%s>%s<reset>", isTarget and "OrangeRed" or "yellow",
 		denizenObject.name, isTarget and " (your target)" or "", affObject.colour, affliction))
+	if own then
+		raiseEvent("keneanung.bashing.afflictionGained", denizenObject.id, affliction)
+	end
 end
 
-keneanung.bashing.removeDenizenAffliction = function(denizen, affliction)
-	debugMessage("Remove denizen affliction.", { denizen = denizen, affliction = affliction })
+keneanung.bashing.removeDenizenAffliction = function(denizen, affliction, own)
+	debugMessage("Remove denizen affliction.", { denizen = denizen, affliction = affliction, own = own })
 
 	local affObject = afflictions[affliction]
 	debugMessage("associated affliction object", affObject)
@@ -1411,6 +1414,9 @@ keneanung.bashing.removeDenizenAffliction = function(denizen, affliction)
 	killTimer(denizenObject.affs[affliction])
 	kecho(string.format("<%s>%s%s<reset> <red>lost<reset> <%s>%s<reset>",
 		isTarget and "OrangeRed" or "yellow", denizenObject.name, isTarget and " (your target)" or "", affObject.colour, affliction))
+	if own then
+		raiseEvent("keneanung.bashing.afflictionLost", denizenObject.id, affliction)
+	end
 	denizenObject.affs[affliction] = nil
 end
 
@@ -1465,13 +1471,16 @@ keneanung.bashing.handleSkillInfo = function()
 	local command = skillInfo.info:match("\n(.+<target>.-)\n"):gsub("<target>", "%%d")
 	local affliction = skillInfo.info:match("Gives denizen affliction: (%w+)")
 	local affsUsed = {skillInfo.info:match("Uses denizen afflictions: (%w+) or (%w+)")}
+	for ind, aff in ipairs(affsUsed) do
+		affsUsed[ind] = aff:lower()
+	end
 	local skillKnown = skillInfo.info:find("*** You have not yet learned this ability ***", 1, true) == nil
 
 	local rageObject = {
 		cooldown = cooldown,
 		rage = rage,
 		command = command,
-		affliction = affliction,
+		affliction = affliction and affliction:lower(),
 		affsUsed = affsUsed,
 		name = skillInfo.skill,
 		skillKnown = skillKnown
@@ -1561,7 +1570,7 @@ end
 keneanung.bashing.unseenDenizen = function(id)
 	id = tonumber(id)
 	if denizenCache[id] then
-		killTimer(denizenCache[id])
+		killTimer(denizenCache[id].expireTimer)
 	end
 	denizenCache[id] = nil
 end
