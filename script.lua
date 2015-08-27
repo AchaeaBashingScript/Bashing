@@ -53,6 +53,7 @@ local lastGold
 local lastXp
 
 local roomTargetStore = {}
+local denizenCache = {}
 
 keneanung = keneanung or {}
 keneanung.bashing = {}
@@ -839,6 +840,7 @@ local roomItemCallbackWorker = function(event)
 		if not keneanung.bashing.configuration.manualTargetting then
 			keneanung.bashing.addTarget(item)
 		end
+		keneanung.bashing.seenDenizen(item.id, item.name)
 	end
 
 	if(event == "gmcp.Char.Items.List") then
@@ -876,6 +878,7 @@ local roomItemCallbackWorker = function(event)
 			if not keneanung.bashing.configuration.manualTargetting then
 				keneanung.bashing.addTarget(item)
 			end
+			keneanung.bashing.seenDenizen(item.id, item.name)
 		end
 	end
 
@@ -1366,7 +1369,10 @@ keneanung.bashing.addDenizenAffliction = function(denizen, affliction)
 
 	local denizenObject = directTargetAccess[denizen]
 	debugMessage("associated denizen object from direct access", denizenObject)
-	if not denizenObject then
+	if not denizenObject and tonumber(denizen) then
+		denizenObject = { id = denizen, name = keneanung.bashing.getDenizenName(denizen), affs = {} }
+		directTargetAccess[denizen] = denizenObject
+	elseif not denizenObject then
 		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets. Fallback is not yet implemented.")
 		return
 	end
@@ -1392,7 +1398,10 @@ keneanung.bashing.removeDenizenAffliction = function(denizen, affliction)
 
 	local denizenObject = directTargetAccess[denizen]
 	debugMessage("associated denizen object from direct access", denizenObject)
-	if not denizenObject then
+	if not denizenObject and tonumber(denizen) then
+		denizenObject = { id = denizen, name = keneanung.bashing.getDenizenName(denizen), affs = {} }
+		directTargetAccess[denizen] = denizenObject
+	elseif not denizenObject then
 		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
 		return
 	end
@@ -1533,6 +1542,33 @@ keneanung.bashing.stopHuntingTrip = function()
 	else
 		kecho("You are not hunting or didn't tell me you did. Can't stop anything.")
 	end
+end
+
+keneanung.bashing.seenDenizen = function(id, name)
+	id = tonumber(id)
+	if denizenCache[id] then
+		local timer = denizenCache[id].expireTimer
+		killTimer(timer)
+		timer = tempTimer(10 * 60, "keneanung.bashing.unseenDenizen(" .. id .. ")")
+		denizenCache[id].expireTimer = timer
+	else
+		local cacheObject = { name = name }
+		cacheObject.expireTimer = tempTimer(10 * 60, "keneanung.bashing.unseenDenizen(" .. id .. ")")
+		denizenCache[id] = cacheObject
+	end
+end
+
+keneanung.bashing.unseenDenizen = function(id)
+	id = tonumber(id)
+	if denizenCache[id] then
+		killTimer(denizenCache[id])
+	end
+	denizenCache[id] = nil
+end
+
+keneanung.bashing.getDenizenName = function(id)
+	id = tonumber(id)
+	return denizenCache[id] and denizenCache[id].name or "unknown"
 end
 
 keneanung.bashing.load()
