@@ -1380,7 +1380,7 @@ keneanung.bashing.addDenizenAffliction = function(denizen, affliction, own)
 	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking] == denizenObject)
 
 	denizenObject.affs[affliction] = tempTimer(affObject.timer,
-		string.format("keneanung.bashing.removeDenizenAffliction('%s', '%s', %s)", denizenObject.id, affliction, own and "true" or false))
+		string.format("keneanung.bashing.removeDenizenAffliction('%s', '%s', %s)", denizenObject.id, affliction, own and "true" or "false"))
 
 	kecho(string.format("<%s>%s%s<reset> <green>gained<reset> <%s>%s<reset>", isTarget and "OrangeRed" or "yellow",
 		denizenObject.name, isTarget and " (your target)" or "", affObject.colour, affliction))
