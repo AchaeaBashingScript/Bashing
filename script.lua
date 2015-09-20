@@ -38,6 +38,10 @@ local afflictions = {
 		colour = "black:yellow",
 		timer = 4
 	},
+	amnesia = {
+		colour = "LightGrey",
+		timer = 5
+	},
 }
 local sessionGains = { }
 local tripGains = { gold = 0, experience = 0 }
