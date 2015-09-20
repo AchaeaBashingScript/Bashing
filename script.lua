@@ -1381,10 +1381,10 @@ keneanung.bashing.addDenizenAffliction = function(denizen, affliction, own)
 		return
 	end
 
-	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking] == denizenObject)
+	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking].id == denizenObject.id)
 
 	denizenObject.affs[affliction] = tempTimer(affObject.timer,
-		string.format("keneanung.bashing.removeDenizenAffliction('%s', '%s', %s)", denizenObject.id, affliction, own and "true" or false))
+		string.format("keneanung.bashing.removeDenizenAffliction('%s', '%s', %s)", denizenObject.id, affliction, own and "true" or "false"))
 
 	kecho(string.format("<%s>%s%s<reset> <green>gained<reset> <%s>%s<reset>", isTarget and "OrangeRed" or "yellow",
 		denizenObject.name, isTarget and " (your target)" or "", affObject.colour, affliction))
@@ -1413,7 +1413,7 @@ keneanung.bashing.removeDenizenAffliction = function(denizen, affliction, own)
 		return
 	end
 
-	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking] == denizenObject)
+	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking].id == denizenObject.id)
 
 	killTimer(denizenObject.affs[affliction])
 	kecho(string.format("<%s>%s%s<reset> <red>lost<reset> <%s>%s<reset>",
@@ -1430,8 +1430,7 @@ keneanung.bashing.getAfflictions = function(denizen)
 	local denizenObject = directTargetAccess[denizen]
 	debugMessage("associated denizen object from direct access", denizenObject)
 	if not denizenObject then
-		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
-		return
+		return {}
 	end
 
 	local ret = {}
@@ -1448,8 +1447,7 @@ keneanung.bashing.hasAffliction = function(denizen, affliction)
 	local denizenObject = directTargetAccess[denizen]
 	debugMessage("associated denizen object from direct access", denizenObject)
 	if not denizenObject then
-		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
-		return
+		return false
 	end
 
 	return denizenObject.affs[affliction] ~= nil
