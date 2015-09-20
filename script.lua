@@ -1470,7 +1470,7 @@ keneanung.bashing.handleSkillInfo = function()
 
 	local cooldown = tonumber(skillInfo.info:match("(%d+\.%d+) seconds"))
 	local rage = tonumber(skillInfo.info:match("(%d+) rage"))
-	local command = skillInfo.info:match("\n(.+<target>.-)\n"):gsub("<target>", "%%d")
+	local command = skillInfo.info:match("Syntax:\n(.-)\n"):gsub("<target>", "%%d")
 	local affliction = skillInfo.info:match("Gives denizen affliction: (%w+)")
 	local affsUsed = {skillInfo.info:match("Uses denizen afflictions: (%w+) or (%w+)")}
 	for ind, aff in ipairs(affsUsed) do
