@@ -41,14 +41,8 @@ then
   exit 1
 fi
 
-UPLOADS_URL=`cat output.txt | jq ".upload_url" | egrep -o '[^"]+'`
-out=$?
-if [ "$out" != "0" ]
-then
-  echo "Grep failed:" "$out"
-  exit 1
-fi
-UPLOADS_URL=`echo "$UPLOADS_URL" | sed 's/{//' | sed 's/}//'`
+UPLOADS_URL=`cat output.txt | jq --raw-output ".upload_url"`
+UPLOADS_URL=`echo "$UPLOADS_URL" | sed 's/{//' | sed 's/,label}//'`
 UPLOADS_URL=`echo "$UPLOADS_URL""=%s&access_token=%s"`
 UPLOADS_URL=$(printf "$UPLOADS_URL" "Bashing.mpackage" "$ACCESS_TOKEN")
 
