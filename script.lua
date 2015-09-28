@@ -119,11 +119,10 @@ local migrateTo1Point8 = function()
 		keneanung.bashing.configuration.autoraze = nil
 		migratedConfig.razecommand = keneanung.bashing.configuration.razecommand
 		keneanung.bashing.configuration.razecommand = nil
-		migratedConfig.ragestrat = keneanung.bashing.configuration.ragestrat
-		keneanung.bashing.configuration.ragestrat = nil
+		migratedConfig.rageStrat = keneanung.bashing.configuration.rageStrat
+		keneanung.bashing.configuration.rageStrat = nil
 		migratedConfig.autorageraze = keneanung.bashing.configuration.autorageraze
 		keneanung.bashing.configuration.autorageraze = nil
-		keneanung.bashing.configuration[class] = migratedConfig
 	end
 end
 
@@ -1179,6 +1178,7 @@ keneanung.bashing.charStatusCallback = function()
 			newClassConfig.razecommand = "none"
 			newClassConfig.attackcommand = "kill"
 			newClassConfig.rageStrat = "simple"
+			keneanung.bashing.configuration[class] = newClassConfig
 			kecho("Seen new class " .. class .. ". Default config set.")
 		end
 	end
