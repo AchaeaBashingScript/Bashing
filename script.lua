@@ -74,12 +74,8 @@ keneanung.bashing.configuration.enabled = false
 keneanung.bashing.configuration.warning = 500
 keneanung.bashing.configuration.fleeing = 300
 keneanung.bashing.configuration.autoflee = true
-keneanung.bashing.configuration.autoraze = false
-keneanung.bashing.configuration.razecommand = "none"
-keneanung.bashing.configuration.attackcommand = "kill"
 keneanung.bashing.configuration.system = "auto"
 keneanung.bashing.configuration.filesToLoad = {}
-keneanung.bashing.configuration.rageStrat = "simple"
 keneanung.bashing.configuration.targetLoyals = false
 keneanung.bashing.configuration.lifetimeGains = { gold = 0, experience = 0 }
 
@@ -106,6 +102,23 @@ local requestNextSkillDetails = function()
 	if #requestSkillDetails == 0 then return end
 	sendGMCP(string.format([[Char.Skills.Get {"group": "battlerage", "name": "%s"}]], requestSkillDetails[1]))
 	table.remove(requestSkillDetails,1)
+end
+
+local migrateTo1Point8 = function()
+	if keneanung.bashing.configuration.attackcommand then
+		local migratedConfig = {}
+		migratedConfig.attackcommand = keneanung.bashing.configuration.attackcommand
+		keneanung.bashing.configuration.attackcommand = nil
+		migratedConfig.autoraze = keneanung.bashing.configuration.autoraze
+		keneanung.bashing.configuration.autoraze = nil
+		migratedConfig.razecommand = keneanung.bashing.configuration.razecommand
+		keneanung.bashing.configuration.razecommand = nil
+		migratedConfig.ragestrat = keneanung.bashing.configuration.ragestrat
+		keneanung.bashing.configuration.ragestrat = nil
+		migratedConfig.autorageraze = keneanung.bashing.configuration.autorageraze
+		keneanung.bashing.configuration.autorageraze = nil
+		keneanung.bashing.configuration[class] = migratedConfig
+	end
 end
 
 keneanung.bashing.systems.svo = {
@@ -141,10 +154,10 @@ keneanung.bashing.systems.svo = {
 			debugMessage("send got called", {command = command, echoback = echoback })
 			local useAlias = false
 			if command == "keneanungki" then
-				command = keneanung.bashing.configuration.attackcommand
+				command = keneanung.bashing.configuration[class].attackcommand
 				useAlias = true
 			elseif command == "keneanungra" then
-				command = keneanung.bashing.configuration.razecommand
+				command = keneanung.bashing.configuration[class].razecommand
 				useAlias = true
 			end
 			if keneanung.bashing.attacking > 0 and useAlias then
@@ -170,10 +183,10 @@ keneanung.bashing.systems.wundersys = {
 		if keneanung.bashing.attacking > 0 then
 			enableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
 			local command
-			if keneanung.bashing.configuration.attackcommand:find("&tar") then
-				command = keneanung.bashing.configuration.attackcommand
+			if keneanung.bashing.configuration[class].attackcommand:find("&tar") then
+				command = keneanung.bashing.configuration[class].attackcommand
 			else
-				command = keneanung.bashing.configuration.attackcommand .. " &tar"
+				command = keneanung.bashing.configuration[class].attackcommand .. " &tar"
 			end
 			wsys.doradd(command)
  	 	end
@@ -198,12 +211,12 @@ keneanung.bashing.systems.wundersys = {
 	end,
 
 	handleShield = function()
-		if keneanung.bashing.configuration.autoraze then
+		if keneanung.bashing.configuration[class].autoraze then
 			local command
-			if keneanung.bashing.configuration.razecommand:find("&tar") then
-				command = keneanung.bashing.configuration.razecommand
+			if keneanung.bashing.configuration[class].razecommand:find("&tar") then
+				command = keneanung.bashing.configuration[class].razecommand
 			else
-				command = keneanung.bashing.configuration.razecommand .. " &tar"	
+				command = keneanung.bashing.configuration[class].razecommand .. " &tar"
 			end
 			wsys.dofirst(command, 1)
 		end
@@ -254,10 +267,10 @@ keneanung.bashing.systems.wundersys = {
 
 	doActionRun = function(_, command)
 		local razecommand
-		if keneanung.bashing.configuration.razecommand:find("&tar") then
-			razecommand = keneanung.bashing.configuration.razecommand
+		if keneanung.bashing.configuration[class].razecommand:find("&tar") then
+			razecommand = keneanung.bashing.configuration[class].razecommand
 		else
-			razecommand = keneanung.bashing.configuration.razecommand .. " &tar"
+			razecommand = keneanung.bashing.configuration[class].razecommand .. " &tar"
 		end
 		if command == razecommand then
 			keneanung.bashing.shield = false
@@ -294,7 +307,7 @@ keneanung.bashing.systems.none = {
 
 	handleShield = function()
 		keneanung.bashing.shield = true
-		if keneanung.bashing.configuration.autoraze then
+		if keneanung.bashing.configuration[class].autoraze then
 			local command
 			send("queue prepend eqbal keneanungra", false)
 		end
@@ -358,7 +371,7 @@ end
 
 local function rageRazeFunction()
 	if keneanung.bashing.shield then
-		if keneanung.bashing.configuration.autorageraze and keneanung.bashing.rageAvailable(3) then
+		if keneanung.bashing.configuration[class].autorageraze and keneanung.bashing.rageAvailable(3) then
 			send(battlerageSkills[3].command, false)
 			keneanung.bashing.shield = false
 			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
@@ -382,7 +395,7 @@ keneanung.bashing.battlerage.simple = function(rage)
 		{
 			rage = rage,
 			shield = keneanung.bashing.shield,
-			rageraze = keneanung.bashing.configuration.autorageraze,
+			rageraze = keneanung.bashing.configuration[class].autorageraze,
 			rageSkills = battlerageSkills
 		}
 	)
@@ -407,7 +420,7 @@ keneanung.bashing.battlerage.simplereverse = function(rage)
 		{
 			rage = rage,
 			shield = keneanung.bashing.shield,
-			rageraze = keneanung.bashing.configuration.autorageraze,
+			rageraze = keneanung.bashing.configuration[class].autorageraze,
 			rageSkills = battlerageSkills
 		}
 	)
@@ -631,7 +644,7 @@ keneanung.bashing.showConfig = function()
 	kecho(
 		string.format(
 			"Attack is set to <red>%s<reset>",
-			keneanung.bashing.configuration.attackcommand
+			keneanung.bashing.configuration[class].attackcommand
 		),
 		"clearCmdLine() appendCmdLine('kconfig bashing attackcommand ')",
 		"Set attack."
@@ -640,19 +653,19 @@ keneanung.bashing.showConfig = function()
 	kecho(
 		string.format(
 			"Autoraze is <red>%s<reset>",
-			keneanung.bashing.configuration.autoraze and "on" or "off"
+			keneanung.bashing.configuration[class].autoraze and "on" or "off"
 		),
 		"keneanung.bashing.toggle('autoraze', 'Autorazing')",
 		string.format(
 			"Turn autorazing %s",
-			keneanung.bashing.configuration.autoraze and "off" or "on"
+			keneanung.bashing.configuration[class].autoraze and "off" or "on"
 		)
 	)
 
 	kecho(
 		string.format(
 			"Special attack on shielding is set to <red>%s<reset>",
-			keneanung.bashing.configuration.razecommand
+			keneanung.bashing.configuration[class].razecommand
 		),
 		"clearCmdLine() appendCmdLine('kconfig bashing razecommand ')",
 		"Set attack to raze shields."
@@ -661,19 +674,19 @@ keneanung.bashing.showConfig = function()
 	kecho(
 		string.format(
 			"Razing shields with rage is <red>%s<reset>",
-			keneanung.bashing.configuration.autorageraze and "on" or "off"
+			keneanung.bashing.configuration[class].autorageraze and "on" or "off"
 		),
 		"keneanung.bashing.toggle('autorageraze', 'Autorazing with rage')",
 		string.format(
 			"Turn autorazing with rage %s",
-			keneanung.bashing.configuration.autorageraze and "off" or "on"
+			keneanung.bashing.configuration[class].autorageraze and "off" or "on"
 		)
 	)
 
 	kecho(
 		string.format(
 			"Currently using this battlerage strategy: <red>%s<reset>",
-			keneanung.bashing.configuration.rageStrat
+			keneanung.bashing.configuration[class].rageStrat
 		),
 		"clearCmdLine() appendCmdLine('kconfig bashing ragestrat ')",
 		"Set battlerage strategy to use."
@@ -791,7 +804,7 @@ keneanung.bashing.nextAttack = function()
 
 			end
 		
-			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration.autoraze) and "keneanungra" or "keneanungki"
+			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration[class].autoraze) and "keneanungra" or "keneanungki"
 			send(attack, false)
 			keneanung.bashing.shield = false
 			keneanung.bashing.usedBalanceAttack = true
@@ -1108,12 +1121,12 @@ keneanung.bashing.vitalsChangeRecord = function()
 		end
 	end
 
-	keneanung.bashing.battlerage[keneanung.bashing.configuration.rageStrat](rage, battlerageSkills)
+	keneanung.bashing.battlerage[keneanung.bashing.configuration[class].rageStrat](rage, battlerageSkills)
 
 end
 
 keneanung.bashing.buttonActionsCallback = function()
-	keneanung.bashing.battlerage[keneanung.bashing.configuration.rageStrat](rage, battlerageSkills)
+	keneanung.bashing.battlerage[keneanung.bashing.configuration[class].rageStrat](rage, battlerageSkills)
 end
 
 keneanung.bashing.charStatusCallback = function()
@@ -1132,6 +1145,15 @@ keneanung.bashing.charStatusCallback = function()
 
 	if somethingChanged then
 		sendGMCP([[Char.Skills.Get {"group":"battlerage"}]]) -- rerequest battlerage abilities
+		migrateTo1Point8()
+		if not keneanung.bashing.configuration[class] then
+			local newClassConfig = {}
+			newClassConfig.autoraze = false
+			newClassConfig.razecommand = "none"
+			newClassConfig.attackcommand = "kill"
+			newClassConfig.rageStrat = "simple"
+			kecho("Seen new class " .. class .. ". Default config set.")
+		end
 	end
 
 	debugMessage("Going to calculate gold gains", { lastGoldChange = lastGoldChange, lastGold = lastGold } )
@@ -1246,10 +1268,10 @@ end
 
 keneanung.bashing.setAlias = function(command)
 	local attackCommand
-	if keneanung.bashing.configuration[command]:find("&tar") then
-		attackCommand = keneanung.bashing.configuration[command]
+	if keneanung.bashing.configuration[class][command]:find("&tar") then
+		attackCommand = keneanung.bashing.configuration[class][command]
 	else
-		attackCommand = keneanung.bashing.configuration[command] .. " &tar"
+		attackCommand = keneanung.bashing.configuration[class][command] .. " &tar"
 	end
 	send(string.format("setalias %s %s", aliases[command], attackCommand), false)
 end
@@ -1296,7 +1318,7 @@ keneanung.bashing.setRageStrat = function(strategyName)
 		kecho("<orange>Battlerage strategy not changed as '" .. strategyName .. "' is unknown.")
 		return
 	end
-	keneanung.bashing.configuration.rageStrat = strategyName
+	keneanung.bashing.configuration[class].rageStrat = strategyName
 	keneanung.bashing.save()
 	kecho("Using <red>" .. strategyName .. "<reset> as battlerage strategy.\n" )
 end
