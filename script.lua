@@ -1223,8 +1223,8 @@ keneanung.bashing.charStatusCallback = function()
 end
 
 keneanung.bashing.setCommand = function(command, what)
-	keneanung.bashing.configuration[command] = what
-	kecho(command .. " is now <red>" .. keneanung.bashing.configuration[command] .. "<reset>\n" )
+	keneanung.bashing.configuration[class][command] = what
+	kecho(command .. " is now <red>" .. keneanung.bashing.configuration[class][command] .. "<reset>\n" )
 	keneanung.bashing.setAlias(command)
 	keneanung.bashing.save()
 end
