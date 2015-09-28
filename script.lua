@@ -1181,6 +1181,8 @@ keneanung.bashing.charStatusCallback = function()
 			keneanung.bashing.configuration[class] = newClassConfig
 			kecho("Seen new class " .. class .. ". Default config set.")
 		end
+		keneanung.bashing.setAlias("attackcommand")
+		keneanung.bashing.setAlias("razecommand")
 	end
 
 	debugMessage("Going to calculate gold gains", { lastGoldChange = lastGoldChange, lastGold = lastGold } )
