@@ -841,10 +841,13 @@ local roomItemCallbackWorker = function(event)
 	if(event == "gmcp.Char.Items.Add") then
 		local item = gmcp.Char.Items.Add.item
 		keneanung.bashing.room[#keneanung.bashing.room + 1] = item
-		if not keneanung.bashing.configuration.manualTargetting then
-			keneanung.bashing.addTarget(item)
+		if item.attrib and item.attrib:find("m") and not item.attrib:find("d") then
+			keneanung.bashing.seenDenizen(item.id, item.name)
+			item = keneanung.bashing.getTargetObject(item.id)
+			if not keneanung.bashing.configuration.manualTargetting then
+				keneanung.bashing.addTarget(item)
+			end
 		end
-		keneanung.bashing.seenDenizen(item.id, item.name)
 	end
 
 	if(event == "gmcp.Char.Items.List") then
@@ -879,10 +882,13 @@ local roomItemCallbackWorker = function(event)
 		keneanung.bashing.room = {}
 		for _, item in ipairs(gmcp.Char.Items.List.items) do
 			keneanung.bashing.room[#keneanung.bashing.room + 1] = item
-			if not keneanung.bashing.configuration.manualTargetting then
-				keneanung.bashing.addTarget(item)
+			if item.attrib and item.attrib:find("m") and not item.attrib:find("d") then
+				keneanung.bashing.seenDenizen(item.id, item.name)
+				item = keneanung.bashing.getTargetObject(item.id)
+				if not keneanung.bashing.configuration.manualTargetting then
+					keneanung.bashing.addTarget(item)
+				end
 			end
-			keneanung.bashing.seenDenizen(item.id, item.name)
 		end
 	end
 
@@ -975,10 +981,8 @@ keneanung.bashing.addTarget = function(item)
 		return
 	end
 
-	local targetObject = { id = item.id, name = item.name, affs = {} }
-
 	if #targets == 0 then
-		table.insert(targets, targetObject)
+		table.insert(targets, item)
 	else
 
 		-- Small safeguard against adding something twice
@@ -1017,17 +1021,9 @@ keneanung.bashing.addTarget = function(item)
 			insertAt = keneanung.bashing.attacking + 1
 		end
 
-		table.insert(targets, insertAt, targetObject)
+		table.insert(targets, insertAt, item)
 
 	end
-
-	if directTargetAccess[item.id] then
-		for aff, timer in pairs(directTargetAccess[item.id].affs) do
-			targetObject[aff] = timer
-		end
-	end
-
-	directTargetAccess[item.id] = targetObject
 
 	keneanung.bashing.targetList = targets
 
@@ -1371,12 +1367,9 @@ keneanung.bashing.addDenizenAffliction = function(denizen, affliction, own)
 		return
 	end
 
-	local denizenObject = directTargetAccess[denizen]
+	local denizenObject = keneanung.bashing.getTargetObject(denizen)
 	debugMessage("associated denizen object from direct access", denizenObject)
-	if not denizenObject and tonumber(denizen) then
-		denizenObject = { id = denizen, name = keneanung.bashing.getDenizenName(denizen), affs = {} }
-		directTargetAccess[denizen] = denizenObject
-	elseif not denizenObject then
+	if not denizenObject then
 		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets. Fallback is not yet implemented.")
 		return
 	end
@@ -1405,11 +1398,7 @@ keneanung.bashing.removeDenizenAffliction = function(denizen, affliction, own)
 
 	local denizenObject = directTargetAccess[denizen]
 	debugMessage("associated denizen object from direct access", denizenObject)
-	if not denizenObject and tonumber(denizen) then
-		denizenObject = { id = denizen, name = keneanung.bashing.getDenizenName(denizen), affs = {} }
-		directTargetAccess[denizen] = denizenObject
-	elseif not denizenObject then
-		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
+	if not denizenObject then
 		return
 	end
 
@@ -1556,30 +1545,39 @@ keneanung.bashing.stopHuntingTrip = function()
 end
 
 keneanung.bashing.seenDenizen = function(id, name)
-	id = tonumber(id)
 	if denizenCache[id] then
 		local timer = denizenCache[id].expireTimer
 		killTimer(timer)
-		timer = tempTimer(10 * 60, "keneanung.bashing.unseenDenizen(" .. id .. ")")
+		timer = tempTimer(10 * 60, "keneanung.bashing.unseenDenizen('" .. id .. "')")
 		denizenCache[id].expireTimer = timer
 	else
 		local cacheObject = { name = name }
-		cacheObject.expireTimer = tempTimer(10 * 60, "keneanung.bashing.unseenDenizen(" .. id .. ")")
+		cacheObject.expireTimer = tempTimer(10 * 60, "keneanung.bashing.unseenDenizen('" .. id .. "')")
 		denizenCache[id] = cacheObject
 	end
 end
 
 keneanung.bashing.unseenDenizen = function(id)
-	id = tonumber(id)
 	if denizenCache[id] then
 		killTimer(denizenCache[id].expireTimer)
+		denizenCache[id] = nil
 	end
-	denizenCache[id] = nil
+	if directTargetAccess[id] then
+		directTargetAccess[id] = nil
+	end
 end
 
 keneanung.bashing.getDenizenName = function(id)
-	id = tonumber(id)
 	return denizenCache[id] and denizenCache[id].name or "unknown"
+end
+
+keneanung.bashing.getTargetObject = function(id)
+	local result = directTargetAccess[id]
+	if not result then
+		result = { id = id, name = keneanung.bashing.getDenizenName(id), affs = {} }
+		directTargetAccess[id] = result
+	end
+	return result
 end
 
 keneanung.bashing.load()
