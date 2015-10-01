@@ -744,12 +744,24 @@ keneanung.bashing.showConfig = function()
 end
 
 keneanung.bashing.toggle = function(what, print)
+<<<<<<< HEAD
 	if what == "autoraze" or what == "autorageraze" then
 		keneanung.bashing.configuration[class][what] = not keneanung.bashing.configuration[class][what]
 	else
 		keneanung.bashing.configuration[what] = not keneanung.bashing.configuration[what]
 	end
 	kecho(print .. " <red>" .. (keneanung.bashing.configuration[what] and "enabled" or "disabled") .. "\n" )
+=======
+	local toPrint
+	if what == "autoraze" or what == "autorageraze" then
+		keneanung.bashing.configuration[class][what] = not keneanung.bashing.configuration[class][what]
+		toPrint = keneanung.bashing.configuration[class][what] and "enabled" or "disabled"
+	else
+		keneanung.bashing.configuration[what] = not keneanung.bashing.configuration[what]
+		toPrint = keneanung.bashing.configuration[what] and "enabled" or "disabled"
+	end
+	kecho(print .. " <red>" .. toPrint .. "\n" )
+>>>>>>> master
 	keneanung.bashing.save()
 end
 
