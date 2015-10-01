@@ -744,14 +744,6 @@ keneanung.bashing.showConfig = function()
 end
 
 keneanung.bashing.toggle = function(what, print)
-<<<<<<< HEAD
-	if what == "autoraze" or what == "autorageraze" then
-		keneanung.bashing.configuration[class][what] = not keneanung.bashing.configuration[class][what]
-	else
-		keneanung.bashing.configuration[what] = not keneanung.bashing.configuration[what]
-	end
-	kecho(print .. " <red>" .. (keneanung.bashing.configuration[what] and "enabled" or "disabled") .. "\n" )
-=======
 	local toPrint
 	if what == "autoraze" or what == "autorageraze" then
 		keneanung.bashing.configuration[class][what] = not keneanung.bashing.configuration[class][what]
@@ -761,7 +753,6 @@ keneanung.bashing.toggle = function(what, print)
 		toPrint = keneanung.bashing.configuration[what] and "enabled" or "disabled"
 	end
 	kecho(print .. " <red>" .. toPrint .. "\n" )
->>>>>>> master
 	keneanung.bashing.save()
 end
 
@@ -1499,7 +1490,7 @@ keneanung.bashing.handleSkillInfo = function()
 
 	local cooldown = tonumber(skillInfo.info:match("(%d+\.%d+) seconds"))
 	local rage = tonumber(skillInfo.info:match("(%d+) rage"))
-	local command = skillInfo.info:match("Syntax:\n(.-)\n"):gsub("<target>", "%%d")
+	local command = skillInfo.info:match("Syntax:\n(.-)\n"):gsub("<target>", "%%s")
 	local affliction = skillInfo.info:match("Gives denizen affliction: (%w+)")
 	local affsUsed = {skillInfo.info:match("Uses denizen afflictions: (%w+) or (%w+)")}
 	for ind, aff in ipairs(affsUsed) do
