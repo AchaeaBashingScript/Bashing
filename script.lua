@@ -911,6 +911,10 @@ keneanung.bashing.roomItemCallback = function(event)
 	end
 end
 
+keneanung.bashing.sysDataSendRequestCallback = function(_, data)
+	debugMessage("data gets sent", {data = data})
+end
+
 keneanung.bashing.emitEventsIfChanged = function( before, after)
 	if keneanung.bashing.difference(before, after) then
 		raiseEvent("keneanung.bashing.targetList.changed")

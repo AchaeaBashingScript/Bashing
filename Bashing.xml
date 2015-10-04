@@ -422,4 +422,7 @@ use &quot;flee &lt;direction&gt;&quot; to set a new direction.
             </KeyGroup>
         </KeyGroup>
     </KeyPackage>
+    <HelpPackage>
+        <helpURL></helpURL>
+    </HelpPackage>
 </MudletPackage>
