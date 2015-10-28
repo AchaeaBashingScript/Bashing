@@ -384,6 +384,14 @@ use &quot;flee &lt;direction&gt;&quot; to set a new direction.
                             <string>sysExitEvent</string>
                         </eventHandlerList>
                     </Script>
+                    <Script isActive="yes" isFolder="no">
+                        <name>keneanung.bashing.sysDataSendRequestCallback</name>
+                        <packageName></packageName>
+                        <script>--This registers our sysDataSendRequest callback. Do not remove!</script>
+                        <eventHandlerList>
+                            <string>sysDataSendRequest</string>
+                        </eventHandlerList>
+                    </Script>
                 </ScriptGroup>
             </ScriptGroup>
         </ScriptGroup>
