@@ -377,7 +377,7 @@ end
 local function rageRazeFunction()
 	if keneanung.bashing.shield then
 		if keneanung.bashing.configuration[class].autorageraze and keneanung.bashing.rageAvailable(3) then
-			send(battlerageSkills[3].command, false)
+			send(battlerageSkills[3].command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
 			keneanung.bashing.shield = false
 			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 			if system.brokeShield then
@@ -944,6 +944,10 @@ keneanung.bashing.roomItemCallback = function(event)
 	if event == "gmcp.Char.Items.Add" or event == "gmcp.Char.Items.Remove" then
 		roomItemCallbackWorker(event)
 	end
+end
+
+keneanung.bashing.sysDataSendRequestCallback = function(_, data)
+	debugMessage("data gets sent", {data = data})
 end
 
 keneanung.bashing.emitEventsIfChanged = function( before, after)
