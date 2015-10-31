@@ -1295,8 +1295,6 @@ keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Display")
 	sendGMCP([[Core.Supports.Add ["IRE.Display 3"] ]])   -- register the GMCP module independently from gmod.
 	sendGMCP([[Char.Skills.Get {"group":"battlerage"}]])
-	keneanung.bashing.setAlias("attackcommand")
-	keneanung.bashing.setAlias("razecommand")
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.setup()
 	sessionGains.gold = 0
