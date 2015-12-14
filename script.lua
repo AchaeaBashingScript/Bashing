@@ -61,6 +61,7 @@ keneanung.bashing.configuration.priorities = {}
 keneanung.bashing.targetList = {}
 keneanung.bashing.systems = {}
 keneanung.bashing.battlerage = {}
+keneanung.bashing.room = {}
 
 keneanung.bashing.attacking = 0
 keneanung.bashing.damage = 0
