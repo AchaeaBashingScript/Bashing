@@ -94,6 +94,46 @@
                         <integer>1</integer>
                     </regexCodePropertyList>
                 </Trigger>
+                <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+                    <name>stunned</name>
+                    <script>keneanung.bashing.pauseOnAffliction(&quot;stun&quot;)</script>
+                    <triggerType>0</triggerType>
+                    <conditonLineDelta>0</conditonLineDelta>
+                    <mStayOpen>0</mStayOpen>
+                    <mCommand></mCommand>
+                    <packageName></packageName>
+                    <mFgColor>#ff0000</mFgColor>
+                    <mBgColor>#ffff00</mBgColor>
+                    <mSoundFile></mSoundFile>
+                    <colorTriggerFgColor>#000000</colorTriggerFgColor>
+                    <colorTriggerBgColor>#000000</colorTriggerBgColor>
+                    <regexCodeList>
+                        <string>You are too stunned to be able to do anything.</string>
+                    </regexCodeList>
+                    <regexCodePropertyList>
+                        <integer>3</integer>
+                    </regexCodePropertyList>
+                </Trigger>
+                <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+                    <name>stun cured</name>
+                    <script>keneanung.bashing.unpauseOnHealing(&quot;stun&quot;)</script>
+                    <triggerType>0</triggerType>
+                    <conditonLineDelta>0</conditonLineDelta>
+                    <mStayOpen>0</mStayOpen>
+                    <mCommand></mCommand>
+                    <packageName></packageName>
+                    <mFgColor>#ff0000</mFgColor>
+                    <mBgColor>#ffff00</mBgColor>
+                    <mSoundFile></mSoundFile>
+                    <colorTriggerFgColor>#000000</colorTriggerFgColor>
+                    <colorTriggerBgColor>#000000</colorTriggerBgColor>
+                    <regexCodeList>
+                        <string>You are no longer stunned.</string>
+                    </regexCodeList>
+                    <regexCodePropertyList>
+                        <integer>3</integer>
+                    </regexCodePropertyList>
+                </Trigger>
             </TriggerGroup>
         </TriggerGroup>
     </TriggerPackage>
@@ -390,6 +430,19 @@ use &quot;flee &lt;direction&gt;&quot; to set a new direction.
                         <script>--This registers our sysDataSendRequest callback. Do not remove!</script>
                         <eventHandlerList>
                             <string>sysDataSendRequest</string>
+                        </eventHandlerList>
+                    </Script>
+                    <Script isActive="yes" isFolder="no">
+                        <name>keneanung.bashing.afflictionCallback</name>
+                        <packageName></packageName>
+                        <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+</script>
+                        <eventHandlerList>
+                            <string>gmcp.Char.Afflictions</string>
                         </eventHandlerList>
                     </Script>
                 </ScriptGroup>

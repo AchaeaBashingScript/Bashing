@@ -66,6 +66,8 @@ keneanung.bashing.configuration.priorities = {}
 keneanung.bashing.targetList = {}
 keneanung.bashing.systems = {}
 keneanung.bashing.battlerage = {}
+keneanung.bashing.room = {}
+keneanung.bashing.pausingAfflictions = {}
 
 keneanung.bashing.attacking = 0
 keneanung.bashing.damage = 0
@@ -179,6 +181,10 @@ keneanung.bashing.systems.svo = {
 	teardown = function()
 		send = _G.send
 	end,
+
+	unpause = function()
+		svo.donext()
+	end
 	
 }
 
@@ -281,6 +287,14 @@ keneanung.bashing.systems.wundersys = {
 			keneanung.bashing.shield = false
 		end
 	end,
+
+	pause = function()
+		keneanung.bashing.systems.wundersys.stopAttack()
+	end,
+
+	unpause = function()
+		keneanung.bashing.systems.wundersys.startAttack()
+	end
 }
 
 keneanung.bashing.systems.none = {
@@ -364,6 +378,14 @@ keneanung.bashing.systems.none = {
 			killTrigger(keneanung.bashing.systems.none.queueTrigger)
 		end
 	end,
+
+	pause = function()
+		disableTrigger(keneanung.bashing.systems.none.queueTrigger)
+	end,
+
+	unpause = function()
+		keneanung.bashing.systems.none.startAttack()
+	end
 
 }
 
@@ -802,6 +824,10 @@ keneanung.bashing.nextAttack = function()
 	if keneanung.bashing.usedBalanceAttack then
 		return true
 	end
+
+	if #keneanung.bashing.pausingAfflictions > 0 then
+		return false
+	end
 	
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 
@@ -1233,6 +1259,59 @@ keneanung.bashing.charStatusCallback = function()
 	end
 
 	lastXp = newXp
+end
+
+local proneAfflictions = {
+	"prone",
+	"stun",
+	"paralysis",
+	"entangled",
+	"webbed"
+}
+
+keneanung.bashing.pauseOnAffliction = function(affliction)
+	affliction = affliction:lower()
+	if table.contains(proneAfflictions, affliction) then
+		local pAffs = keneanung.bashing.pausingAfflictions
+		if not table.contains(pAffs, affliction) then
+			pAffs[#pAffs + 1] = affliction
+			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+			if system.pause then
+				system.pause()
+			end
+		end
+	end
+end
+
+keneanung.bashing.unpauseOnHealing = function(affliction)
+	affliction = affliction:lower()
+	if table.contains(proneAfflictions, affliction) then
+		local pAffs = keneanung.bashing.pausingAfflictions
+		local index = 0
+		for i, aff in ipairs(pAffs) do
+			if aff == affliction then
+				index = i
+				break
+			end
+		end
+		if index > 0 then
+			table.remove(pAffs, index)
+		end
+		if #pAffs == 0 then
+			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+			if system.unpause and keneanung.bashing.attacking > 0 then
+				system.unpause()
+			end
+		end
+	end
+end
+
+keneanung.bashing.afflictionCallback = function(_, origMessage)
+	if origMessage == "gmcp.Char.Afflictions.Add" then
+		keneanung.bashing.pauseOnAffliction(gmcp.Char.Afflictions.Add.name)
+	elseif origMessage == "gmcp.Char.Afflictions.Remove" then
+		keneanung.bashing.unpauseOnHealing(gmcp.Char.Afflictions.Remove[1])
+	end
 end
 
 keneanung.bashing.setCommand = function(command, what)
