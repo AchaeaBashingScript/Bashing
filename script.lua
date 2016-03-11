@@ -1239,7 +1239,11 @@ local proneAfflictions = {
 	"stun",
 	"paralysis",
 	"entangled",
-	"webbed"
+	"webbed",
+	"transfixation",
+	"impaled",
+	"bound",
+	"aeon",
 }
 
 keneanung.bashing.pauseOnAffliction = function(affliction)
