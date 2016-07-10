@@ -270,6 +270,14 @@
                     <packageName></packageName>
                     <regex>^ktrip stop$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>import from Guhem</name>
+                    <script>keneanung.bashing.guhemImport()
+disableAlias(&quot;import from Guhem&quot;)</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing guhemimport$</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
