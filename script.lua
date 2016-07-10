@@ -1627,6 +1627,21 @@ keneanung.bashing.stopHuntingTrip = function()
 	end
 end
 
+keneanung.bashing.guhemImport = function()
+	for k in pairs(huntVar.userAreaList) do
+		if #huntVar.userAreaList[k] > 0 then
+			if not keneanung.bashing.configuration.priorities[k] then
+				keneanung.bashing.configuration.priorities[k] = {}
+			end
+			for i,v in pairs(huntVar.userAreaList[k]) do
+				if not table.contains(keneanung.bashing.configuration.priorities[k],v) then
+					keneanung.bashing.configuration.priorities[k][#keneanung.bashing.configuration.priorities[k]+1] = v
+				end
+			end
+		end
+	end	
+end
+
 keneanung.bashing.load()
 for _, file in ipairs(keneanung.bashing.configuration.filesToLoad) do
 	dofile(file)
