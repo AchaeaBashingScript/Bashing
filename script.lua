@@ -1639,7 +1639,40 @@ keneanung.bashing.guhemImport = function()
 				end
 			end
 		end
-	end	
+	end
+end
+
+keneanung.bashing.export = function()
+	local directory = invokeFileDialog(false, "Which do you want to export your priorities to?")
+	if directory ~= "" then -- If a folder was provided
+		local sep -- System directory separator
+		if string.char(getMudletHomeDir():byte()) == "/" then
+			sep = "/" else sep = "\\"
+		end
+		table.save(directory.. sep .. "Bashing-Export.lua", keneanung.bashing.configuration.priorities) -- Exporting to folder specified
+		kecho("Have exported priorities to " .. path .. sep .. "Bashing-Export.lua") -- Messaging user
+	end
+end
+
+keneanung.bashing.import = function()
+	local path = invokeFileDialog(true, "Which file do you want to add?") -- Requesting the specific file to be imported
+	if path ~= "" then -- Making sure that the file was specified
+		local importTable = {}
+		table.load(path, importTable)
+		for area in pairs(importTable) do
+			if #importTable[area] > 0 then
+				if not keneanung.bashing.configuration.priorities[area] then
+					keneanung.bashing.configuration.priorities[area] = {}
+				end
+				for index,denizenString in pairs(importTable[area]) do
+					if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
+						keneanung.bashing.configuration.priorities[area][#keneanung.bashing.configuration.priorities[area]+1] = denizenString
+					end
+				end
+			end
+		end
+		kecho("Import Completed")
+	end --if
 end
 
 keneanung.bashing.load()
