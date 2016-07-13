@@ -278,6 +278,21 @@ disableAlias(&quot;import from Guhem&quot;)</script>
                     <packageName></packageName>
                     <regex>^kconfig bashing guhemimport$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Export Prios to file</name>
+                    <script>keneanung.bashing.export()</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing export$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Import Prios from file</name>
+                    <script>keneanung.bashing.import()</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing import$</regex>
+                </Alias>
+                
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
