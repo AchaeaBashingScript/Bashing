@@ -1266,7 +1266,11 @@ local proneAfflictions = {
 	"stun",
 	"paralysis",
 	"entangled",
-	"webbed"
+	"webbed",
+	"transfixation",
+	"impaled",
+	"bound",
+	"aeon",
 }
 
 keneanung.bashing.pauseOnAffliction = function(affliction)
@@ -1691,6 +1695,22 @@ keneanung.bashing.getTargetObject = function(id)
 	end
 	return result
 end
+
+keneanung.bashing.guhemImport = function()
+	for area in pairs(huntVar.userAreaList) do
+		if #huntVar.userAreaList[area] > 0 then
+			if not keneanung.bashing.configuration.priorities[area] then
+				keneanung.bashing.configuration.priorities[area] = {}
+			end
+			for index,denizenString in pairs(huntVar.userAreaList[area]) do
+				if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
+					keneanung.bashing.configuration.priorities[area][#keneanung.bashing.configuration.priorities[area]+1] = denizenString
+				end
+			end
+		end
+	end	
+end
+
 
 keneanung.bashing.load()
 for _, file in ipairs(keneanung.bashing.configuration.filesToLoad) do
