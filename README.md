@@ -117,7 +117,7 @@ The Basher has a generic support for group bashing built in. However since group
 communication is very different between different groups, there are no triggers
 or party/group calls or custom battlerage strategies included.
 
-This document will list some general things that may be useful to have or do 
+This document will list some general things that may be useful to have or do
 when hunting with a group.
 
 ### Targetting ###
@@ -132,8 +132,9 @@ leader to the list.
 To activate that mode, use the alias `kconfig bashing manual` to toggle manual
 targetting.
 
-# TODO #
-check alias above and add a manual target function. Document it here.
+When in manual targetting mode, you can use the
+`keneanung.bashing.manuallyTarget()` function to change the target to a denizen
+of your choice by giving it a denizen ID to switch to.
 
 ### Battlerage strategies ###
 

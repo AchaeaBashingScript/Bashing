@@ -278,6 +278,13 @@ disableAlias(&quot;import from Guhem&quot;)</script>
                     <packageName></packageName>
                     <regex>^kconfig bashing guhemimport$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>toggle manual targetting</name>
+                    <script>keneanung.bashing.toggle('manualTargetting', 'Manual targetting')</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing manual$</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
