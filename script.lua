@@ -1303,11 +1303,13 @@ keneanung.bashing.setTarget = function()
 		local tar
 		local targetSet = false
 
-		if target ~= nil and target ~='' then
+		if target ~= nil and target ~='' and target:lower() ~= "none" then
 			tar = target
 		elseif gmcp.Char.Status.target ~= "None" then
 			tar = gmcp.Char.Status.target
 		end
+
+		debugMessage("set tar", tar)
 
 		if tar ~= nil then
 
