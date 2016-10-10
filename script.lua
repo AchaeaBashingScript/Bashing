@@ -1690,14 +1690,14 @@ keneanung.bashing.getDenizenName = function(id)
 end
 
 keneanung.bashing.getTargetObject = function(id)
-  if not tonumber(id) then
-    kecho("You are trying to access the denizen with ID <red>" .. id .. "<reset> which is not a numerical ID.")
-    return
-  end
-	local result = directTargetAccess[id]
+	if not tonumber(id) then
+		kecho("You are trying to access the denizen with ID <red>" .. id .. "<reset> which is not a numerical ID.")
+		return
+	end
+	local result = directTargetAccess[tostring(id)]
 	if not result then
 		result = { id = id, name = keneanung.bashing.getDenizenName(id), affs = {} }
-		directTargetAccess[id] = result
+		directTargetAccess[tostring(id)] = result
 	end
 	return result
 end
@@ -1718,13 +1718,13 @@ keneanung.bashing.guhemImport = function()
 end
 
 keneanung.bashing.manuallyTarget = function(what)
-  if not keneanung.bashing.configuration.manualTargetting then return end
-  local item = keneanung.bashing.getTargetObject(what)
-  if not item then return end
-  keneanung.bashing.targetList = { item }
-  sendGMCP('IRE.Target.Set "' .. item.id .. '"')
-  raiseEvent("keneanung.bashing.targetList.changed")
-  raiseEvent("keneanung.bashing.targetList.firstChanged", keneanung.bashing.targetList[1].id)
+	if not keneanung.bashing.configuration.manualTargetting then return end
+	local item = keneanung.bashing.getTargetObject(what)
+	if not item then return end
+	keneanung.bashing.targetList = { item }
+	sendGMCP('IRE.Target.Set "' .. item.id .. '"')
+	raiseEvent("keneanung.bashing.targetList.changed")
+	raiseEvent("keneanung.bashing.targetList.firstChanged", keneanung.bashing.targetList[1].id)
 end
 
 
