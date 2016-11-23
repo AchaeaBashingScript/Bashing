@@ -1645,12 +1645,8 @@ end
 keneanung.bashing.export = function()
 	local directory = invokeFileDialog(false, "Which file do you want to export your priorities to?")
 	if directory ~= "" then -- If a folder was provided
-		local sep -- System directory separator
-		if string.char(getMudletHomeDir():byte()) == "/" then
-			sep = "/" else sep = "\\"
-		end
-		table.save(directory.. sep .. "Bashing-Export.lua", keneanung.bashing.configuration.priorities) -- Exporting to folder specified
-		kecho("Have exported priorities to " .. path .. sep .. "Bashing-Export.lua") -- Messaging user
+		table.save(directory .. "/Bashing-Export.lua", keneanung.bashing.configuration.priorities) -- Exporting to folder specified
+		kecho("Have exported priorities to " .. path .. "/Bashing-Export.lua") -- Messaging user
 	end
 end
 
