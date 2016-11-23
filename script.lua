@@ -1627,19 +1627,23 @@ keneanung.bashing.stopHuntingTrip = function()
 	end
 end
 
-keneanung.bashing.guhemImport = function()
-	for area in ipairs(huntVar.userAreaList) do
-		if #huntVar.userAreaList[area] > 0 then
+local doImport = function(importTable)
+	for area in ipairs(importTable) do
+		if #importTable[area] > 0 then
 			if not keneanung.bashing.configuration.priorities[area] then
 				keneanung.bashing.configuration.priorities[area] = {}
 			end
-			for index,denizenString in pairs(huntVar.userAreaList[area]) do
+			for _,denizenString in pairs(importTable[area]) do
 				if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
 					keneanung.bashing.configuration.priorities[area][#keneanung.bashing.configuration.priorities[area]+1] = denizenString
 				end
 			end
 		end
 	end
+end
+
+keneanung.bashing.guhemImport = function()
+	doImport(huntVar.userAreaList)
 end
 
 keneanung.bashing.export = function()
@@ -1655,18 +1659,7 @@ keneanung.bashing.import = function()
 	if path ~= "" then -- Making sure that the file was specified
 		local importTable = {}
 		table.load(path, importTable)
-		for area in ipairs(importTable) do
-			if #importTable[area] > 0 then
-				if not keneanung.bashing.configuration.priorities[area] then
-					keneanung.bashing.configuration.priorities[area] = {}
-				end
-				for _,denizenString in pairs(importTable[area]) do
-					if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
-						keneanung.bashing.configuration.priorities[area][#keneanung.bashing.configuration.priorities[area]+1] = denizenString
-					end
-				end
-			end
-		end
+		doImport(importTable)
 		kecho("Import Completed")
 	end --if
 end
