@@ -1628,7 +1628,7 @@ keneanung.bashing.stopHuntingTrip = function()
 end
 
 keneanung.bashing.guhemImport = function()
-	for area in pairs(huntVar.userAreaList) do
+	for area in ipairs(huntVar.userAreaList) do
 		if #huntVar.userAreaList[area] > 0 then
 			if not keneanung.bashing.configuration.priorities[area] then
 				keneanung.bashing.configuration.priorities[area] = {}
@@ -1659,7 +1659,7 @@ keneanung.bashing.import = function()
 	if path ~= "" then -- Making sure that the file was specified
 		local importTable = {}
 		table.load(path, importTable)
-		for area in pairs(importTable) do
+		for area in ipairs(importTable) do
 			if #importTable[area] > 0 then
 				if not keneanung.bashing.configuration.priorities[area] then
 					keneanung.bashing.configuration.priorities[area] = {}
