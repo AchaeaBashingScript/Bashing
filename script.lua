@@ -1664,7 +1664,7 @@ keneanung.bashing.import = function()
 				if not keneanung.bashing.configuration.priorities[area] then
 					keneanung.bashing.configuration.priorities[area] = {}
 				end
-				for index,denizenString in pairs(importTable[area]) do
+				for _,denizenString in pairs(importTable[area]) do
 					if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
 						keneanung.bashing.configuration.priorities[area][#keneanung.bashing.configuration.priorities[area]+1] = denizenString
 					end
