@@ -43,7 +43,7 @@ local sessionGains = { }
 local tripGains = { gold = 0, experience = 0 }
 
 local requestSkillDetails = {}
-local Skills = {}
+local battlerageSkills = {}
 local rage = 0
 
 local race = ""
