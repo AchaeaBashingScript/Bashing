@@ -59,6 +59,9 @@ local lastXp
 local roomTargetStore = {}
 local denizenCache = {}
 
+local waintingForManualTargetTimer
+local waitingForManualTarget = false
+
 keneanung = keneanung or {}
 keneanung.bashing = {}
 keneanung.bashing.configuration = {}
@@ -86,6 +89,7 @@ keneanung.bashing.configuration.filesToLoad = {}
 keneanung.bashing.configuration.targetLoyals = false
 keneanung.bashing.configuration.lifetimeGains = { gold = 0, experience = 0 }
 keneanung.bashing.configuration.manualTargetting = false
+keneanung.bashing.configuration.waitForManualTarget = 2
 
 local debugMessage = function(message, content)
 	if not debugEnabled then return end
@@ -134,20 +138,20 @@ keneanung.bashing.systems.svo = {
 		svo.addbalanceful("do next attack", keneanung.bashing.nextAttack)
 		svo.donext()
 	end,
-	
+
 	stopAttack = function()
 		svo.removebalanceful("do next attack")
 	end,
-	
+
 	flee = function()
 		keneanung.bashing.systems.svo.stopAttack()
 		svo.dofreefirst(keneanung.bashing.fleeDirection)
 	end,
-	
+
 	warnFlee = function(avg)
 		svo.boxDisplay("Better run or get ready to die!", "orange")
 	end,
-	
+
 	notifyFlee = function(avg)
 		svo.boxDisplay("Running as you have not enough health left.", "red")
 	end,
@@ -155,7 +159,7 @@ keneanung.bashing.systems.svo = {
 	handleShield = function()
 		keneanung.bashing.shield = true
 	end,
-	
+
 	setup = function()
 		send = function(command, echoback)
 			debugMessage("send got called", {command = command, echoback = echoback })
@@ -177,7 +181,7 @@ keneanung.bashing.systems.svo = {
 			end
 		end
 	end,
-	
+
 	teardown = function()
 		send = _G.send
 	end,
@@ -185,7 +189,7 @@ keneanung.bashing.systems.svo = {
 	unpause = function()
 		svo.donext()
 	end
-	
+
 }
 
 keneanung.bashing.systems.wundersys = {
@@ -202,21 +206,21 @@ keneanung.bashing.systems.wundersys = {
 			wsys.doradd(command)
  	 	end
 	end,
-	
+
 	stopAttack = function()
 		disableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
 		wsys.dorclear()
 	end,
-	
+
 	flee = function()
 		keneanung.bashing.systems.wundersys.stopAttack()
 		wsys.dofreeadd(keneanung.bashing.fleeDirection)
 	end,
-	
+
 	warnFlee = function(avg)
 		wsys.boxDisplay("Better run or get ready to die!", "orange")
 	end,
-	
+
 	notifyFlee = function(avg)
 		wsys.boxDisplay("Running as you have not enough health left.", "red")
 	end,
@@ -237,7 +241,7 @@ keneanung.bashing.systems.wundersys = {
 	brokeShield = function()
 		wsys.undo(true, 1)
 	end,
-	
+
 	setup = function()
 		keneanung.bashing.systems.wundersys.queueTrigger = tempTrigger("[System]: Running queued eqbal command: DOR",
 			[[
@@ -245,7 +249,7 @@ keneanung.bashing.systems.wundersys = {
 			keneanung.bashing.attacks = keneanung.bashing.attacks + 1
 			local avgDmg = keneanung.bashing.damage / keneanung.bashing.attacks
 			local avgHeal = keneanung.bashing.healing / keneanung.bashing.attacks
-			
+
 			local estimatedDmg = avgDmg * 2 - avgHeal
 
 			local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
@@ -269,7 +273,7 @@ keneanung.bashing.systems.wundersys = {
 		disableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
 		registerAnonymousEventHandler("do action run", "keneanung.bashing.systems.wundersys.doActionRun")
 	end,
-	
+
 	teardown = function()
 		if keneanung.bashing.systems.wundersys.queueTrigger then
 			killTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
@@ -494,9 +498,9 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 	end
 
 	if not table.contains(prios[area], targetName) then
-		
+
 		local before = keneanung.bashing.idOnly(keneanung.bashing.targetList)
-		
+
 		table.insert(prios[area], targetName)
 		kecho("Added the new possible target <red>" .. targetName .. "<reset> to the end of the priority list.")
 		keneanung.bashing.configuration.priorities = prios
@@ -506,7 +510,7 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 		for _, item in ipairs(keneanung.bashing.room) do
 			keneanung.bashing.addTarget(item)
 		end
-		
+
 		local after = keneanung.bashing.idOnly(keneanung.bashing.targetList)
 
 		keneanung.bashing.emitEventsIfChanged(before, after)
@@ -752,6 +756,15 @@ keneanung.bashing.showConfig = function()
 		)
 	)
 
+	kecho(
+		string.format(
+			"Waiting for <red>%s<reset> seconds for a new target before stopping, if attacking manutally",
+			keneanung.bashing.configuration.waitForManualTarget
+		),
+		"clearCmdLine() appendCmdLine('kconfig bashing waitfortarget ')",
+		"Set time to wait for a target."
+	)
+
 	echo("\n")
 
 	kecho("Loading these additional files on startup:    ")
@@ -816,6 +829,12 @@ keneanung.bashing.setThreshold = function(newValue, what)
 	keneanung.bashing.save()
 end
 
+keneanung.bashing.setWaitForTarget = function(amount)
+	keneanung.bashing.configuration.waitForManualTarget = tonumber(amount) or 2
+	kecho("Waiting <red>" .. keneanung.bashing.configuration.waitForManualTarget .. "<reset> seconds for a new target\n" )
+	keneanung.bashing.save()
+end
+
 keneanung.bashing.nextAttack = function()
 	if keneanung.bashing.configuration.enabled == false then
 		return false
@@ -828,7 +847,7 @@ keneanung.bashing.nextAttack = function()
 	if #keneanung.bashing.pausingAfflictions > 0 then
 		return false
 	end
-	
+
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 
 	keneanung.bashing.attacks = keneanung.bashing.attacks + 1
@@ -853,7 +872,7 @@ keneanung.bashing.nextAttack = function()
 				system.warnFlee(avg)
 
 			end
-		
+
 			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration[class].autoraze) and "keneanungra" or "keneanungki"
 			send(attack, false)
 			keneanung.bashing.shield = false
@@ -946,9 +965,7 @@ local roomItemCallbackWorker = function(event)
 			end
 		end
 
-		if not keneanung.bashing.configuration.manualTargetting then
-			keneanung.bashing.removeTarget(item)
-		end
+		keneanung.bashing.removeTarget(item)
 	end
 
 	local after = keneanung.bashing.idOnly(keneanung.bashing.targetList)
@@ -1040,7 +1057,7 @@ keneanung.bashing.addTarget = function(item)
 				return
 			end
 		end
-		
+
 		local iStart,iEnd,iMid = 1,#targets,0
 		local found = false
 		-- Binary Search
@@ -1100,6 +1117,10 @@ keneanung.bashing.removeTarget = function(item)
 			killTimer(timer)
 		end
 		directTargetAccess[item.id] = nil
+		if keneanung.bashing.attacking == 0 and keneanung.bashing.configuration.manualTargetting then
+			waitingForManualTarget = true
+			waitingForManualTargetTimer = tempTimer(keneanung.bashing.configuration.waitForManualTarget, function() waitingForManualTarget = false end)
+		end
 	end
 
 	keneanung.bashing.targetList = targets
@@ -1714,7 +1735,7 @@ keneanung.bashing.guhemImport = function()
 				end
 			end
 		end
-	end	
+	end
 end
 
 keneanung.bashing.manuallyTarget = function(what)
@@ -1725,8 +1746,13 @@ keneanung.bashing.manuallyTarget = function(what)
 	sendGMCP('IRE.Target.Set "' .. item.id .. '"')
 	raiseEvent("keneanung.bashing.targetList.changed")
 	raiseEvent("keneanung.bashing.targetList.firstChanged", keneanung.bashing.targetList[1].id)
+	if waitingForManualTargetTimer then killTimer(waitingForManualTargetTimer) end
+	if waitingForManualTarget then
+		keneanung.bashing.setTarget()
+		local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+		system.startAttack()
+	end
 end
-
 
 keneanung.bashing.load()
 for _, file in ipairs(keneanung.bashing.configuration.filesToLoad) do

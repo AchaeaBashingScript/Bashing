@@ -136,6 +136,11 @@ When in manual targetting mode, you can use the
 `keneanung.bashing.manuallyTarget()` function to change the target to a denizen
 of your choice by giving it a denizen ID to switch to.
 
+If your current target leaves, it will wait for a time (default 2 seconds), for
+a new target to continue attacking. If a new target is set within that timeframe
+, the basher will continue attacking. You can customize the time with the
+command `kconfig bashing waitfortarget <numberofseconds>`.
+
 ### Battlerage strategies ###
 
 Depending on the class and composition of the group, it might be useful to
@@ -161,7 +166,7 @@ Configuration
 The current configuration can be shown with the alias `kconfig bashing`. All items in red are clickable and will either
 toggle the item or set the alias to the command line, so you only need to add the add the value you want to set.
 
-The basher stores one set of settings for each class, so remember to tweak your
+The basher stores certain settings for each class, so remember to tweak your
 configuration when switching to a new one!
 
 ### Warn and flee thresholds ###
