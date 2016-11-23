@@ -1643,7 +1643,7 @@ keneanung.bashing.guhemImport = function()
 end
 
 keneanung.bashing.export = function()
-	local directory = invokeFileDialog(false, "Which do you want to export your priorities to?")
+	local directory = invokeFileDialog(false, "Which file do you want to export your priorities to?")
 	if directory ~= "" then -- If a folder was provided
 		local sep -- System directory separator
 		if string.char(getMudletHomeDir():byte()) == "/" then
