@@ -426,7 +426,7 @@ keneanung.bashing.battlerage.simple = function(rage)
 	)
 
 	if not rageRazeFunction() then
-		if class = "Depthswalker" then	-- Special case for Depthswalker rage order
+		if class == "Depthswalker" then	-- Special case for Depthswalker rage order
 			if keneanung.bashing.rageAvailable(2) then
 				sendRageAttack(battlerageSkills[2].command)
 			elseif
@@ -437,7 +437,7 @@ keneanung.bashing.battlerage.simple = function(rage)
 				sendRageAttack(battlerageSkills[1].command)
 			end
 		else
-			if keneanung.bashing.rageAvailable(4) then
+			if class ~= "Depthswalker" and keneanung.bashing.rageAvailable(4) then
 				sendRageAttack(battlerageSkills[4].command)
 			elseif
 				keneanung.bashing.rageAvailable(1) and
