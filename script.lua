@@ -1646,7 +1646,7 @@ keneanung.bashing.export = function()
 	local directory = invokeFileDialog(false, "Which file do you want to export your priorities to?")
 	if directory ~= "" then -- If a folder was provided
 		table.save(directory .. "/Bashing-Export.lua", keneanung.bashing.configuration.priorities) -- Exporting to folder specified
-		kecho("Have exported priorities to " .. path .. "/Bashing-Export.lua") -- Messaging user
+		kecho("Have exported priorities to <red>" .. path .. "/Bashing-Export.lua<reset>") -- Messaging user
 	end
 end
 
