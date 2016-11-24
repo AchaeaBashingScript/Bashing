@@ -1629,19 +1629,41 @@ keneanung.bashing.stopHuntingTrip = function()
 	end
 end
 
-keneanung.bashing.guhemImport = function()
-	for area in pairs(huntVar.userAreaList) do
-		if #huntVar.userAreaList[area] > 0 then
+local doImport = function(importTable)
+	for area in ipairs(importTable) do
+		if #importTable[area] > 0 then
 			if not keneanung.bashing.configuration.priorities[area] then
 				keneanung.bashing.configuration.priorities[area] = {}
 			end
-			for index,denizenString in pairs(huntVar.userAreaList[area]) do
+			for _,denizenString in pairs(importTable[area]) do
 				if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
 					keneanung.bashing.configuration.priorities[area][#keneanung.bashing.configuration.priorities[area]+1] = denizenString
 				end
 			end
 		end
-	end	
+	end
+end
+
+keneanung.bashing.guhemImport = function()
+	doImport(huntVar.userAreaList)
+end
+
+keneanung.bashing.export = function()
+	local directory = invokeFileDialog(false, "Which file do you want to export your priorities to?")
+	if directory ~= "" then -- If a folder was provided
+		table.save(directory .. "/Bashing-Export.lua", keneanung.bashing.configuration.priorities) -- Exporting to folder specified
+		kecho("Have exported priorities to <red>" .. path .. "/Bashing-Export.lua<reset>") -- Messaging user
+	end
+end
+
+keneanung.bashing.import = function()
+	local path = invokeFileDialog(true, "Which file do you want to add?") -- Requesting the specific file to be imported
+	if path ~= "" then -- Making sure that the file was specified
+		local importTable = {}
+		table.load(path, importTable)
+		doImport(importTable)
+		kecho("Import Completed")
+	end --if
 end
 
 keneanung.bashing.load()
