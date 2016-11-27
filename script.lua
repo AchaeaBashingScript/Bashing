@@ -100,8 +100,28 @@ local kecho = function(what, command, popup)
 
 end
 
+local sortDepthswalkerBattlerage = function()
+
+	debugMessage("sorting brage for walkers", {battlerageSkills = battlerageSkills})
+
+	if class ~= "Depthswalker" or #battlerageSkills ~= 6 then return end
+	battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["curse"], battlerageSkills["nakail"], battlerageSkills["lash"]
+
+	battlerageSkills[2].affliction = "aeon"
+	battlerageSkills[6].affliction = "charm"
+
+	battlerageSkills[5].affsUsed = {
+		"amnesia",
+		"weakness"
+	}
+
+	debugMessage("sorted brage for walkers", {battlerageSkills = battlerageSkills})
+end
+
 local requestNextSkillDetails = function()
-	if #requestSkillDetails == 0 then return end
+	if #requestSkillDetails == 0 then
+		sortDepthswalkerBattlerage()
+	end
 	sendGMCP(string.format([[Char.Skills.Get {"group": "battlerage", "name": "%s"}]], requestSkillDetails[1]))
 	table.remove(requestSkillDetails,1)
 end
@@ -1558,7 +1578,7 @@ keneanung.bashing.handleSkillInfo = function()
 		command = command,
 		affliction = affliction,
 		affsUsed = affsUsed,
-		name = skillInfo.skill,
+		name = skillInfo.skill:lower(),
 		skillKnown = skillKnown
 	}
 
