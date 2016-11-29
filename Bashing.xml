@@ -286,7 +286,7 @@ disableAlias(&quot;import from Guhem&quot;)</script>
                     <regex>^kconfig bashing manual$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
-                    <name>set flee threshold</name>
+                    <name>set wait for target</name>
                     <script>keneanung.bashing.setWaitForTarget(matches[2])</script>
                     <command></command>
                     <packageName></packageName>
