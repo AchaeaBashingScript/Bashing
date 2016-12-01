@@ -231,7 +231,32 @@ Some further hints:
 ### Custom battlerage strategies ###
 
 To use a custom battlerage strategy, you can add a function to the `keneanung.bashing.battlerage` table und any name you
-like. That function will receive the current accumulated battlerage.
+like. That function will receive the current accumulated battlerage and a table of battlerage skills.
+
+The battlerage skills table includes every ability twice: Once with its name as key and once via an index. The indexes are
+in the following order:
+
+1. Low damage skill
+2. First affliction
+3. Shieldbreaker
+4. High damage skill
+5. Conditional damage skill
+6. Second affliction
+
+This is the natural order of most classes battlerage skills, Depthswalker being the exception. But even for Depthswalker the
+order given above is true. Each skill is an table with the following structure:
+
+~~~~~~~{lua}
+rageObject = {
+  cooldown = number,                   -- cool down in seconds
+  rage = number,                       -- rage used
+  command = string,                    -- command to use the ability, placeholder %s where the target should be
+  affliction = string,                 -- affliction given, only present, if an affliction is given
+  affsUsed = table,                    -- indexed table of afflictions used, only present if this is the conditional damage ability
+  name = string,                       -- name of the battlerage skill, all lower case
+  skillKnown = boolean                 -- whether the skill is known or not
+}
+~~~~~~~
 
 The script also provides the `keneanung.bashing.rageAvailable` function which receives a name or number of a battlerage
 ability and returns a boolean if that ability is available (enough battlerage and off cooldown).
