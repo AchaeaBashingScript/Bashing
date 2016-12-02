@@ -110,8 +110,28 @@ local kecho = function(what, command, popup)
 
 end
 
+local sortDepthswalkerBattlerage = function()
+
+	debugMessage("sorting brage for walkers", {battlerageSkills = battlerageSkills})
+
+	if class ~= "Depthswalker" or #battlerageSkills ~= 6 then return end
+	battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["curse"], battlerageSkills["nakail"], battlerageSkills["lash"]
+
+	battlerageSkills[2].affliction = "aeon"
+	battlerageSkills[6].affliction = "charm"
+
+	battlerageSkills[5].affsUsed = {
+		"amnesia",
+		"weakness"
+	}
+
+	debugMessage("sorted brage for walkers", {battlerageSkills = battlerageSkills})
+end
+
 local requestNextSkillDetails = function()
-	if #requestSkillDetails == 0 then return end
+	if #requestSkillDetails == 0 then
+		sortDepthswalkerBattlerage()
+	end
 	sendGMCP(string.format([[Char.Skills.Get {"group": "battlerage", "name": "%s"}]], requestSkillDetails[1]))
 	table.remove(requestSkillDetails,1)
 end
@@ -1047,8 +1067,10 @@ keneanung.bashing.addTarget = function(item)
 		return
 	end
 
+	local targetObject = { id = item.id, name = item.name, affs = {} }
+
 	if #targets == 0 then
-		table.insert(targets, item)
+		table.insert(targets, targetObject)
 	else
 
 		-- Small safeguard against adding something twice
@@ -1090,6 +1112,14 @@ keneanung.bashing.addTarget = function(item)
 		table.insert(targets, insertAt, item)
 
 	end
+
+	if directTargetAccess[item.id] then
+		for aff, timer in pairs(directTargetAccess[item.id].affs) do
+			targetObject[aff] = timer
+		end
+	end
+
+	directTargetAccess[item.id] = targetObject
 
 	keneanung.bashing.targetList = targets
 
@@ -1612,7 +1642,7 @@ keneanung.bashing.handleSkillInfo = function()
 		command = command,
 		affliction = affliction and affliction:lower(),
 		affsUsed = affsUsed,
-		name = skillInfo.skill,
+		name = skillInfo.skill:lower(),
 		skillKnown = skillKnown
 	}
 
@@ -1723,19 +1753,41 @@ keneanung.bashing.getTargetObject = function(id)
 	return result
 end
 
-keneanung.bashing.guhemImport = function()
-	for area in pairs(huntVar.userAreaList) do
-		if #huntVar.userAreaList[area] > 0 then
+local doImport = function(importTable)
+	for area in ipairs(importTable) do
+		if #importTable[area] > 0 then
 			if not keneanung.bashing.configuration.priorities[area] then
 				keneanung.bashing.configuration.priorities[area] = {}
 			end
-			for index,denizenString in pairs(huntVar.userAreaList[area]) do
+			for _,denizenString in pairs(importTable[area]) do
 				if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
 					keneanung.bashing.configuration.priorities[area][#keneanung.bashing.configuration.priorities[area]+1] = denizenString
 				end
 			end
 		end
 	end
+end
+
+keneanung.bashing.guhemImport = function()
+	doImport(huntVar.userAreaList)
+end
+
+keneanung.bashing.export = function()
+	local directory = invokeFileDialog(false, "Which file do you want to export your priorities to?")
+	if directory ~= "" then -- If a folder was provided
+		table.save(directory .. "/Bashing-Export.lua", keneanung.bashing.configuration.priorities) -- Exporting to folder specified
+		kecho("Have exported priorities to <red>" .. path .. "/Bashing-Export.lua<reset>") -- Messaging user
+	end
+end
+
+keneanung.bashing.import = function()
+	local path = invokeFileDialog(true, "Which file do you want to add?") -- Requesting the specific file to be imported
+	if path ~= "" then -- Making sure that the file was specified
+		local importTable = {}
+		table.load(path, importTable)
+		doImport(importTable)
+		kecho("Import Completed")
+	end --if
 end
 
 keneanung.bashing.manuallyTarget = function(what)
