@@ -1410,7 +1410,7 @@ keneanung.bashing.setTarget = function()
 			return
 		end
 	end
-	if keneanung.bashing.attacking == 0 or keneanung.bashing.targetList[keneanung.bashing.attacking].id ~= gmcp.Char.Status.target then
+	if keneanung.bashing.attacking == 0 or keneanung.bashing.targetList[keneanung.bashing.attacking].id ~= gmcp.IRE.Target.Info.id then
 		keneanung.bashing.attacking = keneanung.bashing.attacking + 1
 	end
 	debugMessage("setting target", keneanung.bashing.targetList[keneanung.bashing.attacking])
