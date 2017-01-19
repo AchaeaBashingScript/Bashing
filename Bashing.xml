@@ -279,6 +279,20 @@ disableAlias(&quot;import from Guhem&quot;)</script>
                     <regex>^kconfig bashing guhemimport$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
+                    <name>toggle manual targetting</name>
+                    <script>keneanung.bashing.toggle('manualTargetting', 'Manual targetting')</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing manual$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>set wait for target</name>
+                    <script>keneanung.bashing.setWaitForTarget(matches[2])</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing waitfortarget (\d+)$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
                     <name>Export Prios to file</name>
                     <script>keneanung.bashing.export()</script>
                     <command></command>
@@ -292,7 +306,6 @@ disableAlias(&quot;import from Guhem&quot;)</script>
                     <packageName></packageName>
                     <regex>^kconfig bashing import$</regex>
                 </Alias>
-                
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>

@@ -107,19 +107,77 @@ The first way is the manual way. Simple press the keybinding `F3` to stop attack
 
 The second way is automated and may be activated, if the **average** damage you have taken in this room between 2 attacks is
 higher than you have at the next attack with an configurable threshold. The basher will also issue a warning, if average the
-damage between 2 attacks is higher than your current health and another threshold. You can enable and disable that with the
-alias `kconfig bashing autoflee` and the configure thresholds with `kconfig bashing fleeat <health amount>` and
-`kconfig bashing warnat <health amount>`.
+damage between 2 attacks is higher than your current health and another threshold. For the configuration see the
+[Configuration](#configuration) section.
 
-You may specify values as a flat amount, a percentage of the maximum health (ending the config value with a `%`) or as a
-multiple of the damage taken in the room (ending the config value with a `d`) as the security threshold (amount of health
-left after subtracting the current damage from the current health).
+Support for groups
+------------------
+
+The Basher has a generic support for group bashing built in. However since group
+communication is very different between different groups, there are no triggers
+or party/group calls or custom battlerage strategies included.
+
+This document will list some general things that may be useful to have or do
+when hunting with a group.
+
+### Targetting ###
+
+The system supports a manual targetting mode. That means it won't change the
+target list in any way. It won't add things, remove them or change its order,
+while in manual mode.
+
+That means it's save to add targets in the order as they are called by the party
+leader to the list.
+
+To activate that mode, use the alias `kconfig bashing manual` to toggle manual
+targetting.
+
+When in manual targetting mode, you can use the
+`keneanung.bashing.manuallyTarget()` function to change the target to a denizen
+of your choice by giving it a denizen ID to switch to.
+
+If your current target leaves, it will wait for a time (default 2 seconds), for
+a new target to continue attacking. If a new target is set within that timeframe
+, the basher will continue attacking. You can customize the time with the
+command `kconfig bashing waitfortarget <numberofseconds>`.
+
+### Battlerage strategies ###
+
+Depending on the class and composition of the group, it might be useful to
+utilize afflictions, defense or critical battlerage abilities. That is possible
+through custom battlerage strategies. Please refer to the scripting section
+about those.
+
+### Affliction tracking ###
+
+The basher allows for denizen affliction tracking through the functions 
+`keneanung.bashing.addDenizenAffliction(id, affName, raiseEvent)` and
+`keneanung.bashing.removeDenizenAffliction(id, addName, raiseEvent)`. Those
+functions echo the affliction to the user and associate the affliction with the
+target. That way you can access the current affliction state of your target with
+`keneanung.bashing.targetList[keneanung.bashing.attacking].affs`, of a general
+denizen with `keneanung.bashing.getAfflictions(<id>)`, or check a denizen for a
+certain affliction with `keneanung.bashing.hasAffliction(<id>, <affname>)`
+(for example in the custom battlerage strategy for critical hits).
 
 Configuration
 -------------
 
 The current configuration can be shown with the alias `kconfig bashing`. All items in red are clickable and will either
 toggle the item or set the alias to the command line, so you only need to add the add the value you want to set.
+
+The basher stores certain settings for each class, so remember to tweak your
+configuration when switching to a new one!
+
+### Warn and flee thresholds ###
+
+You can enable and disable automatic fleeing when the health falls below a certain threshold with the
+alias `kconfig bashing autoflee` and the configure thresholds with `kconfig bashing fleeat <health amount>` and
+`kconfig bashing warnat <health amount>`.
+
+You may specify values as a flat amount, a percentage of the maximum health (ending the config value with a `%`) or as a
+multiple of the damage taken in the room (ending the config value with a `d`) as the security threshold (amount of health
+left after subtracting the current damage from the current health).
 
 ### The battlerage strategies ###
 
@@ -142,21 +200,56 @@ This stratey will break denizen shields first, if that is enabled. If it doesn't
 faster, weaker battlerage ability whenever possible. Is enough battlerage collected to use the slow, powerful ability, it
 will use that one as well.
 
+Other interesting features
+--------------------------
+
+### Importing of priorities from Guhem's script ###
+
+Around the time when this basher was first developed, another Achaean user
+called Guhem published their bashing script. Since that script is not actively
+developed anymore, it is possible to import priorities into this script. Use the
+alias `kconfig bashing guhemimport` to do so.
+
+### Tracking of experience and gold gains ###
+
+This script tracks all gold (only gains, less accurate than I'd like on the long
+run) and experience (gains and losses, relatively accurate) gains in three
+different periods: `lifetime`, `session` and `trip`.
+
+The `lifetime` period should track the gains over the time that the script was
+installed.
+
+The `session` period should track the gains over the time this mudlet session
+was open. When you close mudlet or the profile and reopen it, these figures are
+reset.
+
+The `trip` period is started and stopped manually. You can do so with
+`ktrip start` and `ktrip stop` respectively. Useful for splitting the gold at
+the end of a hunting trip.
+
 Scripting
 ---------
 
 Some example scripts can be found in the [plugin repository](https://github.com/achaeabashingscript/BashingPlugins).
 
 ### Events ###
-The script fires two events that can be used to extend the bashing script.
+The script fires a number of events that can be used to extend the bashing script.
 
 The `keneanung.bashing.targetList.changed` event gets raised whenever anything in the list changes. That may be a new target
 gets added, a target removed or the list got reordered. To access the current target list, use
 `keneanung.bashing.targetList`.
 
 The `keneanung.bashing.targetList.firstChanged` event is raised whenever the first item of the target list changes. That
-means a new taget is used. This event also gives the new target as argument to the event handlers. To access the first item
+means a new target is used. This event also gives the new target as argument to the event handlers. To access the first item
 of the target list directly, you can access `keneanung.bashing.targetList[1]`.
+
+The `keneanung.bashing.afflictionGained` event is raised, whenever a new
+battlerage affliction is registered, where the user is the source. This event can be used
+to relay the information to party or group chats without a need for triggers.
+The targetted denizen ID and the affliction used are arguments to this event.
+
+The `keneanung.bashing.afflictionLost` event corresponds to the event above, but
+is fired when the denizen lost an affliction.
 
 ### Plugins ###
 Additions to the script can now be loaded in two ways:
@@ -223,14 +316,14 @@ configure the basher to use the system by choosing the name *exactly* like the k
 
 Some further hints:
 - If your queueing supports running functions instead of sending things directly to the mud, queue the
-   `keneanung.bashing.nextAttack()` function and keep similar the svo implementation
+   `keneanung.bashing.nextAttack()` function and keep similar to the svo implementation
 - If your queueing uses the Achaean server side queue, keep close to the WunderSys implementation
 - If your queueing is neither of those two possibilities, think about a way you can register attacks. If you have a way, you
    can check the WunderSys implementation for things needed to flee.
 
 ### Custom battlerage strategies ###
 
-To use a custom battlerage strategy, you can add a function to the `keneanung.bashing.battlerage` table und any name you
+To use a custom battlerage strategy, you can add a function to the `keneanung.bashing.battlerage` table under any name you
 like. That function will receive the current accumulated battlerage and a table of battlerage skills.
 
 The battlerage skills table includes every ability twice: Once with its name as key and once via an index. The indexes are

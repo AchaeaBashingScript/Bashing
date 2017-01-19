@@ -18,11 +18,11 @@ local afflictions = {
 		colour = "purple",
 		timer = 6
 	},
-	feared = {
+	fear = {
 		colour = "orange",
 		timer = 8
 	},
-	clumsy = {
+	clumsiness = {
 		colour = "forest_green",
 		timer = 7
 	},
@@ -37,6 +37,10 @@ local afflictions = {
 	stun = {
 		colour = "black:yellow",
 		timer = 4
+	},
+	amnesia = {
+		colour = "LightGrey",
+		timer = 5
 	},
 }
 local sessionGains = { }
@@ -53,6 +57,10 @@ local lastGold
 local lastXp
 
 local roomTargetStore = {}
+local denizenCache = {}
+
+local waintingForManualTargetTimer
+local waitingForManualTarget = false
 
 keneanung = keneanung or {}
 keneanung.bashing = {}
@@ -80,6 +88,8 @@ keneanung.bashing.configuration.system = "auto"
 keneanung.bashing.configuration.filesToLoad = {}
 keneanung.bashing.configuration.targetLoyals = false
 keneanung.bashing.configuration.lifetimeGains = { gold = 0, experience = 0 }
+keneanung.bashing.configuration.manualTargetting = false
+keneanung.bashing.configuration.waitForManualTarget = 2
 
 local debugMessage = function(message, content)
 	if not debugEnabled then return end
@@ -148,20 +158,20 @@ keneanung.bashing.systems.svo = {
 		svo.addbalanceful("do next attack", keneanung.bashing.nextAttack)
 		svo.donext()
 	end,
-	
+
 	stopAttack = function()
 		svo.removebalanceful("do next attack")
 	end,
-	
+
 	flee = function()
 		keneanung.bashing.systems.svo.stopAttack()
 		svo.dofreefirst(keneanung.bashing.fleeDirection)
 	end,
-	
+
 	warnFlee = function(avg)
 		svo.boxDisplay("Better run or get ready to die!", "orange")
 	end,
-	
+
 	notifyFlee = function(avg)
 		svo.boxDisplay("Running as you have not enough health left.", "red")
 	end,
@@ -169,7 +179,7 @@ keneanung.bashing.systems.svo = {
 	handleShield = function()
 		keneanung.bashing.shield = true
 	end,
-	
+
 	setup = function()
 		send = function(command, echoback)
 			debugMessage("send got called", {command = command, echoback = echoback })
@@ -191,7 +201,7 @@ keneanung.bashing.systems.svo = {
 			end
 		end
 	end,
-	
+
 	teardown = function()
 		send = _G.send
 	end,
@@ -199,7 +209,7 @@ keneanung.bashing.systems.svo = {
 	unpause = function()
 		svo.donext()
 	end
-	
+
 }
 
 keneanung.bashing.systems.wundersys = {
@@ -216,21 +226,21 @@ keneanung.bashing.systems.wundersys = {
 			wsys.doradd(command)
  	 	end
 	end,
-	
+
 	stopAttack = function()
 		disableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
 		wsys.dorclear()
 	end,
-	
+
 	flee = function()
 		keneanung.bashing.systems.wundersys.stopAttack()
 		wsys.dofreeadd(keneanung.bashing.fleeDirection)
 	end,
-	
+
 	warnFlee = function(avg)
 		wsys.boxDisplay("Better run or get ready to die!", "orange")
 	end,
-	
+
 	notifyFlee = function(avg)
 		wsys.boxDisplay("Running as you have not enough health left.", "red")
 	end,
@@ -251,7 +261,7 @@ keneanung.bashing.systems.wundersys = {
 	brokeShield = function()
 		wsys.undo(true, 1)
 	end,
-	
+
 	setup = function()
 		keneanung.bashing.systems.wundersys.queueTrigger = tempTrigger("[System]: Running queued eqbal command: DOR",
 			[[
@@ -259,7 +269,7 @@ keneanung.bashing.systems.wundersys = {
 			keneanung.bashing.attacks = keneanung.bashing.attacks + 1
 			local avgDmg = keneanung.bashing.damage / keneanung.bashing.attacks
 			local avgHeal = keneanung.bashing.healing / keneanung.bashing.attacks
-			
+
 			local estimatedDmg = avgDmg * 2 - avgHeal
 
 			local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
@@ -283,7 +293,7 @@ keneanung.bashing.systems.wundersys = {
 		disableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
 		registerAnonymousEventHandler("do action run", "keneanung.bashing.systems.wundersys.doActionRun")
 	end,
-	
+
 	teardown = function()
 		if keneanung.bashing.systems.wundersys.queueTrigger then
 			killTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
@@ -508,9 +518,9 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 	end
 
 	if not table.contains(prios[area], targetName) then
-		
+
 		local before = keneanung.bashing.idOnly(keneanung.bashing.targetList)
-		
+
 		table.insert(prios[area], targetName)
 		kecho("Added the new possible target <red>" .. targetName .. "<reset> to the end of the priority list.")
 		keneanung.bashing.configuration.priorities = prios
@@ -520,7 +530,7 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 		for _, item in ipairs(keneanung.bashing.room) do
 			keneanung.bashing.addTarget(item)
 		end
-		
+
 		local after = keneanung.bashing.idOnly(keneanung.bashing.targetList)
 
 		keneanung.bashing.emitEventsIfChanged(before, after)
@@ -754,6 +764,27 @@ keneanung.bashing.showConfig = function()
 		)
 	)
 
+	kecho(
+		string.format(
+			"Manual targetting is <red>%s<reset>",
+			keneanung.bashing.configuration.manualTargetting and "on" or "off"
+		),
+		"keneanung.bashing.toggle('manualTargetting', 'Manual targetting')",
+		string.format(
+			"Turn manual targetting %s",
+			keneanung.bashing.configuration.manualTargetting and "off" or "on"
+		)
+	)
+
+	kecho(
+		string.format(
+			"Waiting for <red>%s<reset> seconds for a new target before stopping, if attacking manutally",
+			keneanung.bashing.configuration.waitForManualTarget
+		),
+		"clearCmdLine() appendCmdLine('kconfig bashing waitfortarget ')",
+		"Set time to wait for a target."
+	)
+
 	echo("\n")
 
 	kecho("Loading these additional files on startup:    ")
@@ -818,6 +849,12 @@ keneanung.bashing.setThreshold = function(newValue, what)
 	keneanung.bashing.save()
 end
 
+keneanung.bashing.setWaitForTarget = function(amount)
+	keneanung.bashing.configuration.waitForManualTarget = tonumber(amount) or 2
+	kecho("Waiting <red>" .. keneanung.bashing.configuration.waitForManualTarget .. "<reset> seconds for a new target\n" )
+	keneanung.bashing.save()
+end
+
 keneanung.bashing.nextAttack = function()
 	if keneanung.bashing.configuration.enabled == false then
 		return false
@@ -830,7 +867,7 @@ keneanung.bashing.nextAttack = function()
 	if #keneanung.bashing.pausingAfflictions > 0 then
 		return false
 	end
-	
+
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 
 	keneanung.bashing.attacks = keneanung.bashing.attacks + 1
@@ -855,7 +892,7 @@ keneanung.bashing.nextAttack = function()
 				system.warnFlee(avg)
 
 			end
-		
+
 			local attack = (keneanung.bashing.shield and keneanung.bashing.configuration[class].autoraze) and "keneanungra" or "keneanungki"
 			send(attack, false)
 			keneanung.bashing.shield = false
@@ -888,39 +925,54 @@ local roomItemCallbackWorker = function(event)
 	if(event == "gmcp.Char.Items.Add") then
 		local item = gmcp.Char.Items.Add.item
 		keneanung.bashing.room[#keneanung.bashing.room + 1] = item
-		keneanung.bashing.addTarget(item)
+		if item.attrib and item.attrib:find("m") and not item.attrib:find("d") then
+			keneanung.bashing.seenDenizen(item.id, item.name)
+			item = keneanung.bashing.getTargetObject(item.id)
+			if not keneanung.bashing.configuration.manualTargetting then
+				keneanung.bashing.addTarget(item)
+			end
+		end
 	end
 
 	if(event == "gmcp.Char.Items.List") then
 
+		if not keneanung.bashing.configuration.manualTargetting then
 		--restore targets we had when we were in the room last
-		local storedTargets = roomTargetStore[gmcp.Room.Info.num]
+			local storedTargets = roomTargetStore[gmcp.Room.Info.num]
 
-		if storedTargets then
-			keneanung.bashing.targetList = storedTargets.targetList
-		end
+			if storedTargets then
+				keneanung.bashing.targetList = storedTargets.targetList
+			end
 
-		local targetList = {}
-		-- make sure our targets stay at the same place!
-		for index, targ in ipairs(keneanung.bashing.targetList) do
-			-- search if that target possibly left the room
-			local found = false
-			for _, item in ipairs(gmcp.Char.Items.List.items) do
-				if item.id == targ.id then
-					found = true
-					break
+			local targetList = {}
+			-- make sure our targets stay at the same place!
+			for index, targ in ipairs(keneanung.bashing.targetList) do
+				-- search if that target possibly left the room
+				local found = false
+				for _, item in ipairs(gmcp.Char.Items.List.items) do
+					if item.id == targ.id then
+						found = true
+						break
+					end
+				end
+				-- still there? Add it in the old place
+				if found then
+					targetList[#targetList + 1] = targ
 				end
 			end
-			-- still there? Add it in the old place
-			if found then
-				targetList[#targetList + 1] = targ
-			end
+			keneanung.bashing.targetList = targetList
 		end
-		keneanung.bashing.targetList = targetList
+
 		keneanung.bashing.room = {}
 		for _, item in ipairs(gmcp.Char.Items.List.items) do
 			keneanung.bashing.room[#keneanung.bashing.room + 1] = item
-			keneanung.bashing.addTarget(item)
+			if item.attrib and item.attrib:find("m") and not item.attrib:find("d") then
+				keneanung.bashing.seenDenizen(item.id, item.name)
+				item = keneanung.bashing.getTargetObject(item.id)
+				if not keneanung.bashing.configuration.manualTargetting then
+					keneanung.bashing.addTarget(item)
+				end
+			end
 		end
 	end
 
@@ -1027,7 +1079,7 @@ keneanung.bashing.addTarget = function(item)
 				return
 			end
 		end
-		
+
 		local iStart,iEnd,iMid = 1,#targets,0
 		local found = false
 		-- Binary Search
@@ -1057,7 +1109,7 @@ keneanung.bashing.addTarget = function(item)
 			insertAt = keneanung.bashing.attacking + 1
 		end
 
-		table.insert(targets, insertAt, targetObject)
+		table.insert(targets, insertAt, item)
 
 	end
 
@@ -1095,6 +1147,10 @@ keneanung.bashing.removeTarget = function(item)
 			killTimer(timer)
 		end
 		directTargetAccess[item.id] = nil
+		if keneanung.bashing.attacking == 0 and keneanung.bashing.configuration.manualTargetting then
+			waitingForManualTarget = true
+			waitingForManualTargetTimer = tempTimer(keneanung.bashing.configuration.waitForManualTarget, function() waitingForManualTarget = false end)
+		end
 	end
 
 	keneanung.bashing.targetList = targets
@@ -1118,9 +1174,11 @@ keneanung.bashing.roomMessageCallback = function()
 		return
 	end
 
-	roomTargetStore[keneanung.bashing.lastRoom] = {
-		targetList = keneanung.bashing.targetList,
-	}
+	if not keneanung.bashing.configuration.manualTargetting then
+		roomTargetStore[keneanung.bashing.lastRoom] = {
+			targetList = keneanung.bashing.targetList,
+		}
+	end
 
 	keneanung.bashing.damage = 0
 	keneanung.bashing.healing = 0
@@ -1352,7 +1410,7 @@ keneanung.bashing.setTarget = function()
 			return
 		end
 	end
-	if keneanung.bashing.attacking == 0 or keneanung.bashing.targetList[keneanung.bashing.attacking].id ~= gmcp.Char.Status.target then
+	if keneanung.bashing.attacking == 0 or keneanung.bashing.targetList[keneanung.bashing.attacking].id ~= gmcp.IRE.Target.Info.id then
 		keneanung.bashing.attacking = keneanung.bashing.attacking + 1
 	end
 	debugMessage("setting target", keneanung.bashing.targetList[keneanung.bashing.attacking])
@@ -1468,8 +1526,8 @@ keneanung.bashing.toggleDebug = function()
 	kecho("Debug " .. (debugEnabled and "enabled" or "disabled"))
 end
 
-keneanung.bashing.addDenizenAffliction = function(denizen, affliction)
-	debugMessage("New denizen affliction.", { denizen = denizen, affliction = affliction })
+keneanung.bashing.addDenizenAffliction = function(denizen, affliction, own)
+	debugMessage("New denizen affliction.", { denizen = denizen, affliction = affliction, own = own })
 
 	local affObject = afflictions[affliction]
 	debugMessage("associated affliction object", affObject)
@@ -1478,24 +1536,27 @@ keneanung.bashing.addDenizenAffliction = function(denizen, affliction)
 		return
 	end
 
-	local denizenObject = directTargetAccess[denizen]
+	local denizenObject = keneanung.bashing.getTargetObject(denizen)
 	debugMessage("associated denizen object from direct access", denizenObject)
 	if not denizenObject then
 		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets. Fallback is not yet implemented.")
 		return
 	end
 
-	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking] == denizenObject)
+	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking].id == denizenObject.id)
 
 	denizenObject.affs[affliction] = tempTimer(affObject.timer,
-		string.format("keneanung.bashing.removeDenizenAffliction('%s', '%s')", denizenObject.id, affliction))
+		string.format("keneanung.bashing.removeDenizenAffliction('%s', '%s', %s)", denizenObject.id, affliction, own and "true" or "false"))
 
 	kecho(string.format("<%s>%s%s<reset> <green>gained<reset> <%s>%s<reset>", isTarget and "OrangeRed" or "yellow",
 		denizenObject.name, isTarget and " (your target)" or "", affObject.colour, affliction))
+	if own then
+		raiseEvent("keneanung.bashing.afflictionGained", denizenObject.id, affliction)
+	end
 end
 
-keneanung.bashing.removeDenizenAffliction = function(denizen, affliction)
-	debugMessage("Remove denizen affliction.", { denizen = denizen, affliction = affliction })
+keneanung.bashing.removeDenizenAffliction = function(denizen, affliction, own)
+	debugMessage("Remove denizen affliction.", { denizen = denizen, affliction = affliction, own = own })
 
 	local affObject = afflictions[affliction]
 	debugMessage("associated affliction object", affObject)
@@ -1507,15 +1568,17 @@ keneanung.bashing.removeDenizenAffliction = function(denizen, affliction)
 	local denizenObject = directTargetAccess[denizen]
 	debugMessage("associated denizen object from direct access", denizenObject)
 	if not denizenObject then
-		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
 		return
 	end
 
-	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking] == denizenObject)
+	local isTarget = (keneanung.bashing.targetList[keneanung.bashing.attacking].id == denizenObject.id)
 
 	killTimer(denizenObject.affs[affliction])
 	kecho(string.format("<%s>%s%s<reset> <red>lost<reset> <%s>%s<reset>",
 		isTarget and "OrangeRed" or "yellow", denizenObject.name, isTarget and " (your target)" or "", affObject.colour, affliction))
+	if own then
+		raiseEvent("keneanung.bashing.afflictionLost", denizenObject.id, affliction)
+	end
 	denizenObject.affs[affliction] = nil
 end
 
@@ -1525,8 +1588,7 @@ keneanung.bashing.getAfflictions = function(denizen)
 	local denizenObject = directTargetAccess[denizen]
 	debugMessage("associated denizen object from direct access", denizenObject)
 	if not denizenObject then
-		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
-		return
+		return {}
 	end
 
 	local ret = {}
@@ -1543,8 +1605,7 @@ keneanung.bashing.hasAffliction = function(denizen, affliction)
 	local denizenObject = directTargetAccess[denizen]
 	debugMessage("associated denizen object from direct access", denizenObject)
 	if not denizenObject then
-		kecho("Denizen '<red>" .. denizen .. "<reset>' not in list of targets.")
-		return
+		return false
 	end
 
 	return denizenObject.affs[affliction] ~= nil
@@ -1570,13 +1631,16 @@ keneanung.bashing.handleSkillInfo = function()
 	local command = skillInfo.info:match("Syntax:\n(.-)\n"):gsub("<target>", "%%s")
 	local affliction = skillInfo.info:match("Gives denizen affliction: (%w+)")
 	local affsUsed = {skillInfo.info:match("Uses denizen afflictions: (%w+) or (%w+)")}
+	for ind, aff in ipairs(affsUsed) do
+		affsUsed[ind] = aff:lower()
+	end
 	local skillKnown = skillInfo.info:find("*** You have not yet learned this ability ***", 1, true) == nil
 
 	local rageObject = {
 		cooldown = cooldown,
 		rage = rage,
 		command = command,
-		affliction = affliction,
+		affliction = affliction and affliction:lower(),
 		affsUsed = affsUsed,
 		name = skillInfo.skill:lower(),
 		skillKnown = skillKnown
@@ -1649,6 +1713,46 @@ keneanung.bashing.stopHuntingTrip = function()
 	end
 end
 
+keneanung.bashing.seenDenizen = function(id, name)
+	if denizenCache[id] then
+		local timer = denizenCache[id].expireTimer
+		killTimer(timer)
+		timer = tempTimer(10 * 60, "keneanung.bashing.unseenDenizen('" .. id .. "')")
+		denizenCache[id].expireTimer = timer
+	else
+		local cacheObject = { name = name }
+		cacheObject.expireTimer = tempTimer(10 * 60, "keneanung.bashing.unseenDenizen('" .. id .. "')")
+		denizenCache[id] = cacheObject
+	end
+end
+
+keneanung.bashing.unseenDenizen = function(id)
+	if denizenCache[id] then
+		killTimer(denizenCache[id].expireTimer)
+		denizenCache[id] = nil
+	end
+	if directTargetAccess[id] then
+		directTargetAccess[id] = nil
+	end
+end
+
+keneanung.bashing.getDenizenName = function(id)
+	return denizenCache[id] and denizenCache[id].name or "unknown"
+end
+
+keneanung.bashing.getTargetObject = function(id)
+	if not tonumber(id) then
+		kecho("You are trying to access the denizen with ID <red>" .. id .. "<reset> which is not a numerical ID.")
+		return
+	end
+	local result = directTargetAccess[tostring(id)]
+	if not result then
+		result = { id = id, name = keneanung.bashing.getDenizenName(id), affs = {} }
+		directTargetAccess[tostring(id)] = result
+	end
+	return result
+end
+
 local doImport = function(importTable)
 	for area in ipairs(importTable) do
 		if #importTable[area] > 0 then
@@ -1684,6 +1788,22 @@ keneanung.bashing.import = function()
 		doImport(importTable)
 		kecho("Import Completed")
 	end --if
+end
+
+keneanung.bashing.manuallyTarget = function(what)
+	if not keneanung.bashing.configuration.manualTargetting then return end
+	local item = keneanung.bashing.getTargetObject(what)
+	if not item then return end
+	keneanung.bashing.targetList = { item }
+	sendGMCP('IRE.Target.Set "' .. item.id .. '"')
+	raiseEvent("keneanung.bashing.targetList.changed")
+	raiseEvent("keneanung.bashing.targetList.firstChanged", keneanung.bashing.targetList[1].id)
+	if waitingForManualTargetTimer then killTimer(waitingForManualTargetTimer) end
+	if waitingForManualTarget then
+		keneanung.bashing.setTarget()
+		local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+		system.startAttack()
+	end
 end
 
 keneanung.bashing.load()
