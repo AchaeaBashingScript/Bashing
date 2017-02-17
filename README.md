@@ -324,7 +324,8 @@ Some further hints:
 ### Custom battlerage strategies ###
 
 To use a custom battlerage strategy, you can add a function to the `keneanung.bashing.battlerage` table under any name you
-like. That function will receive the current accumulated battlerage and a table of battlerage skills.
+like. This name will be the value you need to set the ragestrat to, when using the strategy. It is called whenever the amount
+of battlerage changes or new abilities are available. The function will receive the current accumulated battlerage and a table of battlerage skills.
 
 The battlerage skills table includes every ability twice: Once with its name as key and once via an index. The indexes are
 in the following order:
@@ -353,6 +354,39 @@ rageObject = {
 
 The script also provides the `keneanung.bashing.rageAvailable` function which receives a name or number of a battlerage
 ability and returns a boolean if that ability is available (enough battlerage and off cooldown).
+
+As an external script,  the `simple` strategy would look similar to this:
+
+~~~~~~~{lua}
+keneanung.bashing.battlerage.simple = function(rage, battlerageSkills)
+  if keneanung.bashing.attacking == 0 then return end
+
+  local razed = false
+  if keneanung.bashing.shield then
+    if keneanung.bashing.configuration[class].autorageraze and keneanung.bashing.rageAvailable(3) then
+      send(battlerageSkills[3].command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+      keneanung.bashing.shield = false
+      local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+      if system.brokeShield then
+        system.brokeShield()
+      end
+      razed = true
+    end
+  end
+
+  if not razed then
+    if keneanung.bashing.rageAvailable(4) then
+      send(battlerageSkills[4].command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+    elseif keneanung.bashing.rageAvailable(1) and
+            ((not battlerageSkills[4].skillKnown) or
+              rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage)
+	     )
+    then
+      send(battlerageSkills[1].command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+    end
+  end
+end
+~~~~~~~
 
 Showing your appreciation
 =========================
