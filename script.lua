@@ -422,8 +422,12 @@ end
 
 local function rageRazeFunction()
 	if keneanung.bashing.shield then
-		if keneanung.bashing.configuration[class].autorageraze and keneanung.bashing.rageAvailable(3) then
-			send(battlerageSkills[3].command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+		if keneanung.bashing.configuration[class].autorageraze then
+			if class == "Depthswalker" and keneanung.bashing.rageAvailable(4) then -- Because Depthswalkers Shieldbreaker is their 4th BR.
+				send(battlerageSkills[4].command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+			elseif class ~= "Depthswalker" and keneanung.bashing.rageAvailable(3) then -- Everyone else that isn't a special snowflake
+				send(battlerageSkills[3].command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+			end
 			keneanung.bashing.shield = false
 			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 			if system.brokeShield then
@@ -452,14 +456,26 @@ keneanung.bashing.battlerage.simple = function(rage)
 	)
 
 	if not rageRazeFunction() then
-		if keneanung.bashing.rageAvailable(4) then
-			sendRageAttack(battlerageSkills[4].command)
-		elseif
-			keneanung.bashing.rageAvailable(1) and
-				((not battlerageSkills[4].skillKnown) or
-				rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage))
-		then
-			sendRageAttack(battlerageSkills[1].command)
+		if class == "Depthswalker" then	-- Special case for Depthswalker rage order
+			if keneanung.bashing.rageAvailable(2) then
+				sendRageAttack(battlerageSkills[2].command)
+			elseif
+				keneanung.bashing.rageAvailable(1) and
+					((not battlerageSkills[2].skillKnown) or
+					rage >= (battlerageSkills[1].rage + battlerageSkills[2].rage))
+			then
+				sendRageAttack(battlerageSkills[1].command)
+			end
+		else
+			if class ~= "Depthswalker" and keneanung.bashing.rageAvailable(4) then
+				sendRageAttack(battlerageSkills[4].command)
+			elseif
+				keneanung.bashing.rageAvailable(1) and
+					((not battlerageSkills[4].skillKnown) or
+					rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage))
+			then
+				sendRageAttack(battlerageSkills[1].command)
+			end
 		end
 	end
 end
@@ -479,7 +495,9 @@ keneanung.bashing.battlerage.simplereverse = function(rage)
 	if not rageRazeFunction() then
 		if keneanung.bashing.rageAvailable(1) then
 			sendRageAttack(battlerageSkills[1].command)
-		elseif keneanung.bashing.rageAvailable(4) then
+		elseif class == "Depthswalker" and keneanung.bashing.rageAvailable(2) then -- If we're special
+			sendRageAttack(battlerageSkills[2].command)
+		elseif class ~= "Depthswalker" and keneanung.bashing.rageAvailable(4) then -- Not special
 			sendRageAttack(battlerageSkills[4].command)
 		end
 	end
