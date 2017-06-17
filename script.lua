@@ -1154,7 +1154,11 @@ keneanung.bashing.removeTarget = function(item)
 	end
 
 	keneanung.bashing.targetList = targets
-
+	
+	if #targets == 0 then
+		raiseEvent("keneanung.bashing.targetList.cleared")
+	end
+	
 end
 
 keneanung.bashing.prioListChangedCallback = function()
