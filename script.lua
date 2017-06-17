@@ -724,6 +724,18 @@ keneanung.bashing.showConfig = function()
 
     kecho(
         string.format(
+            "Autopickup is <red>%s<reset>",
+            keneanung.bashing.configuration.autopickup and "on" or "off"
+        ),
+        "keneanung.bashing.toggle('autopickup', 'Auto Pickup')",
+        string.format(
+            "Turn autopickup %s",
+            keneanung.bashing.configuration.autopickup and "off" or "on"
+        )
+    )
+
+    kecho(
+        string.format(
             "Special attack on shielding is set to <red>%s<reset>",
             keneanung.bashing.configuration[class].razecommand
         ),
