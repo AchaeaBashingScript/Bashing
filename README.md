@@ -43,6 +43,7 @@ Quickstart
 5. Use the alias `kconfig bashing toggle` to enable the script
 6. Start killing things. Acceptable targets must be killed at least once in an area to register them with the bashing script.
    The basher will use the "target" variable or the in game target as a fallback, if there is no item in the prio list.
+   - Alternatively, you can send the command `kconfig bashing addtarget <name>` to add the mob manually
 7. Keep bashing away using the F2 keybinding to work yourself down the list.
 
 Priority management
@@ -203,6 +204,10 @@ will use that one as well.
 Other interesting features
 --------------------------
 
+### Auto-collection of gold and shards ###
+
+This script automatically picks up gold and shards upon entering a room, or after the target list has been cleared. Use the alias `kconfig bashing pickup` to toggle it off and on (defaults to on).
+
 ### Importing of priorities from Guhem's script ###
 
 Around the time when this basher was first developed, another Achaean user
@@ -242,6 +247,8 @@ gets added, a target removed or the list got reordered. To access the current ta
 The `keneanung.bashing.targetList.firstChanged` event is raised whenever the first item of the target list changes. That
 means a new target is used. This event also gives the new target as argument to the event handlers. To access the first item
 of the target list directly, you can access `keneanung.bashing.targetList[1]`.
+
+The `keneanung.bashing.targetList.cleared` event is raised whenever an item from the target list is removed and it leaves the target list empty.
 
 The `keneanung.bashing.afflictionGained` event is raised, whenever a new
 battlerage affliction is registered, where the user is the source. This event can be used
