@@ -920,7 +920,6 @@ keneanung.bashing.nextAttack = function()
 end
 
 local roomItemCallbackWorker = function(event)
-
     if gmcp.Char.Items[event:match("%w+$")].location ~= "room" or keneanung.bashing.configuration.enabled == false then
         return
     end
@@ -944,7 +943,6 @@ local roomItemCallbackWorker = function(event)
     end
 
     if(event == "gmcp.Char.Items.List") then
-
         if not keneanung.bashing.configuration.manualTargetting then
         --restore targets we had when we were in the room last
             local storedTargets = roomTargetStore[gmcp.Room.Info.num]
@@ -1191,6 +1189,12 @@ keneanung.bashing.roomMessageCallback = function()
     end
 
     if keneanung.bashing.lastRoom == gmcp.Room.Info.num then
+        -- Check for pickup items here
+        for _, item in ipairs(gmcp.Char.Items.List.items) do
+            if keneanung.bashing.configuration.autopickup and keneanung.bashing.configuration.pickupItems[item.name] then
+                send(string.format("get %s", item.id))
+            end
+        end
         return
     end
 
