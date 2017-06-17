@@ -1128,6 +1128,7 @@ end
 keneanung.bashing.removeTarget = function(item)
 
 	local targets = keneanung.bashing.targetList
+	local initialCount = #targets
 	local number
 
 	for num, itemTarget in ipairs(targets) do
@@ -1155,7 +1156,7 @@ keneanung.bashing.removeTarget = function(item)
 
 	keneanung.bashing.targetList = targets
 	
-	if #targets == 0 then
+	if #targets == 0 and initialCount > targets then
 		raiseEvent("keneanung.bashing.targetList.cleared")
 	end
 	
