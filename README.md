@@ -243,6 +243,8 @@ The `keneanung.bashing.targetList.firstChanged` event is raised whenever the fir
 means a new target is used. This event also gives the new target as argument to the event handlers. To access the first item
 of the target list directly, you can access `keneanung.bashing.targetList[1]`.
 
+The `keneanung.bashing.targetList.cleared` event ijs raised whenever an item from the target list is removed, leaving the target list empty.
+
 The `keneanung.bashing.afflictionGained` event is raised, whenever a new
 battlerage affliction is registered, where the user is the source. This event can be used
 to relay the information to party or group chats without a need for triggers.
