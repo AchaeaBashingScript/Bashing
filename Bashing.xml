@@ -306,6 +306,20 @@ disableAlias(&quot;import from Guhem&quot;)</script>
                     <packageName></packageName>
                     <regex>^kconfig bashing import$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>add target</name>
+                    <script>keneanung.bashing.addPossibleTarget(matches[2])</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing addtarget (.*)$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>toggle autopickup</name>
+                    <script>keneanung.bashing.toggle(&quot;autopickup&quot;, &quot;Auto Pickup&quot;)</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^kconfig bashing pickup$</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
