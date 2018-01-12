@@ -429,7 +429,7 @@ below for fairness reasons.*
 
 You can send bitcoins to this address: 1M6DVCYeGmWN7yR3no3XjeZq3jrydKhYe7
 
-I also have an Amazon wishlist: https://www.amazon.de/gp/registry/wishlist/20AAS3W9RZLAF
+I also have an Amazon wishlist: https://www.amazon.de/gp/registry/wishlist/20AAS3W9RZLAF?language=en_GB
 
 Credits or other in game stuff
 ------------------------------
