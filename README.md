@@ -38,7 +38,7 @@ Quickstart
 1. Download the Bashing.mpackage
 2. Import the package into Mudlet
 3. If using svo: Deactivate or delete the keybinding of F2 that comes with svo
-4. If using a custom system: [setup the system table](#support-for-other-systems) and configure 
+4. If not using svof, wundersys or stock server side queuing: [setup the system table](#support-for-other-systems) and configure 
    `kconfig bashing system <name>`
 5. Use the alias `kconfig bashing toggle` to enable the script
 6. Start killing things. Acceptable targets must be killed at least once in an area to register them with the bashing script.
@@ -169,6 +169,19 @@ toggle the item or set the alias to the command line, so you only need to add th
 The basher stores certain settings for each class, so remember to tweak your
 configuration when switching to a new one!
 
+### System use ###
+
+The basher uses external systems for queueing and displaying warnings and notifications. It comes with support for 3 possible
+systems out of the box and can be extended via plugins. See [the scripting section]](#support-for-other-systems).
+
+Valid out-of-the-box settings are:
+- `auto` (default) which tries to find out automatically, which system is available
+- `svo` for using the svof system
+- `wundersys` for using the wundersys system
+- `none` for using stock server side queueing and plain notifications
+
+If you add your own system table, this option becomes available as a setting as well.
+
 ### Warn and flee thresholds ###
 
 You can enable and disable automatic fleeing when the health falls below a certain threshold with the
@@ -261,8 +274,9 @@ Additions to the script can now be loaded in two ways:
 ### Support for other systems ###
 A special case of plugins is the support of custom systems.
 
-While two often used systems are supported by the bashing script, there are a multitude of other systems (private and public)
-out there. To allow integration of the bashing script into these systems, an interface was designed.
+While two often used systems (svof and wundersys) are supported out of the box by the bashing script, there are a multitude
+of other systems (private and public) out there. To allow integration of the bashing script into these systems, an
+interface was designed.
 
 To interface the system, create a table with the following structure:
 
