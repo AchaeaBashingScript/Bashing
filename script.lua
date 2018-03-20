@@ -131,9 +131,10 @@ end
 local requestNextSkillDetails = function()
 	if #requestSkillDetails == 0 then
 		sortDepthswalkerBattlerage()
+	else
+		sendGMCP(string.format([[Char.Skills.Get {"group": "battlerage", "name": "%s"}]], requestSkillDetails[1]))
+		table.remove(requestSkillDetails,1)
 	end
-	sendGMCP(string.format([[Char.Skills.Get {"group": "battlerage", "name": "%s"}]], requestSkillDetails[1]))
-	table.remove(requestSkillDetails,1)
 end
 
 local migrateTo1Point8 = function()
