@@ -153,6 +153,20 @@ local migrateTo1Point8 = function()
 	end
 end
 
+local startAttack = function()
+	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+        system.startAttack()
+	gmod.enableModule("keneanung.bashing", "IRE.Display")
+	sendGMCP([[Core.Supports.Add ["IRE.Display 3"] ]])   -- register the GMCP module independently from gmod.
+end
+
+local stopAttack = function()
+	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+        system.stopAttack()
+	gmod.disableModule("keneanung.bashing", "IRE.Display")
+	sendGMCP([[Core.Supports.Remove ["IRE.Display"] ]])   -- unregister the GMCP module independently from gmod.
+end
+
 keneanung.bashing.systems.svo = {
 
 	startAttack = function()
@@ -827,14 +841,16 @@ keneanung.bashing.flee = function()
 end
 
 keneanung.bashing.attackButton = function()
-	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	if keneanung.bashing.attacking == 0 then
-		keneanung.bashing.setTarget()
-		system.startAttack()
+		if keneanung.bashing.setTarget() then
+		startAttack()
 		kecho("Nothing will stand in our way.\n")
+                else
+                kecho("Nothing to target, boss.\n")
+                end
 	else
 		keneanung.bashing.clearTarget()
-		system.stopAttack()
+		stopAttack()
 		kecho("Lets save them for later.\n")
 	end
 end
@@ -906,7 +922,7 @@ keneanung.bashing.nextAttack = function()
 	end
 
 	keneanung.bashing.clearTarget()
-	system.stopAttack()
+	stopAttack()
 	return false
 
 end
@@ -1188,8 +1204,7 @@ keneanung.bashing.roomMessageCallback = function()
 	keneanung.bashing.shield = false
 	if keneanung.bashing.attacking > 0 then
 		keneanung.bashing.clearTarget()
-		local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-		system.stopAttack()
+		stopAttack()
 	end
 	local exits = getRoomExits(gmcp.Room.Info.num) or gmcp.Room.Info.exits
 	local found = false
@@ -1406,8 +1421,7 @@ keneanung.bashing.setTarget = function()
 		end
 		if not targetSet then
 			keneanung.bashing.clearTarget()
-			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-			system.stopAttack()
+			stopAttack()
 			return
 		end
 	end
@@ -1416,6 +1430,7 @@ keneanung.bashing.setTarget = function()
 	end
 	debugMessage("setting target", keneanung.bashing.targetList[keneanung.bashing.attacking])
 	sendGMCP('IRE.Target.Set "' .. keneanung.bashing.targetList[keneanung.bashing.attacking].id .. '"')
+        return keneanung.bashing.attacking ~= 0
 end
 
 keneanung.bashing.clearTarget = function()
@@ -1429,8 +1444,6 @@ end
 keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Target")
 	sendGMCP([[Core.Supports.Add ["IRE.Target 1"] ]])   -- register the GMCP module independently from gmod.
-	gmod.enableModule("keneanung.bashing", "IRE.Display")
-	sendGMCP([[Core.Supports.Add ["IRE.Display 3"] ]])   -- register the GMCP module independently from gmod.
 	sendGMCP([[Char.Skills.Get {"group":"battlerage"}]])
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.setup()
@@ -1802,8 +1815,7 @@ keneanung.bashing.manuallyTarget = function(what)
 	if waitingForManualTargetTimer then killTimer(waitingForManualTargetTimer) end
 	if waitingForManualTarget then
 		keneanung.bashing.setTarget()
-		local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-		system.startAttack()
+		startAttack()
 	end
 end
 
