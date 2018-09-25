@@ -325,8 +325,8 @@ disableAlias(&quot;import from Guhem&quot;)</script>
 -- Note that you can also use external Scripts --
 -------------------------------------------------
 keneanung.bashing = keneanung.bashing or { }
-keneanung.bashing.configuration = {}
-keneanung.bashing.configuration.priorities = {}
+keneanung.bashing.configuration = keneanung.bashing.configuration or {}
+keneanung.bashing.configuration.priorities = keneanung.bashing.configuration.priorities or {}
 keneanung.bashing.targetList = {}</script>
                 <eventHandlerList/>
                 <Script isActive="yes" isFolder="no">
