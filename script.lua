@@ -132,7 +132,7 @@ local requestNextSkillDetails = function()
 	if #requestSkillDetails == 0 then
 		sortDepthswalkerBattlerage()
 	else
-		sendGMCP(string.format([[Char.Skills.Get {"group": "battlerage", "name": "%s"}]], requestSkillDetails[1]))
+		sendGMCP(string.format([[Char.Skills.Get {"group": "attainment", "name": "%s"}]], requestSkillDetails[1]))
 		table.remove(requestSkillDetails,1)
 	end
 end
@@ -1274,7 +1274,7 @@ keneanung.bashing.charStatusCallback = function()
 	end
 
 	if somethingChanged then
-		sendGMCP([[Char.Skills.Get {"group":"battlerage"}]]) -- rerequest battlerage abilities
+		sendGMCP([[Char.Skills.Get {"group":"attainment"}]]) -- rerequest attainment abilities
 		migrateTo1Point8()
 		if not keneanung.bashing.configuration[class] then
 			local newClassConfig = {}
@@ -1444,7 +1444,7 @@ end
 keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Target")
 	sendGMCP([[Core.Supports.Add ["IRE.Target 1"] ]])   -- register the GMCP module independently from gmod.
-	sendGMCP([[Char.Skills.Get {"group":"battlerage"}]])
+	sendGMCP([[Char.Skills.Get {"group":"attainment"}]])
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.setup()
 	sessionGains.gold = 0
@@ -1627,7 +1627,7 @@ end
 
 keneanung.bashing.handleSkillList = function()
 	local skillList = gmcp.Char.Skills.List
-	if skillList.group ~= "battlerage" then return end
+	if skillList.group ~= "attainment" then return end
 
 	for index, skill in ipairs(skillList.list) do
 		requestSkillDetails[index] = skill
@@ -1638,7 +1638,7 @@ end
 
 keneanung.bashing.handleSkillInfo = function()
 	local skillInfo = gmcp.Char.Skills.Info
-	if skillInfo.group ~= "battlerage" then return end
+	if skillInfo.group ~= "attainment" then return end
 
 	local cooldown = tonumber(skillInfo.info:match("(%d+\.%d+) seconds"))
 	local rage = tonumber(skillInfo.info:match("(%d+) rage"))
