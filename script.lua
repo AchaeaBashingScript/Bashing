@@ -1631,11 +1631,11 @@ keneanung.bashing.handleSkillList = function()
 
 	local battlerageOffset = skillList[1] == "Portals" and 0 or 1
 	requestSkillDetails[1] = skillList[2 + battlerageOffset]
-	requestSkillDetails[1] = skillList[4 + battlerageOffset]
-	requestSkillDetails[1] = skillList[8 + battlerageOffset]
-	requestSkillDetails[1] = skillList[13 + battlerageOffset]
-	requestSkillDetails[1] = skillList[14 + battlerageOffset]
-	requestSkillDetails[1] = skillList[16 + battlerageOffset]
+	requestSkillDetails[2] = skillList[4 + battlerageOffset]
+	requestSkillDetails[3] = skillList[8 + battlerageOffset]
+	requestSkillDetails[4] = skillList[13 + battlerageOffset]
+	requestSkillDetails[5] = skillList[14 + battlerageOffset]
+	requestSkillDetails[6] = skillList[16 + battlerageOffset]
 	battlerageSkills = {}
 	requestNextSkillDetails()
 end
