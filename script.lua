@@ -1698,9 +1698,8 @@ keneanung.bashing.rageAvailable = function(ability)
 
 	if rage >= battlerageSkills[ability].rage then
 		return not keneanung.bashing.battlerageSkillsCD[ability]
-	else
-		return false
 	end
+	return false
 end
 
 keneanung.bashing.printGains = function(which)
