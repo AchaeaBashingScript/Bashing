@@ -1633,8 +1633,13 @@ keneanung.bashing.handleSkillList = function()
 	requestSkillDetails[1] = skillList.list[2 + battlerageOffset]
 	requestSkillDetails[2] = skillList.list[4 + battlerageOffset]
 	requestSkillDetails[3] = skillList.list[8 + battlerageOffset]
-	requestSkillDetails[4] = skillList.list[13 + battlerageOffset]
-	requestSkillDetails[5] = skillList.list[14 + battlerageOffset]
+	if skillList.list[12 + battlerageOffset] == "Theft" then
+		requestSkillDetails[4] = skillList.list[13 + battlerageOffset]
+		requestSkillDetails[5] = skillList.list[14 + battlerageOffset]
+	else
+		requestSkillDetails[4] = skillList.list[12 + battlerageOffset]
+		requestSkillDetails[5] = skillList.list[13 + battlerageOffset]
+	end
 	requestSkillDetails[6] = skillList.list[16 + battlerageOffset]
 	battlerageSkills = {}
 	requestNextSkillDetails()
