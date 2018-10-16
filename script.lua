@@ -69,6 +69,7 @@ keneanung.bashing.configuration.priorities = {}
 keneanung.bashing.targetList = {}
 keneanung.bashing.systems = {}
 keneanung.bashing.battlerage = {}
+keneanung.bashing.battlerageSkillsCD = {} -- I couldn't get it to work as a local in a tempTimer D:
 keneanung.bashing.room = {}
 keneanung.bashing.pausingAfflictions = {}
 
@@ -454,6 +455,10 @@ end
 keneanung.bashing.battlerage.none = function(rage)
 end
 
+keneanung.bashing.battlerage.setCooldown = function(rage)
+	timeframe("keneanung.bashing.battlerageSkillsCD['"..rage.name.."']", 0, rage.cooldown)
+end
+
 keneanung.bashing.battlerage.simple = function(rage)
 	if keneanung.bashing.attacking == 0 then return end
 
@@ -469,12 +474,14 @@ keneanung.bashing.battlerage.simple = function(rage)
 	if not rageRazeFunction() then
 		if keneanung.bashing.rageAvailable(4) then
 			sendRageAttack(battlerageSkills[4].command)
+			keneanung.bashing.battlerage.setCooldown(battlerageSkills[4])
 		elseif
 			keneanung.bashing.rageAvailable(1) and
 				((not battlerageSkills[4].skillKnown) or
 				rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage))
 		then
 			sendRageAttack(battlerageSkills[1].command)
+			keneanung.bashing.battlerage.setCooldown(battlerageSkills[1])
 		end
 	end
 end
@@ -494,8 +501,10 @@ keneanung.bashing.battlerage.simplereverse = function(rage)
 	if not rageRazeFunction() then
 		if keneanung.bashing.rageAvailable(1) then
 			sendRageAttack(battlerageSkills[1].command)
+			keneanung.bashing.battlerage.setCooldown(battlerageSkills[1])
 		elseif keneanung.bashing.rageAvailable(4) then
 			sendRageAttack(battlerageSkills[4].command)
+			keneanung.bashing.battlerage.setCooldown(battlerageSkills[4])
 		end
 	end
 end
@@ -1681,16 +1690,17 @@ keneanung.bashing.handleSkillInfo = function()
 end
 
 keneanung.bashing.rageAvailable = function(ability)
+
 	if keneanung.bashing.usedRageAttack then return false end
 	if type(ability) == "number" then
 		ability = battlerageSkills[ability].name
 	end
-	for _, button in pairs(gmcp.IRE.Display.ButtonActions) do
-		if button.text:lower() == ability:lower() then
-			return button.highlight == 1
-		end
+
+	if rage >= battlerageSkills[ability].rage then
+		return not keneanung.bashing.battlerageSkillsCD[ability]
+	else
+		return false
 	end
-	return false
 end
 
 keneanung.bashing.printGains = function(which)
