@@ -1629,13 +1629,13 @@ keneanung.bashing.handleSkillList = function()
 	local skillList = gmcp.Char.Skills.List
 	if skillList.group ~= "attainment" then return end
 
-	local battlerageOffset = skillList[1] == "Portals" and 0 or 1
-	requestSkillDetails[1] = skillList[2 + battlerageOffset]
-	requestSkillDetails[2] = skillList[4 + battlerageOffset]
-	requestSkillDetails[3] = skillList[8 + battlerageOffset]
-	requestSkillDetails[4] = skillList[13 + battlerageOffset]
-	requestSkillDetails[5] = skillList[14 + battlerageOffset]
-	requestSkillDetails[6] = skillList[16 + battlerageOffset]
+	local battlerageOffset = skillList.list[1] == "Portals" and 0 or 1
+	requestSkillDetails[1] = skillList.list[2 + battlerageOffset]
+	requestSkillDetails[2] = skillList.list[4 + battlerageOffset]
+	requestSkillDetails[3] = skillList.list[8 + battlerageOffset]
+	requestSkillDetails[4] = skillList.list[13 + battlerageOffset]
+	requestSkillDetails[5] = skillList.list[14 + battlerageOffset]
+	requestSkillDetails[6] = skillList.list[16 + battlerageOffset]
 	battlerageSkills = {}
 	requestNextSkillDetails()
 end
