@@ -69,6 +69,7 @@ keneanung.bashing.configuration.priorities = {}
 keneanung.bashing.targetList = {}
 keneanung.bashing.systems = {}
 keneanung.bashing.battlerage = {}
+keneanung.bashing.battlerageSkillsCD = {}
 keneanung.bashing.room = {}
 keneanung.bashing.pausingAfflictions = {}
 
@@ -155,16 +156,12 @@ end
 
 local startAttack = function()
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-        system.startAttack()
-	gmod.enableModule("keneanung.bashing", "IRE.Display")
-	sendGMCP([[Core.Supports.Add ["IRE.Display 3"] ]])   -- register the GMCP module independently from gmod.
+	system.startAttack()
 end
 
 local stopAttack = function()
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-        system.stopAttack()
-	gmod.disableModule("keneanung.bashing", "IRE.Display")
-	sendGMCP([[Core.Supports.Remove ["IRE.Display"] ]])   -- unregister the GMCP module independently from gmod.
+	system.stopAttack()
 end
 
 keneanung.bashing.systems.svo = {
@@ -428,9 +425,10 @@ keneanung.bashing.systems.none = {
 
 }
 
-local function sendRageAttack(attack)
-	debugMessage("sending rage attack", attack)
-	send(attack:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+local function sendRageAttack(thisRage)
+	debugMessage("sending rage attack", thisRage.command)
+	send(thisRage.command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+	keneanung.bashing.battlerage.setCooldown(thisRage)
 	keneanung.bashing.usedRageAttack = true
 	tempTimer(1, "keneanung.bashing.usedRageAttack = false")
 end
@@ -438,7 +436,7 @@ end
 local function rageRazeFunction()
 	if keneanung.bashing.shield then
 		if keneanung.bashing.configuration[class].autorageraze and keneanung.bashing.rageAvailable(3) then
-			send(battlerageSkills[3].command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+			sendRageAttack(battlerageSkills[3])
 			keneanung.bashing.shield = false
 			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 			if system.brokeShield then
@@ -452,6 +450,10 @@ local function rageRazeFunction()
 end
 
 keneanung.bashing.battlerage.none = function(rage)
+end
+
+keneanung.bashing.battlerage.setCooldown = function(rage)
+	timeframe("keneanung.bashing.battlerageSkillsCD['"..rage.name.."']", 0, rage.cooldown)
 end
 
 keneanung.bashing.battlerage.simple = function(rage)
@@ -468,13 +470,13 @@ keneanung.bashing.battlerage.simple = function(rage)
 
 	if not rageRazeFunction() then
 		if keneanung.bashing.rageAvailable(4) then
-			sendRageAttack(battlerageSkills[4].command)
+			sendRageAttack(battlerageSkills[4])
 		elseif
 			keneanung.bashing.rageAvailable(1) and
 				((not battlerageSkills[4].skillKnown) or
 				rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage))
 		then
-			sendRageAttack(battlerageSkills[1].command)
+			sendRageAttack(battlerageSkills[1])
 		end
 	end
 end
@@ -493,9 +495,9 @@ keneanung.bashing.battlerage.simplereverse = function(rage)
 
 	if not rageRazeFunction() then
 		if keneanung.bashing.rageAvailable(1) then
-			sendRageAttack(battlerageSkills[1].command)
+			sendRageAttack(battlerageSkills[1])
 		elseif keneanung.bashing.rageAvailable(4) then
-			sendRageAttack(battlerageSkills[4].command)
+			sendRageAttack(battlerageSkills[4])
 		end
 	end
 end
@@ -1681,14 +1683,14 @@ keneanung.bashing.handleSkillInfo = function()
 end
 
 keneanung.bashing.rageAvailable = function(ability)
+
 	if keneanung.bashing.usedRageAttack then return false end
 	if type(ability) == "number" then
 		ability = battlerageSkills[ability].name
 	end
-	for _, button in pairs(gmcp.IRE.Display.ButtonActions) do
-		if button.text:lower() == ability:lower() then
-			return button.highlight == 1
-		end
+
+	if rage >= battlerageSkills[ability].rage then
+		return not keneanung.bashing.battlerageSkillsCD[ability]
 	end
 	return false
 end
