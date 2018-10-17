@@ -69,7 +69,7 @@ keneanung.bashing.configuration.priorities = {}
 keneanung.bashing.targetList = {}
 keneanung.bashing.systems = {}
 keneanung.bashing.battlerage = {}
-keneanung.bashing.battlerageSkillsCD = {} -- I couldn't get it to work as a local in a tempTimer D:
+keneanung.bashing.battlerageSkillsCD = {}
 keneanung.bashing.room = {}
 keneanung.bashing.pausingAfflictions = {}
 
@@ -156,16 +156,12 @@ end
 
 local startAttack = function()
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-        system.startAttack()
-	gmod.enableModule("keneanung.bashing", "IRE.Display")
-	sendGMCP([[Core.Supports.Add ["IRE.Display 3"] ]])   -- register the GMCP module independently from gmod.
+	system.startAttack()
 end
 
 local stopAttack = function()
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-        system.stopAttack()
-	gmod.disableModule("keneanung.bashing", "IRE.Display")
-	sendGMCP([[Core.Supports.Remove ["IRE.Display"] ]])   -- unregister the GMCP module independently from gmod.
+	system.stopAttack()
 end
 
 keneanung.bashing.systems.svo = {
