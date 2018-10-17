@@ -429,9 +429,10 @@ keneanung.bashing.systems.none = {
 
 }
 
-local function sendRageAttack(attack)
-	debugMessage("sending rage attack", attack)
-	send(attack:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+local function sendRageAttack(thisRage)
+	debugMessage("sending rage attack", thisRage.command)
+	send(thisRage.command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+	keneanung.bashing.battlerage.setCooldown(thisRage)
 	keneanung.bashing.usedRageAttack = true
 	tempTimer(1, "keneanung.bashing.usedRageAttack = false")
 end
@@ -439,7 +440,7 @@ end
 local function rageRazeFunction()
 	if keneanung.bashing.shield then
 		if keneanung.bashing.configuration[class].autorageraze and keneanung.bashing.rageAvailable(3) then
-			send(battlerageSkills[3].command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+			sendRageAttack(battlerageSkills[3])
 			keneanung.bashing.shield = false
 			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 			if system.brokeShield then
@@ -473,15 +474,13 @@ keneanung.bashing.battlerage.simple = function(rage)
 
 	if not rageRazeFunction() then
 		if keneanung.bashing.rageAvailable(4) then
-			sendRageAttack(battlerageSkills[4].command)
-			keneanung.bashing.battlerage.setCooldown(battlerageSkills[4])
+			sendRageAttack(battlerageSkills[4])
 		elseif
 			keneanung.bashing.rageAvailable(1) and
 				((not battlerageSkills[4].skillKnown) or
 				rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage))
 		then
-			sendRageAttack(battlerageSkills[1].command)
-			keneanung.bashing.battlerage.setCooldown(battlerageSkills[1])
+			sendRageAttack(battlerageSkills[1])
 		end
 	end
 end
@@ -500,11 +499,9 @@ keneanung.bashing.battlerage.simplereverse = function(rage)
 
 	if not rageRazeFunction() then
 		if keneanung.bashing.rageAvailable(1) then
-			sendRageAttack(battlerageSkills[1].command)
-			keneanung.bashing.battlerage.setCooldown(battlerageSkills[1])
+			sendRageAttack(battlerageSkills[1])
 		elseif keneanung.bashing.rageAvailable(4) then
-			sendRageAttack(battlerageSkills[4].command)
-			keneanung.bashing.battlerage.setCooldown(battlerageSkills[4])
+			sendRageAttack(battlerageSkills[4])
 		end
 	end
 end
