@@ -453,7 +453,7 @@ keneanung.bashing.battlerage.none = function(rage)
 end
 
 keneanung.bashing.battlerage.setCooldown = function(rage)
-	timeframe("keneanung.bashing.battlerageSkillsCD['"..rage.name.."']", 0, rage.cooldown)
+	timeframe("keneanung.bashing.battlerageSkillsCD['"..rage.name.."']", 0, rage.cooldown + getNetworkLatency())
 end
 
 keneanung.bashing.battlerage.simple = function(rage)
