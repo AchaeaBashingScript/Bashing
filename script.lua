@@ -43,6 +43,24 @@ local afflictions = {
 		timer = 5
 	},
 }
+
+local nonBattlerageAttainmentSkills = {
+	"Prevail",
+	"Portals",
+	"Battlerage",
+	"Market",
+	"Battle",
+	"Limitedportals",
+	"Independence",
+	"Embrace",
+	"Tradeskills",
+	"Theft",
+	"Craftsmanship",
+	"Multiclass",
+	"Sustenance",
+	"Dragonhood",
+	"Polymath",
+}
 local sessionGains = { }
 local tripGains = { gold = 0, experience = 0 }
 
@@ -1631,18 +1649,11 @@ keneanung.bashing.handleSkillList = function()
 	local skillList = gmcp.Char.Skills.List
 	if skillList.group ~= "attainment" then return end
 
-	local battlerageOffset = skillList.list[1] == "Portals" and 0 or 1
-	requestSkillDetails[1] = skillList.list[2 + battlerageOffset]
-	requestSkillDetails[2] = skillList.list[4 + battlerageOffset]
-	requestSkillDetails[3] = skillList.list[8 + battlerageOffset]
-	if skillList.list[12 + battlerageOffset] == "Theft" then
-		requestSkillDetails[4] = skillList.list[13 + battlerageOffset]
-		requestSkillDetails[5] = skillList.list[14 + battlerageOffset]
-	else
-		requestSkillDetails[4] = skillList.list[12 + battlerageOffset]
-		requestSkillDetails[5] = skillList.list[13 + battlerageOffset]
+	for _, skill in ipairs(skillList.list) do
+		if not table.contains(nonBattlerageAttainmentSkills, skill) then
+			requestSkillDetails[#requestSkillDetails + 1] = skill
+		end
 	end
-	requestSkillDetails[6] = skillList.list[16 + battlerageOffset]
 	battlerageSkills = {}
 	requestNextSkillDetails()
 end
