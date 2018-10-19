@@ -323,10 +323,24 @@ keneanung.bashing.systems.wundersys = {
 
 keneanung.bashing.systems.none = {
 
+	firstAttack = false,
+
 	startAttack = function()
+		timeframe("keneanung.bashing.systems.none.firstAttack", {0, true}, {1, false})
+		keneanung.bashing.systems.none.doAttack()
+	end,
+
+	doAttack = function()
 		if keneanung.bashing.attacking > 0 then
+
+			if keneanung.bashing.usedBalanceAttack and not keneanung.bashing.systems.none.firstAttack then
+				return true
+			end
+
 			enableTrigger(keneanung.bashing.systems.none.queueTrigger)
 			send("queue add eqbal keneanungki", false)
+
+			timeframe("keneanung.bashing.usedBalanceAttack", {0, true}, {0.5, false})
 		end
 	end,
 
@@ -388,7 +402,7 @@ keneanung.bashing.systems.none = {
 
 				end
 				if matches[2] == "KENEANUNGKI" then
-					send("queue add eqbal keneanungki", false)
+					keneanung.bashing.systems.none.doAttack()
 				else
 					keneanung.bashing.shield = false
 				end
