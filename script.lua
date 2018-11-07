@@ -128,6 +128,18 @@ local kecho = function(what, command, popup)
 
 end
 
+local knownBattlerageSkillList = function()
+	if #requestSkillDetails == 0 then
+		return battlerageSkills[1].name .. " " .. battlerageSkills[2].name .. " " .. battlerageSkills[3].name .. " ".. battlerageSkills[4].name .. " ".. battlerageSkills[5].name .. " ".. battlerageSkills[6].name
+	end
+	return("processing... try doing some things!")
+end
+
+keneanung.bashing.configuration.requestBattlerageSkills = function()
+	kecho("Requesting battlerage skills...\n")
+	sendGMCP([[Char.Skills.Get {"group":"attainment"}]])
+end
+
 local sortDepthswalkerBattlerage = function()
 
 	debugMessage("sorting brage for walkers", {battlerageSkills = battlerageSkills})
@@ -149,6 +161,7 @@ end
 local requestNextSkillDetails = function()
 	if #requestSkillDetails == 0 then
 		sortDepthswalkerBattlerage()
+		kecho("Finished parsing battlerage skills.\n")
 	else
 		sendGMCP(string.format([[Char.Skills.Get {"group": "attainment", "name": "%s"}]], requestSkillDetails[1]))
 		table.remove(requestSkillDetails,1)
@@ -811,11 +824,19 @@ keneanung.bashing.showConfig = function()
 
 	kecho(
 		string.format(
-			"Waiting for <red>%s<reset> seconds for a new target before stopping, if attacking manutally",
+			"Waiting for <red>%s<reset> seconds for a new target before stopping, if attacking manually",
 			keneanung.bashing.configuration.waitForManualTarget
 		),
 		"clearCmdLine() appendCmdLine('kconfig bashing waitfortarget ')",
 		"Set time to wait for a target."
+	)
+
+	kecho(
+		string.format(
+			"Battlerage skills identified (<red>reset<reset>): " .. knownBattlerageSkillList()
+		),
+		"keneanung.bashing.configuration.requestBattlerageSkills()",
+		"Request and parse battlerage skills again."
 	)
 
 	echo("\n")
