@@ -138,6 +138,7 @@ end
 keneanung.bashing.configuration.requestBattlerageSkills = function()
 	kecho("Requesting battlerage skills...\n")
 	sendGMCP([[Char.Skills.Get {"group":"attainment"}]])
+	send(" ")
 end
 
 local sortDepthswalkerBattlerage = function()
@@ -164,6 +165,7 @@ local requestNextSkillDetails = function()
 		kecho("Finished parsing battlerage skills.\n")
 	else
 		sendGMCP(string.format([[Char.Skills.Get {"group": "attainment", "name": "%s"}]], requestSkillDetails[1]))
+		send(" ")
 		table.remove(requestSkillDetails,1)
 	end
 end
@@ -1313,7 +1315,7 @@ keneanung.bashing.charStatusCallback = function()
 	end
 
 	if somethingChanged then
-		sendGMCP([[Char.Skills.Get {"group":"attainment"}]]) -- rerequest attainment abilities
+		keneanung.bashing.configuration.requestBattlerageSkills() -- rerequest attainment abilities
 		migrateTo1Point8()
 		if not keneanung.bashing.configuration[class] then
 			local newClassConfig = {}
