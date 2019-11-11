@@ -1707,7 +1707,7 @@ keneanung.bashing.handleSkillInfo = function()
 		if battlerageSkills[skillInfo.skill] then
 			battlerageSkills[skillInfo.skill] = rageObject
 			for index, oldObject in ipairs(battlerageSkills) do
-				if oldObject.name = rageObject.name then
+				if oldObject.name == rageObject.name then
 					battlerageSkills[index] = rageObject
 					break
 				end
