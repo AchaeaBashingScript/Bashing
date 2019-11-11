@@ -148,10 +148,10 @@ local sortDepthswalkerBattlerage = function()
 	if class ~= "Depthswalker" or #battlerageSkills ~= 6 then return end
 	battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["curse"], battlerageSkills["nakail"], battlerageSkills["lash"]
 
-	battlerageSkills[2].affliction = "aeon"
-	battlerageSkills[6].affliction = "charm"
+	battlerageSkills["curse"].affliction = "aeon"
+	battlerageSkills["boinad"].affliction = "charm"
 
-	battlerageSkills[5].affsUsed = {
+	battlerageSkills["erasure"].affsUsed = {
 		"amnesia",
 		"weakness"
 	}
@@ -1704,9 +1704,20 @@ keneanung.bashing.handleSkillInfo = function()
 	}
 
 	if #battlerageSkills == 0 or skillInfo.skill ~= battlerageSkills[#battlerageSkills].name then
-		battlerageSkills[skillInfo.skill] = rageObject
-		battlerageSkills[#battlerageSkills + 1] = rageObject
-		debugMessage("added new battlerage skill complete list is here", battlerageSkills)
+		if battlerageSkills[skillInfo.skill] then
+			battlerageSkills[skillInfo.skill] = rageObject
+			for index, oldObject in ipairs(battlerageSkills) do
+				if oldObject.name = rageObject.name then
+					battlerageSkills[index] = rageObject
+					break
+				end
+			end
+			debugMessage("Updated skill " .. skillInfo.skill .. ", complete list is here", battlerageSkills)
+		else
+			battlerageSkills[skillInfo.skill] = rageObject
+			battlerageSkills[#battlerageSkills + 1] = rageObject
+			debugMessage("added new battlerage skill complete list is here", battlerageSkills)
+		end
 	else
 		debugMessage("got double battlerage skill")
 	end
