@@ -1449,7 +1449,7 @@ keneanung.bashing.setTarget = function()
 		if tar ~= nil then
 
 			for _, item in ipairs(keneanung.bashing.room) do
-				if item.attrib and item.attrib:find("m") and item.name:lower():find(tar:lower()) then
+				if item.attrib and item.attrib:find("m") and not item.attrib:find("d") and item.name:lower():find(tar:lower()) then
 					if keneanung.bashing.configuration.targetLoyals or not item.attrib:find("x") then
 						keneanung.bashing.targetList[#keneanung.bashing.targetList + 1]= {
 							id = item.id,
