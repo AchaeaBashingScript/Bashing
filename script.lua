@@ -159,15 +159,12 @@ local sortDepthswalkerBattlerage = function()
 	debugMessage("sorted brage for walkers", {battlerageSkills = battlerageSkills})
 end
 
-local requestNextSkillDetails = function()
-	if #requestSkillDetails == 0 then
-		sortDepthswalkerBattlerage()
-		kecho("Finished parsing battlerage skills.\n")
-	else
+local requestAllSkillDetails = function()
+	while #requestSkillDetails > 0 do
 		sendGMCP(string.format([[Char.Skills.Get {"group": "attainment", "name": "%s"}]], requestSkillDetails[1]))
-		send(" ")
 		table.remove(requestSkillDetails,1)
 	end
+	send(" ",false)
 end
 
 local migrateTo1Point8 = function()
@@ -881,14 +878,27 @@ keneanung.bashing.flee = function()
 	kecho("New order. Tactical retreat.\n")
 end
 
-keneanung.bashing.attackButton = function()
-	if keneanung.bashing.attacking == 0 then
+keneanung.bashing.attackButton = function(toggle)
+    if toggle == nil then
+		if keneanung.bashing.attacking == 0 then
+			if keneanung.bashing.setTarget() then
+				startAttack()
+				kecho("Nothing will stand in our way.\n")
+			else
+				kecho("Nothing to target, boss.\n")
+			end
+		else
+			keneanung.bashing.clearTarget()
+			stopAttack()
+			kecho("Lets save them for later.\n")
+		end
+	elseif toggle then
 		if keneanung.bashing.setTarget() then
-		startAttack()
-		kecho("Nothing will stand in our way.\n")
-                else
-                kecho("Nothing to target, boss.\n")
-                end
+			startAttack()
+			kecho("Nothing will stand in our way.\n")
+        else
+            kecho("Nothing to target, boss.\n")
+        end	
 	else
 		keneanung.bashing.clearTarget()
 		stopAttack()
@@ -1676,7 +1686,7 @@ keneanung.bashing.handleSkillList = function()
 		end
 	end
 	battlerageSkills = {}
-	requestNextSkillDetails()
+	requestAllSkillDetails()
 end
 
 keneanung.bashing.handleSkillInfo = function()
@@ -1703,7 +1713,7 @@ keneanung.bashing.handleSkillInfo = function()
 		skillKnown = skillKnown
 	}
 
-	if #battlerageSkills == 0 or skillInfo.skill ~= battlerageSkills[#battlerageSkills].name then
+	if #battlerageSkills == 0 or skillInfo.skill:lower() ~= battlerageSkills[#battlerageSkills].name then
 		if battlerageSkills[skillInfo.skill] then
 			battlerageSkills[skillInfo.skill] = rageObject
 			for index, oldObject in ipairs(battlerageSkills) do
@@ -1712,17 +1722,19 @@ keneanung.bashing.handleSkillInfo = function()
 					break
 				end
 			end
-			debugMessage("Updated skill " .. skillInfo.skill .. ", complete list is here", battlerageSkills)
+			debugMessage("Updated skill " .. skillInfo.skill .. ", complete list is here ", battlerageSkills)
 		else
 			battlerageSkills[skillInfo.skill] = rageObject
 			battlerageSkills[#battlerageSkills + 1] = rageObject
-			debugMessage("added new battlerage skill complete list is here", battlerageSkills)
+			debugMessage("added new battlerage skill complete list is here ", battlerageSkills)
+			if #battlerageSkills == 6 then
+				sortDepthswalkerBattlerage()
+				kecho("Finished parsing battlerage skills.\n")
+			end
 		end
 	else
 		debugMessage("got double battlerage skill")
 	end
-
-	requestNextSkillDetails()
 end
 
 keneanung.bashing.rageAvailable = function(ability)
@@ -1822,15 +1834,16 @@ keneanung.bashing.getTargetObject = function(id)
 end
 
 local doImport = function(importTable)
-	for area in ipairs(importTable) do
+	--Allow us to strip a full config file down to just the priorities
+	importTable = importTable.priorities or importTable
+	--do the import
+	for area,_ in pairs(importTable) do
 		if #importTable[area] > 0 then
-			if not keneanung.bashing.configuration.priorities[area] then
-				keneanung.bashing.configuration.priorities[area] = {}
-			end
-			for _,denizenString in pairs(importTable[area]) do
-				if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
-					keneanung.bashing.configuration.priorities[area][#keneanung.bashing.configuration.priorities[area]+1] = denizenString
-				end
+			keneanung.bashing.configuration.priorities[area] = keneanung.bashing.configuration.priorities[area] or {}
+		end
+		for _, denizenString in pairs(importTable[area]) do
+			if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
+				table.insert(keneanung.bashing.configuration.priorities[area], denizenString)
 			end
 		end
 	end
