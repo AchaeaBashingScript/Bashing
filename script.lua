@@ -880,7 +880,7 @@ end
 
 keneanung.bashing.attackButton = function(toggle, echoback)
 	if echoback == nil then echoback = true end
-	if keneanung.bashing.attacking == 0 or toggle then
+	if (keneanung.bashing.attacking == 0 and toggle ~= false) or toggle then
 		if keneanung.bashing.setTarget() then
 			startAttack()
 			if echoback then kecho("Nothing will stand in our way.\n") end
