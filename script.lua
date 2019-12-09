@@ -1768,15 +1768,16 @@ keneanung.bashing.getTargetObject = function(id)
 end
 
 local doImport = function(importTable)
-	for area in ipairs(importTable) do
+	--Allow us to strip a full config file down to just the priorities
+	importTable = importTable.priorities or importTable
+	--do the import
+	for area,_ in pairs(importTable) do
 		if #importTable[area] > 0 then
-			if not keneanung.bashing.configuration.priorities[area] then
-				keneanung.bashing.configuration.priorities[area] = {}
-			end
-			for _,denizenString in pairs(importTable[area]) do
-				if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
-					keneanung.bashing.configuration.priorities[area][#keneanung.bashing.configuration.priorities[area]+1] = denizenString
-				end
+			keneanung.bashing.configuration.priorities[area] = keneanung.bashing.configuration.priorities[area] or {}
+		end
+		for _, denizenString in pairs(importTable[area]) do
+			if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
+				table.insert(keneanung.bashing.configuration.priorities[area], denizenString)
 			end
 		end
 	end
