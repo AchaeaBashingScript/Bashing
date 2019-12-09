@@ -878,31 +878,19 @@ keneanung.bashing.flee = function()
 	kecho("New order. Tactical retreat.\n")
 end
 
-keneanung.bashing.attackButton = function(toggle)
-    if toggle == nil then
-		if keneanung.bashing.attacking == 0 then
-			if keneanung.bashing.setTarget() then
-				startAttack()
-				kecho("Nothing will stand in our way.\n")
-			else
-				kecho("Nothing to target, boss.\n")
-			end
-		else
-			keneanung.bashing.clearTarget()
-			stopAttack()
-			kecho("Lets save them for later.\n")
-		end
-	elseif toggle then
+keneanung.bashing.attackButton = function(toggle, echoback)
+	if echoback == nil then echoback = true end
+	if keneanung.bashing.attacking == 0 or toggle then
 		if keneanung.bashing.setTarget() then
 			startAttack()
-			kecho("Nothing will stand in our way.\n")
-        else
-            kecho("Nothing to target, boss.\n")
-        end	
+			if echoback then kecho("Nothing will stand in our way.\n") end
+		else
+			if echoback then kecho("Nothing to target, boss.\n") end
+		end
 	else
 		keneanung.bashing.clearTarget()
 		stopAttack()
-		kecho("Lets save them for later.\n")
+		if echoback then kecho("Lets save them for later.\n") end
 	end
 end
 
