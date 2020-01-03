@@ -43,6 +43,24 @@ local afflictions = {
 		timer = 5
 	},
 }
+
+local nonBattlerageAttainmentSkills = {
+	"Prevail",
+	"Portals",
+	"Battlerage",
+	"Market",
+	"Battle",
+	"Limitedportals",
+	"Independence",
+	"Embrace",
+	"Tradeskills",
+	"Theft",
+	"Craftsmanship",
+	"Multiclass",
+	"Sustenance",
+	"Dragonhood",
+	"Polymath",
+}
 local sessionGains = { }
 local tripGains = { gold = 0, experience = 0 }
 
@@ -110,6 +128,19 @@ local kecho = function(what, command, popup)
 
 end
 
+local knownBattlerageSkillList = function()
+	if #requestSkillDetails == 0 then
+		return battlerageSkills[1].name .. " " .. battlerageSkills[2].name .. " " .. battlerageSkills[3].name .. " ".. battlerageSkills[4].name .. " ".. battlerageSkills[5].name .. " ".. battlerageSkills[6].name
+	end
+	return("processing... try doing some things!")
+end
+
+keneanung.bashing.configuration.requestBattlerageSkills = function()
+	kecho("Requesting battlerage skills...\n")
+	sendGMCP([[Char.Skills.Get {"group":"attainment"}]])
+	send(" ")
+end
+
 local sortDepthswalkerBattlerage = function()
 
 	debugMessage("sorting brage for walkers", {battlerageSkills = battlerageSkills})
@@ -117,10 +148,10 @@ local sortDepthswalkerBattlerage = function()
 	if class ~= "Depthswalker" or #battlerageSkills ~= 6 then return end
 	battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["curse"], battlerageSkills["nakail"], battlerageSkills["lash"]
 
-	battlerageSkills[2].affliction = "aeon"
-	battlerageSkills[6].affliction = "charm"
+	battlerageSkills["curse"].affliction = "aeon"
+	battlerageSkills["boinad"].affliction = "charm"
 
-	battlerageSkills[5].affsUsed = {
+	battlerageSkills["erasure"].affsUsed = {
 		"amnesia",
 		"weakness"
 	}
@@ -128,13 +159,12 @@ local sortDepthswalkerBattlerage = function()
 	debugMessage("sorted brage for walkers", {battlerageSkills = battlerageSkills})
 end
 
-local requestNextSkillDetails = function()
-	if #requestSkillDetails == 0 then
-		sortDepthswalkerBattlerage()
-	else
-		sendGMCP(string.format([[Char.Skills.Get {"group": "battlerage", "name": "%s"}]], requestSkillDetails[1]))
+local requestAllSkillDetails = function()
+	while #requestSkillDetails > 0 do
+		sendGMCP(string.format([[Char.Skills.Get {"group": "attainment", "name": "%s"}]], requestSkillDetails[1]))
 		table.remove(requestSkillDetails,1)
 	end
+	send(" ",false)
 end
 
 local migrateTo1Point8 = function()
@@ -793,11 +823,19 @@ keneanung.bashing.showConfig = function()
 
 	kecho(
 		string.format(
-			"Waiting for <red>%s<reset> seconds for a new target before stopping, if attacking manutally",
+			"Waiting for <red>%s<reset> seconds for a new target before stopping, if attacking manually",
 			keneanung.bashing.configuration.waitForManualTarget
 		),
 		"clearCmdLine() appendCmdLine('kconfig bashing waitfortarget ')",
 		"Set time to wait for a target."
+	)
+
+	kecho(
+		string.format(
+			"Battlerage skills identified (<red>reset<reset>): " .. knownBattlerageSkillList()
+		),
+		"keneanung.bashing.configuration.requestBattlerageSkills()",
+		"Request and parse battlerage skills again."
 	)
 
 	echo("\n")
@@ -840,18 +878,19 @@ keneanung.bashing.flee = function()
 	kecho("New order. Tactical retreat.\n")
 end
 
-keneanung.bashing.attackButton = function()
-	if keneanung.bashing.attacking == 0 then
+keneanung.bashing.attackButton = function(toggle, echoback)
+	if echoback == nil then echoback = true end
+	if (keneanung.bashing.attacking == 0 and toggle ~= false) or toggle then
 		if keneanung.bashing.setTarget() then
-		startAttack()
-		kecho("Nothing will stand in our way.\n")
-                else
-                kecho("Nothing to target, boss.\n")
-                end
+			startAttack()
+			if echoback then kecho("Nothing will stand in our way.\n") end
+		else
+			if echoback then kecho("Nothing to target, boss.\n") end
+		end
 	else
 		keneanung.bashing.clearTarget()
 		stopAttack()
-		kecho("Lets save them for later.\n")
+		if echoback then kecho("Lets save them for later.\n") end
 	end
 end
 
@@ -1274,7 +1313,7 @@ keneanung.bashing.charStatusCallback = function()
 	end
 
 	if somethingChanged then
-		sendGMCP([[Char.Skills.Get {"group":"battlerage"}]]) -- rerequest battlerage abilities
+		keneanung.bashing.configuration.requestBattlerageSkills() -- rerequest attainment abilities
 		migrateTo1Point8()
 		if not keneanung.bashing.configuration[class] then
 			local newClassConfig = {}
@@ -1408,7 +1447,7 @@ keneanung.bashing.setTarget = function()
 		if tar ~= nil then
 
 			for _, item in ipairs(keneanung.bashing.room) do
-				if item.attrib and item.attrib:find("m") and item.name:lower():find(tar:lower()) then
+				if item.attrib and item.attrib:find("m") and not item.attrib:find("d") and item.name:lower():find(tar:lower()) then
 					if keneanung.bashing.configuration.targetLoyals or not item.attrib:find("x") then
 						keneanung.bashing.targetList[#keneanung.bashing.targetList + 1]= {
 							id = item.id,
@@ -1444,7 +1483,7 @@ end
 keneanung.bashing.login = function()
 	gmod.enableModule("keneanung.bashing", "IRE.Target")
 	sendGMCP([[Core.Supports.Add ["IRE.Target 1"] ]])   -- register the GMCP module independently from gmod.
-	sendGMCP([[Char.Skills.Get {"group":"battlerage"}]])
+	sendGMCP([[Char.Skills.Get {"group":"attainment"}]])
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.setup()
 	sessionGains.gold = 0
@@ -1627,18 +1666,20 @@ end
 
 keneanung.bashing.handleSkillList = function()
 	local skillList = gmcp.Char.Skills.List
-	if skillList.group ~= "battlerage" then return end
+	if skillList.group ~= "attainment" then return end
 
-	for index, skill in ipairs(skillList.list) do
-		requestSkillDetails[index] = skill
+	for _, skill in ipairs(skillList.list) do
+		if not table.contains(nonBattlerageAttainmentSkills, skill) then
+			requestSkillDetails[#requestSkillDetails + 1] = skill
+		end
 	end
 	battlerageSkills = {}
-	requestNextSkillDetails()
+	requestAllSkillDetails()
 end
 
 keneanung.bashing.handleSkillInfo = function()
 	local skillInfo = gmcp.Char.Skills.Info
-	if skillInfo.group ~= "battlerage" then return end
+	if skillInfo.group ~= "attainment" then return end
 
 	local cooldown = tonumber(skillInfo.info:match("(%d+\.%d+) seconds"))
 	local rage = tonumber(skillInfo.info:match("(%d+) rage"))
@@ -1660,15 +1701,28 @@ keneanung.bashing.handleSkillInfo = function()
 		skillKnown = skillKnown
 	}
 
-	if #battlerageSkills == 0 or skillInfo.skill ~= battlerageSkills[#battlerageSkills].name then
-		battlerageSkills[skillInfo.skill] = rageObject
-		battlerageSkills[#battlerageSkills + 1] = rageObject
-		debugMessage("added new battlerage skill complete list is here", battlerageSkills)
+	if #battlerageSkills == 0 or skillInfo.skill:lower() ~= battlerageSkills[#battlerageSkills].name then
+		if battlerageSkills[skillInfo.skill] then
+			battlerageSkills[skillInfo.skill] = rageObject
+			for index, oldObject in ipairs(battlerageSkills) do
+				if oldObject.name == rageObject.name then
+					battlerageSkills[index] = rageObject
+					break
+				end
+			end
+			debugMessage("Updated skill " .. skillInfo.skill .. ", complete list is here ", battlerageSkills)
+		else
+			battlerageSkills[skillInfo.skill] = rageObject
+			battlerageSkills[#battlerageSkills + 1] = rageObject
+			debugMessage("added new battlerage skill complete list is here ", battlerageSkills)
+			if #battlerageSkills == 6 then
+				sortDepthswalkerBattlerage()
+				kecho("Finished parsing battlerage skills.\n")
+			end
+		end
 	else
 		debugMessage("got double battlerage skill")
 	end
-
-	requestNextSkillDetails()
 end
 
 keneanung.bashing.rageAvailable = function(ability)
