@@ -1028,7 +1028,7 @@ local roomItemCallbackWorker = function(event)
 			-- make sure our targets stay at the same place!
 			for index, targ in ipairs(keneanung.bashing.targetList) do
 				-- still considered a target?
-				if getTargetPrio(targ.name) then
+				if getTargetPrio(targ) then
 					-- search if that target possibly left the room
 					local found = false
 					for _, item in ipairs(gmcp.Char.Items.List.items) do
