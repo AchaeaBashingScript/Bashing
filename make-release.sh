@@ -42,7 +42,7 @@ fi
 UPLOADS_URL=`cat output.txt | jq --raw-output ".upload_url"`
 UPLOADS_URL=`echo "$UPLOADS_URL" | sed 's/{//' | sed 's/,label}//'`
 UPLOADS_URL=`echo "$UPLOADS_URL""=%s"`
-UPLOADS_URL=$(printf "$UPLOADS_URL" "Bashing.mpackage)
+UPLOADS_URL=$(printf "$UPLOADS_URL" "Bashing.mpackage")
 
 http_code=`curl -s -w "%{http_code}" \
 -u "keneanung:${ACCESS_TOKEN}" \
