@@ -109,22 +109,28 @@ keneanung.bashing.configuration.lifetimeGains = { gold = 0, experience = 0 }
 keneanung.bashing.configuration.manualTargetting = false
 keneanung.bashing.configuration.waitForManualTarget = 2
 
-local getTargetPrio = function(name)
-	local prios = keneanung.bashing.configuration.priorities[gmcp.Room.Info.area]
-
-	if not prios then
-		return
-	end
-
-	return table.index_of(prios, name)
-end
-
 local debugMessage = function(message, content)
 	if not debugEnabled then return end
 	echo(string.format("[%s]: %s", (debug.getinfo(2).name or "unknown"), message))
 	if content then
 		display(content)
 	end
+end
+
+local getTargetPrio = function(name)
+	local prios = keneanung.bashing.configuration.priorities[gmcp.Room.Info.area]
+
+        debugMessage("prios for this area", prios)
+
+	if not prios then
+		return
+	end
+
+        debugMessage("target name", name)
+
+	local prio = table.index_of(prios, name)
+        debugMessage("prio", prio)
+        return prio
 end
 
 local kecho = function(what, command, popup)
@@ -1139,9 +1145,7 @@ keneanung.bashing.addTarget = function(item)
 	local targets = keneanung.bashing.targetList
 	local insertAt
 
-	if not prios then
-		return
-	end
+        debugMessage("addTarget", item)
 
 	local targetPrio = getTargetPrio(item.name)
 
