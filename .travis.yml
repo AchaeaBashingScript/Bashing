@@ -1,4 +1,5 @@
 language: c
+virt: lxc
 
 sudo: false
 
