@@ -16,11 +16,9 @@ API_STRING='{"tag_name": "v%s","target_commitish": "%s","name": '\
 API_JSON=$(printf "$API_STRING" \
 "$VERSION" "$TRAVIS_BRANCH" "$VERSION" "$VERSION")
 
-API_URL=$(printf \
-"https://api.github.com/repos/achaeabashingscript/Bashing/releases?access_token=%s" \
-"$ACCESS_TOKEN")
+API_URL="https://api.github.com/repos/achaeabashingscript/Bashing/releases"
 
-http_code=`curl -s -w "%{http_code}" --data "$API_JSON" -o output.txt "$API_URL"` 
+http_code=`curl -s -w "%{http_code}" -u "keneanung:${ACCESS_TOKEN}" --data "$API_JSON" -o output.txt "$API_URL"` 
 out=$?
 if [ "$out" != "0" ]
 then
@@ -43,10 +41,11 @@ fi
 
 UPLOADS_URL=`cat output.txt | jq --raw-output ".upload_url"`
 UPLOADS_URL=`echo "$UPLOADS_URL" | sed 's/{//' | sed 's/,label}//'`
-UPLOADS_URL=`echo "$UPLOADS_URL""=%s&access_token=%s"`
-UPLOADS_URL=$(printf "$UPLOADS_URL" "Bashing.mpackage" "$ACCESS_TOKEN")
+UPLOADS_URL=`echo "$UPLOADS_URL""=%s"`
+UPLOADS_URL=$(printf "$UPLOADS_URL" "Bashing.mpackage")
 
 http_code=`curl -s -w "%{http_code}" \
+-u "keneanung:${ACCESS_TOKEN}" \
 --data-binary "@Bashing.mpackage" -H "Content-Type: application/octet-stream" \
 -o output.txt "$UPLOADS_URL"`
 out=$?
