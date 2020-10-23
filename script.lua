@@ -117,6 +117,22 @@ local debugMessage = function(message, content)
 	end
 end
 
+local getTargetPrio = function(name)
+	local prios = keneanung.bashing.configuration.priorities[gmcp.Room.Info.area]
+
+        debugMessage("prios for this area", prios)
+
+	if not prios then
+		return
+	end
+
+        debugMessage("target name", name)
+
+	local prio = table.index_of(prios, name)
+        debugMessage("prio", prio)
+        return prio
+end
+
 local kecho = function(what, command, popup)
 
 	what = "\n<green>keneanung<reset>: " .. what
@@ -1017,17 +1033,20 @@ local roomItemCallbackWorker = function(event)
 			local targetList = {}
 			-- make sure our targets stay at the same place!
 			for index, targ in ipairs(keneanung.bashing.targetList) do
-				-- search if that target possibly left the room
-				local found = false
-				for _, item in ipairs(gmcp.Char.Items.List.items) do
-					if item.id == targ.id then
-						found = true
-						break
+				-- still considered a target?
+				if getTargetPrio(targ.name) then
+					-- search if that target possibly left the room
+					local found = false
+					for _, item in ipairs(gmcp.Char.Items.List.items) do
+						if item.id == targ.id then
+							found = true
+							break
+						end
 					end
-				end
-				-- still there? Add it in the old place
-				if found then
-					targetList[#targetList + 1] = targ
+					-- still there? Add it in the old place
+					if found then
+						targetList[#targetList + 1] = targ
+					end	
 				end
 			end
 			keneanung.bashing.targetList = targetList
@@ -1124,14 +1143,11 @@ end
 keneanung.bashing.addTarget = function(item)
 
 	local targets = keneanung.bashing.targetList
-	local prios = keneanung.bashing.configuration.priorities[gmcp.Room.Info.area]
 	local insertAt
 
-	if not prios then
-		return
-	end
+        debugMessage("addTarget", item)
 
-	local targetPrio = table.index_of(prios, item.name)
+	local targetPrio = getTargetPrio(item.name)
 
 	if not targetPrio then
 		return
@@ -1157,7 +1173,7 @@ keneanung.bashing.addTarget = function(item)
 			-- calculate middle
 			iMid = math.floor( (iStart+iEnd)/2 )
 			-- get compare value
-			local existingPrio = table.index_of(prios, targets[iMid].name)
+			local existingPrio = getTargetPrio(targets[iMid].name)
 			-- get all values that match
 			if targetPrio == existingPrio then
 				insertAt = iMid
