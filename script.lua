@@ -191,6 +191,7 @@ local sortPariahBattlerage = function()
 	}
 	
 	battlerageSkills["scour"].command = "ACCURSED SCOUR %s"
+	battlerageSkills["scour"].rage = 17
 
 	debugMessage("sorted brage for pariah", {battlerageSkills = battlerageSkills})
 end
