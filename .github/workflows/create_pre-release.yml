@@ -22,9 +22,20 @@ jobs:
       # check code out
       - uses: actions/checkout@v2
       
-      - name: Figure out version name
+      - name: Set commit short for pull requests
+        if: ${{ github.event.pull_request }}
         run: |
           COMMIT=`expr substr ${{ github.event.pull_request.head.sha }} 1 7`
+          echo "COMMIT=$COMMIT" >> $GITHUB_ENV
+      
+      - name: Set commit short for pushes
+        if: ${{ github.event.push }}
+        run: |
+          COMMIT=`expr substr $GITHUB_SHA 1 7`
+          echo "COMMIT=$COMMIT" >> $GITHUB_ENV
+      
+      - name: Figure out version name
+        run: |
           VERSION=$(printf "%s-pre-%s-%s" `cat .version` "$COMMIT" "${{ steps.branch-names.outputs.current_branch }}")
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
