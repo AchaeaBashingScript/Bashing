@@ -1,0 +1,42 @@
+name: Create pre-release
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get branch names.
+        id: branch-names
+        uses: tj-actions/branch-names@v2.2
+      # check code out
+      - uses: actions/checkout@v2
+      
+      - name: Figure out version name
+        run: |
+          COMMIT=`expr substr $GITHUB_SHA 1 7`
+          VERSION=$(printf "%s-pre-%s-%s" `cat .version` "$COMMIT" "${{ steps.branch-name.outputs.current_branch }}")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      # Runs a set of commands using the runners shell
+      - name: Create release artiface
+        run: |
+          echo "return '$VERSION'" > version.lua
+          zip Bashing.mpackage config.lua script.lua Bashing.xml version.lua License.md
+      - uses: djnicholson/release-action@v2.11
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-name: 'Release of version ${{ env.VERSION }}'
+          tag-name: '${{ env.VERSION }}'
+          asset-name: 'Bashing.mpackage'
+          file: 'Bashing.mpackage'
