@@ -23,13 +23,13 @@ jobs:
       - uses: actions/checkout@v2
       
       - name: Set commit short for pull requests
-        if: ${{ github.event.pull_request }}
+        if: ${{ github.event_name == 'pull_request' }}
         run: |
           COMMIT=`expr substr ${{ github.event.pull_request.head.sha }} 1 7`
           echo "COMMIT=$COMMIT" >> $GITHUB_ENV
       
       - name: Set commit short for pushes
-        if: ${{ github.event.push }}
+        if: ${{ github.event_name == 'push' }}
         run: |
           COMMIT=`expr substr $GITHUB_SHA 1 7`
           echo "COMMIT=$COMMIT" >> $GITHUB_ENV
