@@ -24,7 +24,7 @@ jobs:
       
       - name: Figure out version name
         run: |
-          COMMIT=`expr substr $GITHUB_SHA 1 7`
+          COMMIT=`expr substr ${{ github.event.pull_request.head.sha }} 1 7`
           VERSION=$(printf "%s-pre-%s-%s" `cat .version` "$COMMIT" "${{ steps.branch-names.outputs.current_branch }}")
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
