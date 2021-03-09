@@ -37,7 +37,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifact: Bashing.mpackage
+          artifacts: Bashing.mpackage
           tag: ${{ env.VERSION }}
           commit: ${{ steps.branch-names.outputs.current_branch }}
           body: Release of version ${{ env.VERSION }}
