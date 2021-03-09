@@ -33,10 +33,14 @@ jobs:
         run: |
           echo "return '$VERSION'" > version.lua
           zip Bashing.mpackage config.lua script.lua Bashing.xml version.lua License.md
-      - uses: djnicholson/release-action@v2.11
+      - name: Create Release
+        uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release-name: 'Release of version ${{ env.VERSION }}'
-          tag-name: '${{ env.VERSION }}'
-          asset-name: 'Bashing.mpackage'
-          file: 'Bashing.mpackage'
+          artifact: Bashing.mpackage
+          tag: ${{ env.VERSION }}
+          commit: ${{ steps.branch-names.outputs.current_branch }}
+          name: Release of version {{ env.VERSION }}
+          omitBody: true
+          prerelease: true
+
