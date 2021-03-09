@@ -40,7 +40,7 @@ jobs:
           artifact: Bashing.mpackage
           tag: ${{ env.VERSION }}
           commit: ${{ steps.branch-names.outputs.current_branch }}
-          name: Release of version {{ env.VERSION }}
-          omitBody: true
+          body: Release of version ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
           prerelease: true
 
