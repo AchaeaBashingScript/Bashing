@@ -225,6 +225,7 @@ keneanung.bashing.systems.svo = {
 	end,
 
 	flee = function()
+		raiseEvent("keneanung.bashing.fleeing")
 		keneanung.bashing.systems.svo.stopAttack()
 		svo.dofreefirst(keneanung.bashing.fleeDirection)
 	end,
@@ -294,6 +295,7 @@ keneanung.bashing.systems.wundersys = {
 	end,
 
 	flee = function()
+		raiseEvent("keneanung.bashing.fleeing")
 		keneanung.bashing.systems.wundersys.stopAttack()
 		wsys.dofreeadd(keneanung.bashing.fleeDirection)
 	end,
@@ -411,6 +413,7 @@ keneanung.bashing.systems.none = {
 	end,
 
 	flee = function()
+		raiseEvent("keneanung.bashing.fleeing")
 		keneanung.bashing.systems.none.stopAttack()
 		send("queue prepend eqbal " .. keneanung.bashing.fleeDirection)
 	end,
