@@ -180,7 +180,7 @@ local sortPsionBattlerage = function()
 	debugMessage("sorting brage for psion", {battlerageSkills = battlerageSkills})
 
 	if class ~= "Psion" or #battlerageSkills ~= 6 then return end
-	battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["devastate"], battlerageSkills["pulverise"], battlerageSkills["regrowth"]
+	battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["regrowth"], battlerageSkills["pulverise"], battlerageSkills["devastate"]
 
 	battlerageSkills["terror"].affliction = "fear"
 	
