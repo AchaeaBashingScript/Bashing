@@ -175,6 +175,19 @@ local sortDepthswalkerBattlerage = function()
 	debugMessage("sorted brage for walkers", {battlerageSkills = battlerageSkills})
 end
 
+local sortPsionBattlerage = function()
+
+	debugMessage("sorting brage for psion", {battlerageSkills = battlerageSkills})
+
+	if class ~= "Psion" or #battlerageSkills ~= 6 then return end
+	battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["regrowth"], battlerageSkills["pulverise"], battlerageSkills["devastate"]
+
+	battlerageSkills["terror"].affliction = "fear"
+	
+
+	debugMessage("sorted brage for psion", {battlerageSkills = battlerageSkills})
+end
+
 local requestAllSkillDetails = function()
 	while #requestSkillDetails > 0 do
 		sendGMCP(string.format([[Char.Skills.Get {"group": "attainment", "name": "%s"}]], requestSkillDetails[1]))
@@ -1750,6 +1763,7 @@ keneanung.bashing.handleSkillInfo = function()
 			debugMessage("added new battlerage skill complete list is here ", battlerageSkills)
 			if #battlerageSkills == 6 then
 				sortDepthswalkerBattlerage()
+				sortPsionBattlerage()
 				kecho("Finished parsing battlerage skills.\n")
 			end
 		end
