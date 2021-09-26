@@ -196,6 +196,19 @@ local sortPariahBattlerage = function()
 	debugMessage("sorted brage for pariah", {battlerageSkills = battlerageSkills})
 end
 
+local sortPsionBattlerage = function()
+
+	debugMessage("sorting brage for psion", {battlerageSkills = battlerageSkills})
+
+	if class ~= "Psion" or #battlerageSkills ~= 6 then return end
+	battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["regrowth"], battlerageSkills["pulverise"], battlerageSkills["devastate"]
+
+	battlerageSkills["terror"].affliction = "fear"
+	
+
+	debugMessage("sorted brage for psion", {battlerageSkills = battlerageSkills})
+end
+
 local requestAllSkillDetails = function()
 	while #requestSkillDetails > 0 do
 		sendGMCP(string.format([[Char.Skills.Get {"group": "attainment", "name": "%s"}]], requestSkillDetails[1]))
@@ -246,6 +259,7 @@ keneanung.bashing.systems.svo = {
 	end,
 
 	flee = function()
+		raiseEvent("keneanung.bashing.fleeing")
 		keneanung.bashing.systems.svo.stopAttack()
 		svo.dofreefirst(keneanung.bashing.fleeDirection)
 	end,
@@ -315,6 +329,7 @@ keneanung.bashing.systems.wundersys = {
 	end,
 
 	flee = function()
+		raiseEvent("keneanung.bashing.fleeing")
 		keneanung.bashing.systems.wundersys.stopAttack()
 		wsys.dofreeadd(keneanung.bashing.fleeDirection)
 	end,
@@ -432,6 +447,7 @@ keneanung.bashing.systems.none = {
 	end,
 
 	flee = function()
+		raiseEvent("keneanung.bashing.fleeing")
 		keneanung.bashing.systems.none.stopAttack()
 		send("queue prepend eqbal " .. keneanung.bashing.fleeDirection)
 	end,
@@ -1769,6 +1785,7 @@ keneanung.bashing.handleSkillInfo = function()
 			if #battlerageSkills == 6 then
 				sortDepthswalkerBattlerage()
 				sortPariahBattlerage()
+				sortPsionBattlerage()
 				kecho("Finished parsing battlerage skills.\n")
 			end
 		end
