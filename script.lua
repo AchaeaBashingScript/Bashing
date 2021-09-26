@@ -175,6 +175,27 @@ local sortDepthswalkerBattlerage = function()
 	debugMessage("sorted brage for walkers", {battlerageSkills = battlerageSkills})
 end
 
+local sortPariahBattlerage = function()
+
+	debugMessage("sorting brage for pariah", {battlerageSkills = battlerageSkills})
+
+	if class ~= "Pariah" or #battlerageSkills ~= 6 then return end
+	battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["symphony"], battlerageSkills["scour"], battlerageSkills["feast"]
+
+	battlerageSkills["symphony"].affliction = "fear"
+	battlerageSkills["wail"].affliction = "clumsiness"
+
+	battlerageSkills["spider"].affsUsed = {
+		"inhibit",
+		"sensitivity"
+	}
+	
+	battlerageSkills["scour"].command = "ACCURSED SCOUR %s"
+	battlerageSkills["scour"].rage = 17
+
+	debugMessage("sorted brage for pariah", {battlerageSkills = battlerageSkills})
+end
+
 local sortPsionBattlerage = function()
 
 	debugMessage("sorting brage for psion", {battlerageSkills = battlerageSkills})
@@ -1763,6 +1784,7 @@ keneanung.bashing.handleSkillInfo = function()
 			debugMessage("added new battlerage skill complete list is here ", battlerageSkills)
 			if #battlerageSkills == 6 then
 				sortDepthswalkerBattlerage()
+				sortPariahBattlerage()
 				sortPsionBattlerage()
 				kecho("Finished parsing battlerage skills.\n")
 			end
