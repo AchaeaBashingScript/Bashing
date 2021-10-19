@@ -209,6 +209,24 @@ local sortPsionBattlerage = function()
 	debugMessage("sorted brage for psion", {battlerageSkills = battlerageSkills})
 end
 
+local sortUnnamableBattlerage = function()
+
+	debugMessage("sorting brage for unnamable", {battlerageSkills = battlerageSkills})
+
+	if class ~= "Unnamable" or #battlerageSkills ~= 6 then return end
+	battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["dread"], battlerageSkills["sunder"], battlerageSkills["destroy"]
+
+	battlerageSkills["dread"].affliction = "fear"
+	battlerageSkills["entropy"].affliction = "aeon"
+
+	battlerageSkills["onslaught"].affsUsed = {
+		"stun",
+		"sensitivity"
+	}
+	
+	debugMessage("sorted brage for unnamable", {battlerageSkills = battlerageSkills})
+end
+
 local requestAllSkillDetails = function()
 	while #requestSkillDetails > 0 do
 		sendGMCP(string.format([[Char.Skills.Get {"group": "attainment", "name": "%s"}]], requestSkillDetails[1]))
@@ -1786,6 +1804,7 @@ keneanung.bashing.handleSkillInfo = function()
 				sortDepthswalkerBattlerage()
 				sortPariahBattlerage()
 				sortPsionBattlerage()
+				sortUnnamableBattlerage()
 				kecho("Finished parsing battlerage skills.\n")
 			end
 		end
