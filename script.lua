@@ -189,7 +189,7 @@ local sortPariahBattlerage = function()
 		"inhibit",
 		"sensitivity"
 	}
-	
+
 	battlerageSkills["scour"].command = "ACCURSED SCOUR %s"
 	battlerageSkills["scour"].rage = 17
 
@@ -204,7 +204,7 @@ local sortPsionBattlerage = function()
 	battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["regrowth"], battlerageSkills["pulverise"], battlerageSkills["devastate"]
 
 	battlerageSkills["terror"].affliction = "fear"
-	
+
 
 	debugMessage("sorted brage for psion", {battlerageSkills = battlerageSkills})
 end
@@ -223,7 +223,7 @@ local sortUnnamableBattlerage = function()
 		"stun",
 		"sensitivity"
 	}
-	
+
 	debugMessage("sorted brage for unnamable", {battlerageSkills = battlerageSkills})
 end
 
@@ -1101,7 +1101,7 @@ local roomItemCallbackWorker = function(event)
 					-- still there? Add it in the old place
 					if found then
 						targetList[#targetList + 1] = targ
-					end	
+					end
 				end
 			end
 			keneanung.bashing.targetList = targetList
@@ -1155,6 +1155,16 @@ end
 
 keneanung.bashing.sysDataSendRequestCallback = function(_, data)
 	debugMessage("data gets sent", {data = data})
+	local lowerData = data:lower()
+	if
+		lowerData:starts("class switch") or -- class switch
+		lowerData:starts("dragonform") or   -- dragon
+		lowerData:starts("lesserform") or   -- from dragon to normal
+		lowerData:starts("prevail") or      -- elemental lord
+		lowerData:starts("forsake")         -- from elemental to normal
+	then
+		sendGMCP('Core.Supports.Add ["IRE.Display 3"]')
+	end
 end
 
 keneanung.bashing.emitEventsIfChanged = function( before, after)
@@ -1411,6 +1421,7 @@ keneanung.bashing.charStatusCallback = function()
 		end
 		keneanung.bashing.setAlias("attackcommand")
 		keneanung.bashing.setAlias("razecommand")
+		sendGMCP([[Core.Supports.Remove ["IRE.Display"] ]])
 	end
 
 	debugMessage("Going to calculate gold gains", { lastGoldChange = lastGoldChange, lastGold = lastGold } )
