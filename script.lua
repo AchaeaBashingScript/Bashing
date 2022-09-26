@@ -378,7 +378,7 @@ keneanung.bashing.systems.wundersys = {
 	end,
 
 	setup = function()
-		keneanung.bashing.systems.wundersys.queueTrigger = tempTrigger("[System]: Running queued eqbal command: DOR",
+		keneanung.bashing.systems.wundersys.queueTrigger = tempTrigger("[System]: Running queued eb command: DOR",
 			[[
 			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 			keneanung.bashing.attacks = keneanung.bashing.attacks + 1
@@ -492,7 +492,7 @@ keneanung.bashing.systems.none = {
 	end,
 
 	setup = function()
-		keneanung.bashing.systems.none.queueTrigger = tempRegexTrigger("^\\[System\\]: Running queued eqbal command: (KENEANUNGKI|KENEANUNGRA)$",
+		keneanung.bashing.systems.none.queueTrigger = tempRegexTrigger("^\\[System\\]: Running queued eb command: (KENEANUNGKI|KENEANUNGRA)$",
 			[[
 			local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 			keneanung.bashing.attacks = keneanung.bashing.attacks + 1
