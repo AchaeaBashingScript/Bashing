@@ -946,6 +946,7 @@ keneanung.bashing.toggle = function(what, print)
 		toPrint = keneanung.bashing.configuration[what] and "enabled" or "disabled"
 	end
 	kecho(print .. " <red>" .. toPrint .. "\n" )
+	raiseEvent("keneanung.bashing.settings.changed")
 	keneanung.bashing.save()
 end
 
