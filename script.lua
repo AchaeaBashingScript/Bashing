@@ -248,6 +248,8 @@ local migrateTo1Point8 = function()
 		keneanung.bashing.configuration.rageStrat = nil
 		migratedConfig.autorageraze = keneanung.bashing.configuration.autorageraze
 		keneanung.bashing.configuration.autorageraze = nil
+
+		raiseEvent("keneanung.bashing.settings.changed")
 	end
 end
 
@@ -654,7 +656,7 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 		table.insert(prios[area], targetName)
 		kecho("Added the new possible target <red>" .. targetName .. "<reset> to the end of the priority list.")
 		keneanung.bashing.configuration.priorities = prios
-
+		raiseEvent("keneanung.bashing.settings.changed")
 		keneanung.bashing.save()
 
 		for _, item in ipairs(keneanung.bashing.room) do
@@ -982,6 +984,7 @@ end
 
 keneanung.bashing.setFlee = function(where)
 	keneanung.bashing.fleeDirection = where
+	raiseEvent("keneanung.bashing.settings.changed")
 	kecho("Fleeing to the <red>" .. keneanung.bashing.fleeDirection .. "\n" )
 end
 
@@ -994,6 +997,7 @@ end
 keneanung.bashing.setWaitForTarget = function(amount)
 	keneanung.bashing.configuration.waitForManualTarget = tonumber(amount) or 2
 	kecho("Waiting <red>" .. keneanung.bashing.configuration.waitForManualTarget .. "<reset> seconds for a new target\n" )
+	raiseEvent("keneanung.bashing.settings.changed")
 	keneanung.bashing.save()
 end
 
@@ -1622,6 +1626,7 @@ keneanung.bashing.setSystem = function(systemName)
 	end
 	keneanung.bashing.configuration.system = systemName
 	kecho("Using <red>" .. keneanung.bashing.configuration.system .. "<reset> as queuing system.\n" )
+	raiseEvent("keneanung.bashing.settings.changed")
 	keneanung.bashing.save()
 	system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.setup()
@@ -1662,6 +1667,7 @@ keneanung.bashing.addFile = function()
 	local path = invokeFileDialog(true, "Which file do you want to add?")
 	if path ~= "" then
 		keneanung.bashing.configuration.filesToLoad[#keneanung.bashing.configuration.filesToLoad + 1] = path
+		raiseEvent("keneanung.bashing.settings.changed")
 	end
 	keneanung.bashing.save()
 end
@@ -1924,16 +1930,26 @@ end
 local doImport = function(importTable)
 	--Allow us to strip a full config file down to just the priorities
 	importTable = importTable.priorities or importTable
+
+	local somethingChanged = false
+
+
 	--do the import
 	for area,_ in pairs(importTable) do
 		if #importTable[area] > 0 then
 			keneanung.bashing.configuration.priorities[area] = keneanung.bashing.configuration.priorities[area] or {}
+			somethingChanged = true
 		end
 		for _, denizenString in pairs(importTable[area]) do
 			if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
 				table.insert(keneanung.bashing.configuration.priorities[area], denizenString)
+			somethingChanged = true
 			end
 		end
+	end
+
+	if somethingChanged then
+		raiseEvent("keneanung.bashing.settings.changed")
 	end
 end
 
