@@ -549,6 +549,7 @@ local function sendRageAttack(attack)
 	debugMessage("sending rage attack", attack)
 	send(attack:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
 	keneanung.bashing.usedRageAttack = true
+	raiseEvent("keneanung.bashing.settings.changed")
 	tempTimer(1, "keneanung.bashing.usedRageAttack = false")
 end
 
@@ -990,14 +991,15 @@ end
 
 keneanung.bashing.setThreshold = function(newValue, what)
 	keneanung.bashing.configuration[what] = matches[2]
+	raiseEvent("keneanung.bashing.settings.changed")
 	kecho(what:title().." with a security threshhold of <red>" .. keneanung.bashing.configuration[what] .. "<reset> health\n" )
 	keneanung.bashing.save()
 end
 
 keneanung.bashing.setWaitForTarget = function(amount)
 	keneanung.bashing.configuration.waitForManualTarget = tonumber(amount) or 2
-	kecho("Waiting <red>" .. keneanung.bashing.configuration.waitForManualTarget .. "<reset> seconds for a new target\n" )
 	raiseEvent("keneanung.bashing.settings.changed")
+	kecho("Waiting <red>" .. keneanung.bashing.configuration.waitForManualTarget .. "<reset> seconds for a new target\n" )
 	keneanung.bashing.save()
 end
 
@@ -1530,6 +1532,7 @@ keneanung.bashing.setCommand = function(command, what)
 	kecho(command .. " is now <red>" .. keneanung.bashing.configuration[class][command] .. "<reset>\n" )
 	keneanung.bashing.setAlias(command)
 	keneanung.bashing.save()
+	raiseEvent("keneanung.bashing.settings.changed")
 end
 
 keneanung.bashing.setTarget = function()
@@ -1649,6 +1652,7 @@ keneanung.bashing.setRageStrat = function(strategyName)
 	end
 	keneanung.bashing.configuration[class].rageStrat = strategyName
 	keneanung.bashing.save()
+	raiseEvent("keneanung.bashing.settings.changed")
 	kecho("Using <red>" .. strategyName .. "<reset> as battlerage strategy.\n" )
 end
 
