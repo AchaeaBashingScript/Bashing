@@ -77,7 +77,7 @@ local lastXp
 local roomTargetStore = {}
 local denizenCache = {}
 
-local waintingForManualTargetTimer
+local waitingForManualTargetTimer
 local waitingForManualTarget = false
 
 keneanung = keneanung or {}
@@ -1020,7 +1020,7 @@ keneanung.bashing.nextAttack = function()
 
 	keneanung.bashing.attacks = keneanung.bashing.attacks + 1
 
-	if #keneanung.bashing.targetList > 0 then
+	if #keneanung.bashing.targetList > 0 and gmcp.Char.Vitals.hp then
 
 		local avg = keneanung.bashing.damage / keneanung.bashing.attacks
 
@@ -1374,15 +1374,18 @@ keneanung.bashing.vitalsChangeRecord = function()
 
 	if keneanung.bashing.attacking == 0 then return end
 
-	local difference = keneanung.bashing.lastHealth - gmcp.Char.Vitals.hp
+  if gmcp.Char.Vitals.hp then
 
-	if difference > 0 then
-		keneanung.bashing.damage = keneanung.bashing.damage + difference
-	elseif difference < 0 then
-		keneanung.bashing.healing = keneanung.bashing.healing + math.abs(difference)
+		local difference = keneanung.bashing.lastHealth - gmcp.Char.Vitals.hp
+
+		if difference > 0 then
+			keneanung.bashing.damage = keneanung.bashing.damage + difference
+		elseif difference < 0 then
+			keneanung.bashing.healing = keneanung.bashing.healing + math.abs(difference)
+		end
+
+		keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1.
 	end
-
-	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
 
 	for _, stat in ipairs(gmcp.Char.Vitals.charstats) do
 		local rageAmount = stat:match("^Rage: (%d+)$")
