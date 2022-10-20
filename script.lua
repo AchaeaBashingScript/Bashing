@@ -733,6 +733,7 @@ keneanung.bashing.shuffleDown = function(area, num)
 
 	keneanung.bashing.managePrios(area)
 
+	raiseEvent("keneanung.bashing.settings.changed")
 end
 
 keneanung.bashing.shuffleUp = function(area, num)
@@ -746,6 +747,7 @@ keneanung.bashing.shuffleUp = function(area, num)
 
 	keneanung.bashing.managePrios(area)
 
+	raiseEvent("keneanung.bashing.settings.changed")
 end
 
 keneanung.bashing.delete = function(area, num)
@@ -757,6 +759,8 @@ keneanung.bashing.delete = function(area, num)
 	keneanung.bashing.save()
 
 	keneanung.bashing.managePrios(area)
+
+	raiseEvent("keneanung.bashing.settings.changed")
 end
 
 keneanung.bashing.save = function()
@@ -1679,6 +1683,8 @@ end
 keneanung.bashing.deleteFile = function(num)
 	table.remove(keneanung.bashing.configuration.filesToLoad, num)
 	keneanung.bashing.save()
+
+	raiseEvent("keneanung.bashing.settings.changed")
 end
 
 keneanung.bashing.toggleDebug = function()
