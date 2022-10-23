@@ -248,6 +248,8 @@ local migrateTo1Point8 = function()
 		keneanung.bashing.configuration.rageStrat = nil
 		migratedConfig.autorageraze = keneanung.bashing.configuration.autorageraze
 		keneanung.bashing.configuration.autorageraze = nil
+
+		raiseEvent("keneanung.bashing.settings.changed")
 	end
 end
 
@@ -547,6 +549,7 @@ local function sendRageAttack(attack)
 	debugMessage("sending rage attack", attack)
 	send(attack:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
 	keneanung.bashing.usedRageAttack = true
+	raiseEvent("keneanung.bashing.settings.changed")
 	tempTimer(1, "keneanung.bashing.usedRageAttack = false")
 end
 
@@ -654,7 +657,7 @@ keneanung.bashing.addPossibleTarget = function(targetName)
 		table.insert(prios[area], targetName)
 		kecho("Added the new possible target <red>" .. targetName .. "<reset> to the end of the priority list.")
 		keneanung.bashing.configuration.priorities = prios
-
+		raiseEvent("keneanung.bashing.settings.changed")
 		keneanung.bashing.save()
 
 		for _, item in ipairs(keneanung.bashing.room) do
@@ -730,6 +733,7 @@ keneanung.bashing.shuffleDown = function(area, num)
 
 	keneanung.bashing.managePrios(area)
 
+	raiseEvent("keneanung.bashing.settings.changed")
 end
 
 keneanung.bashing.shuffleUp = function(area, num)
@@ -743,6 +747,7 @@ keneanung.bashing.shuffleUp = function(area, num)
 
 	keneanung.bashing.managePrios(area)
 
+	raiseEvent("keneanung.bashing.settings.changed")
 end
 
 keneanung.bashing.delete = function(area, num)
@@ -754,6 +759,8 @@ keneanung.bashing.delete = function(area, num)
 	keneanung.bashing.save()
 
 	keneanung.bashing.managePrios(area)
+
+	raiseEvent("keneanung.bashing.settings.changed")
 end
 
 keneanung.bashing.save = function()
@@ -946,6 +953,7 @@ keneanung.bashing.toggle = function(what, print)
 		toPrint = keneanung.bashing.configuration[what] and "enabled" or "disabled"
 	end
 	kecho(print .. " <red>" .. toPrint .. "\n" )
+	raiseEvent("keneanung.bashing.settings.changed")
 	keneanung.bashing.save()
 end
 
@@ -981,17 +989,20 @@ end
 
 keneanung.bashing.setFlee = function(where)
 	keneanung.bashing.fleeDirection = where
+	raiseEvent("keneanung.bashing.settings.changed")
 	kecho("Fleeing to the <red>" .. keneanung.bashing.fleeDirection .. "\n" )
 end
 
 keneanung.bashing.setThreshold = function(newValue, what)
 	keneanung.bashing.configuration[what] = matches[2]
+	raiseEvent("keneanung.bashing.settings.changed")
 	kecho(what:title().." with a security threshhold of <red>" .. keneanung.bashing.configuration[what] .. "<reset> health\n" )
 	keneanung.bashing.save()
 end
 
 keneanung.bashing.setWaitForTarget = function(amount)
 	keneanung.bashing.configuration.waitForManualTarget = tonumber(amount) or 2
+	raiseEvent("keneanung.bashing.settings.changed")
 	kecho("Waiting <red>" .. keneanung.bashing.configuration.waitForManualTarget .. "<reset> seconds for a new target\n" )
 	keneanung.bashing.save()
 end
@@ -1525,6 +1536,7 @@ keneanung.bashing.setCommand = function(command, what)
 	kecho(command .. " is now <red>" .. keneanung.bashing.configuration[class][command] .. "<reset>\n" )
 	keneanung.bashing.setAlias(command)
 	keneanung.bashing.save()
+	raiseEvent("keneanung.bashing.settings.changed")
 end
 
 keneanung.bashing.setTarget = function()
@@ -1621,6 +1633,7 @@ keneanung.bashing.setSystem = function(systemName)
 	end
 	keneanung.bashing.configuration.system = systemName
 	kecho("Using <red>" .. keneanung.bashing.configuration.system .. "<reset> as queuing system.\n" )
+	raiseEvent("keneanung.bashing.settings.changed")
 	keneanung.bashing.save()
 	system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 	system.setup()
@@ -1643,6 +1656,7 @@ keneanung.bashing.setRageStrat = function(strategyName)
 	end
 	keneanung.bashing.configuration[class].rageStrat = strategyName
 	keneanung.bashing.save()
+	raiseEvent("keneanung.bashing.settings.changed")
 	kecho("Using <red>" .. strategyName .. "<reset> as battlerage strategy.\n" )
 end
 
@@ -1661,6 +1675,7 @@ keneanung.bashing.addFile = function()
 	local path = invokeFileDialog(true, "Which file do you want to add?")
 	if path ~= "" then
 		keneanung.bashing.configuration.filesToLoad[#keneanung.bashing.configuration.filesToLoad + 1] = path
+		raiseEvent("keneanung.bashing.settings.changed")
 	end
 	keneanung.bashing.save()
 end
@@ -1668,6 +1683,8 @@ end
 keneanung.bashing.deleteFile = function(num)
 	table.remove(keneanung.bashing.configuration.filesToLoad, num)
 	keneanung.bashing.save()
+
+	raiseEvent("keneanung.bashing.settings.changed")
 end
 
 keneanung.bashing.toggleDebug = function()
@@ -1923,16 +1940,26 @@ end
 local doImport = function(importTable)
 	--Allow us to strip a full config file down to just the priorities
 	importTable = importTable.priorities or importTable
+
+	local somethingChanged = false
+
+
 	--do the import
 	for area,_ in pairs(importTable) do
 		if #importTable[area] > 0 then
 			keneanung.bashing.configuration.priorities[area] = keneanung.bashing.configuration.priorities[area] or {}
+			somethingChanged = true
 		end
 		for _, denizenString in pairs(importTable[area]) do
 			if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
 				table.insert(keneanung.bashing.configuration.priorities[area], denizenString)
+			somethingChanged = true
 			end
 		end
+	end
+
+	if somethingChanged then
+		raiseEvent("keneanung.bashing.settings.changed")
 	end
 end
 
