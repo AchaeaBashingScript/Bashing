@@ -1024,22 +1024,21 @@ keneanung.bashing.nextAttack = function()
 
 	keneanung.bashing.attacks = keneanung.bashing.attacks + 1
 
-	if #keneanung.bashing.targetList > 0 and gmcp.Char.Vitals.hp then
-
+	if #keneanung.bashing.targetList > 0 then
 		local avg = keneanung.bashing.damage / keneanung.bashing.attacks
 
 		local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
 
 		local warnat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.warning)
 
-		if avg > gmcp.Char.Vitals.hp - fleeat and keneanung.bashing.configuration.autoflee then
+		if avg > keneanung.bashing.lastHealth - fleeat and keneanung.bashing.configuration.autoflee then
 
 			system.notifyFlee(avg)
 
 			system.flee()
 
 		else
-			if avg > gmcp.Char.Vitals.hp - warnat then
+			if avg > keneanung.bashing.lastHealth - warnat then
 
 				system.warnFlee(avg)
 
@@ -1053,7 +1052,6 @@ keneanung.bashing.nextAttack = function()
 			return true
 
 		end
-
 	end
 
 	keneanung.bashing.clearTarget()
@@ -1345,7 +1343,11 @@ keneanung.bashing.roomMessageCallback = function()
 	keneanung.bashing.damage = 0
 	keneanung.bashing.healing = 0
 	keneanung.bashing.attacks = 0
-	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
+
+	if gmcp.Char.Vitals.hp then
+		keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
+	end
+
 	keneanung.bashing.shield = false
 	if keneanung.bashing.attacking > 0 then
 		keneanung.bashing.clearTarget()
