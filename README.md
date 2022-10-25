@@ -43,6 +43,7 @@ Quickstart
 5. Use the alias `kconfig bashing toggle` to enable the script
 6. Start killing things. Acceptable targets must be killed at least once in an area to register them with the bashing script.
    The basher will use the "target" variable or the in game target as a fallback, if there is no item in the prio list.
+   **Optionally** you can send the command "ih" and click the plus next to the mobs you want to add to the prio list.
 7. Keep bashing away using the F2 keybinding to work yourself down the list.
 
 Priority management
