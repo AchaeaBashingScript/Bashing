@@ -158,7 +158,7 @@
 						<script>echo (" ")
 local mob = matches[2]
 if keneanung.bashing.isPossibleTarget(matches[2]) then
-  cechoLink("&lt;red&gt;-", function() keneanung.bashing.delete(gmcp.Room.Info.area, mob) end, "Remove from priority list")
+  cechoLink("&lt;red&gt;-", function() keneanung.bashing.deleteByName(gmcp.Room.Info.area, mob) end, "Remove from priority list")
 else
   cechoLink("&lt;green&gt;+", function() keneanung.bashing.addPossibleTarget(mob) end, "Add to priority list")
 end</script>
@@ -173,7 +173,7 @@ end</script>
 						<colorTriggerFgColor>#000000</colorTriggerFgColor>
 						<colorTriggerBgColor>#000000</colorTriggerBgColor>
 						<regexCodeList>
-							<string>^\D+\d+\s+(\D+)$</string>
+							<string>^\D+\d+\s+(\D+)\n$</string>
 						</regexCodeList>
 						<regexCodePropertyList>
 							<integer>1</integer>
@@ -445,7 +445,7 @@ use "flee &lt;direction&gt;" to set a new direction.
 					<name>keneanung.bashing.startTrackingIh</name>
 					<packageName></packageName>
 					<script>function keneanung.bashing.startTrackingIh(eventName, commandSent)
-  if commandSent ~= "ih" then return end
+  if not keneanung.bashing.configuration.enabled or commandSent ~= "ih" then return end
 
   keneanung.bashing.trackih = true
 end</script>
