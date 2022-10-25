@@ -158,9 +158,9 @@
 						<script>echo (" ")
 local mob = matches[2]
 if keneanung.bashing.isPossibleTarget(matches[2]) then
-  cechoLink("&lt;red&gt;-", function() keneanung.bashing.deleteByName(gmcp.Room.Info.area, mob) end, "Remove from priority list")
+  cechoLink("(&lt;red&gt;-&lt;reset&gt;)\n", function() keneanung.bashing.deleteByName(gmcp.Room.Info.area, mob) end, "Remove from priority list", true)
 else
-  cechoLink("&lt;green&gt;+", function() keneanung.bashing.addPossibleTarget(mob) end, "Add to priority list")
+  cechoLink("(&lt;green&gt;+&lt;reset&gt;)\n", function() keneanung.bashing.addPossibleTarget(mob) end, "Add to priority list", true)
 end</script>
 						<triggerType>0</triggerType>
 						<conditonLineDelta>0</conditonLineDelta>
