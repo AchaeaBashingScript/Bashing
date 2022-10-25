@@ -89,6 +89,7 @@ keneanung.bashing.systems = {}
 keneanung.bashing.battlerage = {}
 keneanung.bashing.room = {}
 keneanung.bashing.pausingAfflictions = {}
+keneanung.bashing.trackih = false
 
 keneanung.bashing.attacking = 0
 keneanung.bashing.damage = 0
@@ -640,6 +641,17 @@ end
 
 setmetatable(keneanung.bashing.systems, { __index = getSystem } )
 
+keneanung.bashing.isPossibleTarget = function(targetName)
+	local prios = keneanung.bashing.configuration.priorities
+	local area = gmcp.Room.Info.area
+
+	if prios[area] == nil then
+		prios[area] = {}
+	end
+
+	return table.contains(prios[area], targetName)
+end
+
 keneanung.bashing.addPossibleTarget = function(targetName)
 
 	local prios = keneanung.bashing.configuration.priorities
@@ -761,6 +773,18 @@ keneanung.bashing.delete = function(area, num)
 	keneanung.bashing.managePrios(area)
 
 	raiseEvent("keneanung.bashing.settings.changed")
+end
+
+keneanung.bashing.deleteByName = function(area, name)
+
+	local prios = keneanung.bashing.configuration.priorities[area]
+
+	for num, prioName in ipairs(prios) do
+		if name == prioName then
+			keneanung.bashing.delete(area, num)
+			return
+		end
+	end
 end
 
 keneanung.bashing.save = function()
@@ -1036,7 +1060,7 @@ keneanung.bashing.nextAttack = function()
 			system.notifyFlee(avg)
 
 			system.flee()
-
+			
 		else
 			if avg > keneanung.bashing.lastHealth - warnat then
 
@@ -1799,7 +1823,7 @@ keneanung.bashing.handleSkillInfo = function()
 	local skillInfo = gmcp.Char.Skills.Info
 	if skillInfo.group ~= "attainment" then return end
 
-	local cooldown = tonumber(skillInfo.info:match("(%d+\.%d+) seconds"))
+	local cooldown = tonumber(skillInfo.info:match("(%d+%.%d+) seconds"))
 	local rage = tonumber(skillInfo.info:match("(%d+) rage"))
 	local command = skillInfo.info:match("Syntax:\n(.-)\n"):gsub("<target>", "%%s")
 	local affliction = skillInfo.info:match("Gives denizen affliction: (%w+)")
