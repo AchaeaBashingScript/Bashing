@@ -120,17 +120,17 @@ end
 local getTargetPrio = function(name)
 	local prios = keneanung.bashing.configuration.priorities[gmcp.Room.Info.area]
 
-        debugMessage("prios for this area", prios)
+				debugMessage("prios for this area", prios)
 
 	if not prios then
 		return
 	end
 
-        debugMessage("target name", name)
+				debugMessage("target name", name)
 
 	local prio = table.index_of(prios, name)
-        debugMessage("prio", prio)
-        return prio
+				debugMessage("prio", prio)
+				return prio
 end
 
 local kecho = function(what, command, popup)
@@ -255,14 +255,14 @@ end
 
 local startAttack = function()
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-        system.startAttack()
+				system.startAttack()
 	gmod.enableModule("keneanung.bashing", "IRE.Display")
 	sendGMCP([[Core.Supports.Add ["IRE.Display 3"] ]])   -- register the GMCP module independently from gmod.
 end
 
 local stopAttack = function()
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-        system.stopAttack()
+				system.stopAttack()
 	gmod.disableModule("keneanung.bashing", "IRE.Display")
 	sendGMCP([[Core.Supports.Remove ["IRE.Display"] ]])   -- unregister the GMCP module independently from gmod.
 end
@@ -727,7 +727,7 @@ keneanung.bashing.shuffleDown = function(area, num)
 	local prios = keneanung.bashing.configuration.priorities[area]
 
 	if num < #prios then
-		prios[num], prios[num+1] =  prios[num+1], prios[num]
+		prios[num], prios[num+1] = prios[num+1], prios[num]
 	end
 	keneanung.bashing.save()
 
@@ -741,7 +741,7 @@ keneanung.bashing.shuffleUp = function(area, num)
 	local prios = keneanung.bashing.configuration.priorities[area]
 
 	if num > 1 then
-		prios[num], prios[num-1] =  prios[num-1], prios[num]
+		prios[num], prios[num-1] = prios[num-1], prios[num]
 	end
 	keneanung.bashing.save()
 
@@ -764,25 +764,25 @@ keneanung.bashing.delete = function(area, num)
 end
 
 keneanung.bashing.save = function()
-  if string.char(getMudletHomeDir():byte()) == "/" then
+	if string.char(getMudletHomeDir():byte()) == "/" then
 		_sep = "/"
-  	else
+		else
 		_sep = "\\"
-   end -- if
-  local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
-  table.save(savePath, keneanung.bashing.configuration)
+	 end -- if
+	local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
+	table.save(savePath, keneanung.bashing.configuration)
 
 end -- func
 
 keneanung.bashing.load = function()
-  if string.char(getMudletHomeDir():byte()) == "/"
-   then _sep = "/"
-    else _sep = "\\"
-     end -- if
-  local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
-  if (io.exists(savePath)) then
-   table.load(savePath, keneanung.bashing.configuration)
-  end -- if
+	if string.char(getMudletHomeDir():byte()) == "/"
+	 then _sep = "/"
+		else _sep = "\\"
+		 end -- if
+	local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
+	if (io.exists(savePath)) then
+	 table.load(savePath, keneanung.bashing.configuration)
+	end -- if
 
 end -- func
 
@@ -1219,7 +1219,7 @@ keneanung.bashing.addTarget = function(item)
 	local targets = keneanung.bashing.targetList
 	local insertAt
 
-        debugMessage("addTarget", item)
+				debugMessage("addTarget", item)
 
 	local targetPrio = getTargetPrio(item.name)
 
@@ -1380,7 +1380,7 @@ keneanung.bashing.vitalsChangeRecord = function()
 
 	if keneanung.bashing.attacking == 0 then return end
 
-  if gmcp.Char.Vitals.hp then
+	if gmcp.Char.Vitals.hp then
 
 		local difference = keneanung.bashing.lastHealth - gmcp.Char.Vitals.hp
 
@@ -1582,7 +1582,7 @@ keneanung.bashing.setTarget = function()
 	end
 	debugMessage("setting target", keneanung.bashing.targetList[keneanung.bashing.attacking])
 	sendGMCP('IRE.Target.Set "' .. keneanung.bashing.targetList[keneanung.bashing.attacking].id .. '"')
-        return keneanung.bashing.attacking ~= 0
+				return keneanung.bashing.attacking ~= 0
 end
 
 keneanung.bashing.clearTarget = function()
@@ -1851,6 +1851,11 @@ keneanung.bashing.rageAvailable = function(ability)
 	if type(ability) == "number" then
 		ability = battlerageSkills[ability].name
 	end
+
+	if not gmcp.IRE.Display then
+		return false
+	end
+
 	for _, button in pairs(gmcp.IRE.Display.ButtonActions) do
 		if button.text:lower() == ability:lower() then
 			return button.highlight == 1
