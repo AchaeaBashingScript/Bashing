@@ -77,7 +77,7 @@ local lastXp
 local roomTargetStore = {}
 local denizenCache = {}
 
-local waintingForManualTargetTimer
+local waitingForManualTargetTimer
 local waitingForManualTarget = false
 
 keneanung = keneanung or {}
@@ -120,17 +120,17 @@ end
 local getTargetPrio = function(name)
 	local prios = keneanung.bashing.configuration.priorities[gmcp.Room.Info.area]
 
-        debugMessage("prios for this area", prios)
+				debugMessage("prios for this area", prios)
 
 	if not prios then
 		return
 	end
 
-        debugMessage("target name", name)
+				debugMessage("target name", name)
 
 	local prio = table.index_of(prios, name)
-        debugMessage("prio", prio)
-        return prio
+				debugMessage("prio", prio)
+				return prio
 end
 
 local kecho = function(what, command, popup)
@@ -255,14 +255,14 @@ end
 
 local startAttack = function()
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-        system.startAttack()
+				system.startAttack()
 	gmod.enableModule("keneanung.bashing", "IRE.Display")
 	sendGMCP([[Core.Supports.Add ["IRE.Display 3"] ]])   -- register the GMCP module independently from gmod.
 end
 
 local stopAttack = function()
 	local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-        system.stopAttack()
+				system.stopAttack()
 	gmod.disableModule("keneanung.bashing", "IRE.Display")
 	sendGMCP([[Core.Supports.Remove ["IRE.Display"] ]])   -- unregister the GMCP module independently from gmod.
 end
@@ -727,7 +727,7 @@ keneanung.bashing.shuffleDown = function(area, num)
 	local prios = keneanung.bashing.configuration.priorities[area]
 
 	if num < #prios then
-		prios[num], prios[num+1] =  prios[num+1], prios[num]
+		prios[num], prios[num+1] = prios[num+1], prios[num]
 	end
 	keneanung.bashing.save()
 
@@ -741,7 +741,7 @@ keneanung.bashing.shuffleUp = function(area, num)
 	local prios = keneanung.bashing.configuration.priorities[area]
 
 	if num > 1 then
-		prios[num], prios[num-1] =  prios[num-1], prios[num]
+		prios[num], prios[num-1] = prios[num-1], prios[num]
 	end
 	keneanung.bashing.save()
 
@@ -764,25 +764,25 @@ keneanung.bashing.delete = function(area, num)
 end
 
 keneanung.bashing.save = function()
-  if string.char(getMudletHomeDir():byte()) == "/" then
+	if string.char(getMudletHomeDir():byte()) == "/" then
 		_sep = "/"
-  	else
+		else
 		_sep = "\\"
-   end -- if
-  local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
-  table.save(savePath, keneanung.bashing.configuration)
+	 end -- if
+	local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
+	table.save(savePath, keneanung.bashing.configuration)
 
 end -- func
 
 keneanung.bashing.load = function()
-  if string.char(getMudletHomeDir():byte()) == "/"
-   then _sep = "/"
-    else _sep = "\\"
-     end -- if
-  local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
-  if (io.exists(savePath)) then
-   table.load(savePath, keneanung.bashing.configuration)
-  end -- if
+	if string.char(getMudletHomeDir():byte()) == "/"
+	 then _sep = "/"
+		else _sep = "\\"
+		 end -- if
+	local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
+	if (io.exists(savePath)) then
+	 table.load(savePath, keneanung.bashing.configuration)
+	end -- if
 
 end -- func
 
@@ -1025,21 +1025,20 @@ keneanung.bashing.nextAttack = function()
 	keneanung.bashing.attacks = keneanung.bashing.attacks + 1
 
 	if #keneanung.bashing.targetList > 0 then
-
 		local avg = keneanung.bashing.damage / keneanung.bashing.attacks
 
 		local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
 
 		local warnat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.warning)
 
-		if avg > gmcp.Char.Vitals.hp - fleeat and keneanung.bashing.configuration.autoflee then
+		if avg > keneanung.bashing.lastHealth - fleeat and keneanung.bashing.configuration.autoflee then
 
 			system.notifyFlee(avg)
 
 			system.flee()
 
 		else
-			if avg > gmcp.Char.Vitals.hp - warnat then
+			if avg > keneanung.bashing.lastHealth - warnat then
 
 				system.warnFlee(avg)
 
@@ -1053,7 +1052,6 @@ keneanung.bashing.nextAttack = function()
 			return true
 
 		end
-
 	end
 
 	keneanung.bashing.clearTarget()
@@ -1221,7 +1219,7 @@ keneanung.bashing.addTarget = function(item)
 	local targets = keneanung.bashing.targetList
 	local insertAt
 
-        debugMessage("addTarget", item)
+				debugMessage("addTarget", item)
 
 	local targetPrio = getTargetPrio(item.name)
 
@@ -1345,7 +1343,11 @@ keneanung.bashing.roomMessageCallback = function()
 	keneanung.bashing.damage = 0
 	keneanung.bashing.healing = 0
 	keneanung.bashing.attacks = 0
-	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
+
+	if gmcp.Char.Vitals.hp then
+		keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
+	end
+
 	keneanung.bashing.shield = false
 	if keneanung.bashing.attacking > 0 then
 		keneanung.bashing.clearTarget()
@@ -1378,15 +1380,18 @@ keneanung.bashing.vitalsChangeRecord = function()
 
 	if keneanung.bashing.attacking == 0 then return end
 
-	local difference = keneanung.bashing.lastHealth - gmcp.Char.Vitals.hp
+	if gmcp.Char.Vitals.hp then
 
-	if difference > 0 then
-		keneanung.bashing.damage = keneanung.bashing.damage + difference
-	elseif difference < 0 then
-		keneanung.bashing.healing = keneanung.bashing.healing + math.abs(difference)
+		local difference = keneanung.bashing.lastHealth - gmcp.Char.Vitals.hp
+
+		if difference > 0 then
+			keneanung.bashing.damage = keneanung.bashing.damage + difference
+		elseif difference < 0 then
+			keneanung.bashing.healing = keneanung.bashing.healing + math.abs(difference)
+		end
+
+		keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
 	end
-
-	keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
 
 	for _, stat in ipairs(gmcp.Char.Vitals.charstats) do
 		local rageAmount = stat:match("^Rage: (%d+)$")
@@ -1577,7 +1582,7 @@ keneanung.bashing.setTarget = function()
 	end
 	debugMessage("setting target", keneanung.bashing.targetList[keneanung.bashing.attacking])
 	sendGMCP('IRE.Target.Set "' .. keneanung.bashing.targetList[keneanung.bashing.attacking].id .. '"')
-        return keneanung.bashing.attacking ~= 0
+				return keneanung.bashing.attacking ~= 0
 end
 
 keneanung.bashing.clearTarget = function()
@@ -1846,6 +1851,11 @@ keneanung.bashing.rageAvailable = function(ability)
 	if type(ability) == "number" then
 		ability = battlerageSkills[ability].name
 	end
+
+	if not gmcp.IRE.Display then
+		return false
+	end
+
 	for _, button in pairs(gmcp.IRE.Display.ButtonActions) do
 		if button.text:lower() == ability:lower() then
 			return button.highlight == 1
