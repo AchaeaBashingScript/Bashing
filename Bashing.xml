@@ -69,8 +69,10 @@
 					<colorTriggerBgColor>#000000</colorTriggerBgColor>
 					<regexCodeList>
 						<string>^A nearly invisible magical shield forms around (.+)\.$</string>
+						<string>^A dizzying beam of energy strikes you as your attack rebounds off of (.+)'s shield\.$</string>
 					</regexCodeList>
 					<regexCodePropertyList>
+						<integer>1</integer>
 						<integer>1</integer>
 					</regexCodePropertyList>
 				</Trigger>
@@ -157,7 +159,8 @@
 						<name>Parse Entity</name>
 						<script>echo (" ")
 local mob = matches[2]
-if keneanung.bashing.isPossibleTarget(matches[2]) then
+
+if keneanung.bashing.isPossibleTarget(mob) then
   cechoLink("(&lt;red&gt;-&lt;reset&gt;)\n", function() keneanung.bashing.deleteByName(gmcp.Room.Info.area, mob) end, "Remove from priority list", true)
 else
   cechoLink("(&lt;green&gt;+&lt;reset&gt;)\n", function() keneanung.bashing.addPossibleTarget(mob) end, "Add to priority list", true)
@@ -173,7 +176,7 @@ end</script>
 						<colorTriggerFgColor>#000000</colorTriggerFgColor>
 						<colorTriggerBgColor>#000000</colorTriggerBgColor>
 						<regexCodeList>
-							<string>^\D+\d+\s+(\D+)\n$</string>
+							<string>^\D+\d+\s+(\D+)$</string>
 						</regexCodeList>
 						<regexCodePropertyList>
 							<integer>1</integer>
@@ -372,6 +375,15 @@ disableAlias("import from Guhem")</script>
 					<packageName></packageName>
 					<regex>^kconfig bashing import$</regex>
 				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>Check IH</name>
+					<script>if not keneanung.bashing.configuration.enabled then return end
+
+keneanung.bashing.trackih = true</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^ih$</regex>
+				</Alias>
 			</AliasGroup>
 		</AliasGroup>
 	</AliasPackage>
@@ -404,8 +416,13 @@ if string.char(getMudletHomeDir():byte()) == "/" then
 else
 	_sep = "\\" 
 end -- if
-local scriptFile = getMudletHomeDir() .. _sep .. "Bashing" .. _sep .."script.lua"
-local versionFile = getMudletHomeDir() .. _sep .. "Bashing" .. _sep .."version.lua"
+
+local dir = string.gsub(getModulePath("Bashing"), "Bashing.xml", "")
+
+echo(dir)
+
+local scriptFile = dir .. "script.lua"
+local versionFile = dir .. "version.lua"
 dofile(scriptFile)
 keneanung.bashing.version = dofile(versionFile)
 </script>
@@ -440,18 +457,6 @@ use "flee &lt;direction&gt;" to set a new direction.
 
 ]]</script>
 					<eventHandlerList />
-				</Script>
-				<Script isActive="yes" isFolder="no">
-					<name>keneanung.bashing.startTrackingIh</name>
-					<packageName></packageName>
-					<script>function keneanung.bashing.startTrackingIh(eventName, commandSent)
-  if not keneanung.bashing.configuration.enabled or commandSent ~= "ih" then return end
-
-  keneanung.bashing.trackih = true
-end</script>
-					<eventHandlerList>
-						<string>sysDataSendRequest</string>
-					</eventHandlerList>
 				</Script>
 				<ScriptGroup isActive="yes" isFolder="yes">
 					<name>register callbacks</name>
