@@ -641,15 +641,12 @@ end
 
 setmetatable(keneanung.bashing.systems, { __index = getSystem } )
 
-keneanung.bashing.isPossibleTarget = function(targetName)
-	local prios = keneanung.bashing.configuration.priorities
-	local area = gmcp.Room.Info.area
-
-	if prios[area] == nil then
-		prios[area] = {}
+keneanung.bashing.isPossibleTarget = function(targetName, area)
+	if not area then
+		area = gmcp.Room.Info.area
 	end
-
-	return table.contains(prios[area], targetName)
+	local prios = keneanung.bashing.configuration.priorities[area] or {}
+	return table.contains(prios, targetName)
 end
 
 keneanung.bashing.addPossibleTarget = function(targetName)
