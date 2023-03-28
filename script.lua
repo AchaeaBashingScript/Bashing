@@ -1411,7 +1411,7 @@ keneanung.bashing.vitalsChangeRecord = function()
 			keneanung.bashing.healing = keneanung.bashing.healing + math.abs(difference)
 		end
 
-		keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1.
+		keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
 	end
 
 	for _, stat in ipairs(gmcp.Char.Vitals.charstats) do
