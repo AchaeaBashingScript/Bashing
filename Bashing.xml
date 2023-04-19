@@ -1,325 +1,403 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MudletPackage>
-<MudletPackage version="1.0">
-    <TriggerPackage>
-        <TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-            <name>keneanung</name>
-            <script></script>
-            <triggerType>0</triggerType>
-            <conditonLineDelta>0</conditonLineDelta>
-            <mStayOpen>0</mStayOpen>
-            <mCommand></mCommand>
-            <packageName></packageName>
-            <mFgColor>#ff0000</mFgColor>
-            <mBgColor>#ffff00</mBgColor>
-            <mSoundFile></mSoundFile>
-            <colorTriggerFgColor>#000000</colorTriggerFgColor>
-            <colorTriggerBgColor>#000000</colorTriggerBgColor>
-            <regexCodeList/>
-            <regexCodePropertyList/>
-            <TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-                <name>bashing</name>
-                <script></script>
-                <triggerType>0</triggerType>
-                <conditonLineDelta>0</conditonLineDelta>
-                <mStayOpen>0</mStayOpen>
-                <mCommand></mCommand>
-                <packageName></packageName>
-                <mFgColor>#ff0000</mFgColor>
-                <mBgColor>#ffff00</mBgColor>
-                <mSoundFile></mSoundFile>
-                <colorTriggerFgColor>#000000</colorTriggerFgColor>
-                <colorTriggerBgColor>#000000</colorTriggerBgColor>
-                <regexCodeList/>
-                <regexCodePropertyList/>
-                <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="yes" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-                    <name>Slain new</name>
-                    <script>keneanung.bashing.addPossibleTarget(multimatches[2][2])</script>
-                    <triggerType>0</triggerType>
-                    <conditonLineDelta>0</conditonLineDelta>
-                    <mStayOpen>0</mStayOpen>
-                    <mCommand></mCommand>
-                    <packageName></packageName>
-                    <mFgColor>#ff0000</mFgColor>
-                    <mBgColor>#ffff00</mBgColor>
-                    <mSoundFile></mSoundFile>
-                    <colorTriggerFgColor>#000000</colorTriggerFgColor>
-                    <colorTriggerBgColor>#000000</colorTriggerBgColor>
-                    <regexCodeList>
-                        <string>return keneanung.bashing.configuration.enabled</string>
-                        <string>^You have slain (.+), retrieving the corpse\.$</string>
-                    </regexCodeList>
-                    <regexCodePropertyList>
-                        <integer>4</integer>
-                        <integer>1</integer>
-                    </regexCodePropertyList>
-                </Trigger>
-                <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-                    <name>shielded</name>
-                    <script>keneanung.bashing.shielded(matches[2])</script>
-                    <triggerType>0</triggerType>
-                    <conditonLineDelta>0</conditonLineDelta>
-                    <mStayOpen>0</mStayOpen>
-                    <mCommand></mCommand>
-                    <packageName></packageName>
-                    <mFgColor>#ff0000</mFgColor>
-                    <mBgColor>#ffff00</mBgColor>
-                    <mSoundFile></mSoundFile>
-                    <colorTriggerFgColor>#000000</colorTriggerFgColor>
-                    <colorTriggerBgColor>#000000</colorTriggerBgColor>
-                    <regexCodeList>
-                        <string>^A nearly invisible magical shield forms around (.+)\.$</string>
-                    </regexCodeList>
-                    <regexCodePropertyList>
-                        <integer>1</integer>
-                    </regexCodePropertyList>
-                </Trigger>
-                <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-                    <name>login</name>
-                    <script>keneanung.bashing.login()</script>
-                    <triggerType>0</triggerType>
-                    <conditonLineDelta>0</conditonLineDelta>
-                    <mStayOpen>0</mStayOpen>
-                    <mCommand></mCommand>
-                    <packageName></packageName>
-                    <mFgColor>#ff0000</mFgColor>
-                    <mBgColor>#ffff00</mBgColor>
-                    <mSoundFile></mSoundFile>
-                    <colorTriggerFgColor>#000000</colorTriggerFgColor>
-                    <colorTriggerBgColor>#000000</colorTriggerBgColor>
-                    <regexCodeList>
-                        <string>Password correct\. Welcome to Achaea\.$</string>
-                    </regexCodeList>
-                    <regexCodePropertyList>
-                        <integer>1</integer>
-                    </regexCodePropertyList>
-                </Trigger>
-                <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-                    <name>stunned</name>
-                    <script>keneanung.bashing.pauseOnAffliction(&quot;stun&quot;)</script>
-                    <triggerType>0</triggerType>
-                    <conditonLineDelta>0</conditonLineDelta>
-                    <mStayOpen>0</mStayOpen>
-                    <mCommand></mCommand>
-                    <packageName></packageName>
-                    <mFgColor>#ff0000</mFgColor>
-                    <mBgColor>#ffff00</mBgColor>
-                    <mSoundFile></mSoundFile>
-                    <colorTriggerFgColor>#000000</colorTriggerFgColor>
-                    <colorTriggerBgColor>#000000</colorTriggerBgColor>
-                    <regexCodeList>
-                        <string>You are too stunned to be able to do anything.</string>
-                    </regexCodeList>
-                    <regexCodePropertyList>
-                        <integer>3</integer>
-                    </regexCodePropertyList>
-                </Trigger>
-                <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-                    <name>stun cured</name>
-                    <script>keneanung.bashing.unpauseOnHealing(&quot;stun&quot;)</script>
-                    <triggerType>0</triggerType>
-                    <conditonLineDelta>0</conditonLineDelta>
-                    <mStayOpen>0</mStayOpen>
-                    <mCommand></mCommand>
-                    <packageName></packageName>
-                    <mFgColor>#ff0000</mFgColor>
-                    <mBgColor>#ffff00</mBgColor>
-                    <mSoundFile></mSoundFile>
-                    <colorTriggerFgColor>#000000</colorTriggerFgColor>
-                    <colorTriggerBgColor>#000000</colorTriggerBgColor>
-                    <regexCodeList>
-                        <string>You are no longer stunned.</string>
-                    </regexCodeList>
-                    <regexCodePropertyList>
-                        <integer>3</integer>
-                    </regexCodePropertyList>
-                </Trigger>
-            </TriggerGroup>
-        </TriggerGroup>
-    </TriggerPackage>
-    <TimerPackage/>
-    <AliasPackage>
-        <AliasGroup isActive="yes" isFolder="yes">
-            <name>keneanung</name>
-            <script></script>
-            <command></command>
-            <packageName></packageName>
-            <regex></regex>
-            <AliasGroup isActive="yes" isFolder="yes">
-                <name>bashing</name>
-                <script></script>
-                <command></command>
-                <packageName></packageName>
-                <regex></regex>
-                <Alias isActive="yes" isFolder="no">
-                    <name>toggle enabled</name>
-                    <script>keneanung.bashing.toggle(&quot;enabled&quot;, &quot;Bashing&quot;)</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing toggle$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>show areas</name>
-                    <script>keneanung.bashing.showAreas()</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing prios$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>show prios of area</name>
-                    <script>keneanung.bashing.managePrios(matches[2])</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing prios (.+)$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>flee</name>
-                    <script>keneanung.bashing.setFlee(matches[2])</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^flee (.+)$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>set flee threshold</name>
-                    <script>keneanung.bashing.setThreshold(matches[2], &quot;fleeing&quot;)</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing fleeat (\d+[%d]?)$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>set warning threshhold</name>
-                    <script>keneanung.bashing.setThreshold(matches[2], &quot;warning&quot;)</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing warnat (\d+[%d]?)$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>toggle automatic fleeing</name>
-                    <script>keneanung.bashing.toggle(&quot;autoflee&quot;, &quot;Fleeing&quot;)</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing autoflee$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>show configuration</name>
-                    <script>keneanung.bashing.showConfig()</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>set a command</name>
-                    <script>keneanung.bashing.setCommand(matches[2],matches[3])</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing (razecommand|attackcommand) (.+)$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>toggle raze</name>
-                    <script>keneanung.bashing.toggle(&quot;autoraze&quot;, &quot;Razing&quot;)</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing raze$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>set system</name>
-                    <script>keneanung.bashing.setSystem(matches[2])</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing system(?: (\w+))?$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>set battlerage strategy</name>
-                    <script>keneanung.bashing.setRageStrat(matches[2])</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing ragestrat(?: (\w+))?$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>toggle razing with battlerage</name>
-                    <script>keneanung.bashing.toggle('autorageraze', 'Autorazing with rage')</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing rageraze$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>toggle targeting loyals</name>
-                    <script>keneanung.bashing.toggle('targetLoyals', 'Falling back to loyal targets')</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing targetloyals$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>show gains</name>
-                    <script>keneanung.bashing.printGains(matches[2])</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kshow gains (lifetime|session|trip)</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>start a new hunting trip</name>
-                    <script>keneanung.bashing.startHuntingTrip()</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^ktrip start$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>stop the current hunting trip</name>
-                    <script>keneanung.bashing.stopHuntingTrip()</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^ktrip stop$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>import from Guhem</name>
-                    <script>keneanung.bashing.guhemImport()
-disableAlias(&quot;import from Guhem&quot;)</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing guhemimport$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>toggle manual targetting</name>
-                    <script>keneanung.bashing.toggle('manualTargetting', 'Manual targetting')</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing manual$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>set wait for target</name>
-                    <script>keneanung.bashing.setWaitForTarget(matches[2])</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing waitfortarget (\d+)$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>Export Prios to file</name>
-                    <script>keneanung.bashing.export()</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing export$</regex>
-                </Alias>
-                <Alias isActive="yes" isFolder="no">
-                    <name>Import Prios from file</name>
-                    <script>keneanung.bashing.import()</script>
-                    <command></command>
-                    <packageName></packageName>
-                    <regex>^kconfig bashing import$</regex>
-                </Alias>
-            </AliasGroup>
-        </AliasGroup>
-    </AliasPackage>
-    <ActionPackage/>
-    <ScriptPackage>
-        <ScriptGroup isActive="yes" isFolder="yes">
-            <name>keneanung</name>
-            <packageName></packageName>
-            <script>keneanung = keneanung or {}</script>
-            <eventHandlerList/>
-            <ScriptGroup isActive="yes" isFolder="yes">
-                <name>bashing</name>
-                <packageName></packageName>
-                <script>-------------------------------------------------
+<MudletPackage version="1.001">
+	<TriggerPackage>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>keneanung</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>bashing</name>
+				<script></script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList />
+				<regexCodePropertyList />
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="yes" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>Slain new</name>
+					<script>keneanung.bashing.addPossibleTarget(multimatches[2][2])</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>return keneanung.bashing.configuration.enabled</string>
+						<string>^You have slain (.+), retrieving the corpse\.$</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>4</integer>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>shielded</name>
+					<script>keneanung.bashing.shielded(matches[2])</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^A nearly invisible magical shield forms around (.+)\.$</string>
+						<string>^A dizzying beam of energy strikes you as your attack rebounds off of (.+)'s shield\.$</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>login</name>
+					<script>keneanung.bashing.login()</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>Password correct\. Welcome to Achaea\.$</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>stunned</name>
+					<script>keneanung.bashing.pauseOnAffliction("stun")</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>You are too stunned to be able to do anything.</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>stun cured</name>
+					<script>keneanung.bashing.unpauseOnHealing("stun")</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>You are no longer stunned.</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>3</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>When Tracking IH</name>
+					<script></script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>return keneanung.bashing.trackih</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>4</integer>
+					</regexCodePropertyList>
+					<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+						<name>Parse Entity</name>
+						<script>echo (" ")
+local mob = matches[2]
+
+if keneanung.bashing.isPossibleTarget(mob) then
+  cechoLink("(&lt;red&gt;-&lt;reset&gt;)\n", function() keneanung.bashing.deleteByName(gmcp.Room.Info.area, mob) end, "Remove from priority list", true)
+else
+  cechoLink("(&lt;green&gt;+&lt;reset&gt;)\n", function() keneanung.bashing.addPossibleTarget(mob) end, "Add to priority list", true)
+end</script>
+						<triggerType>0</triggerType>
+						<conditonLineDelta>0</conditonLineDelta>
+						<mStayOpen>0</mStayOpen>
+						<mCommand></mCommand>
+						<packageName></packageName>
+						<mFgColor>#ff0000</mFgColor>
+						<mBgColor>#ffff00</mBgColor>
+						<mSoundFile></mSoundFile>
+						<colorTriggerFgColor>#000000</colorTriggerFgColor>
+						<colorTriggerBgColor>#000000</colorTriggerBgColor>
+						<regexCodeList>
+							<string>^\D+\d+\s+([^0-9\n]+)$</string>
+						</regexCodeList>
+						<regexCodePropertyList>
+							<integer>1</integer>
+						</regexCodePropertyList>
+					</Trigger>
+					<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+						<name>Stop Tracking IH</name>
+						<script>keneanung.bashing.trackih = false</script>
+						<triggerType>0</triggerType>
+						<conditonLineDelta>0</conditonLineDelta>
+						<mStayOpen>0</mStayOpen>
+						<mCommand></mCommand>
+						<packageName></packageName>
+						<mFgColor>#ff0000</mFgColor>
+						<mBgColor>#ffff00</mBgColor>
+						<mSoundFile></mSoundFile>
+						<colorTriggerFgColor>#000000</colorTriggerFgColor>
+						<colorTriggerBgColor>#000000</colorTriggerBgColor>
+						<regexCodeList>
+							<string></string>
+						</regexCodeList>
+						<regexCodePropertyList>
+							<integer>7</integer>
+						</regexCodePropertyList>
+					</Trigger>
+				</Trigger>
+			</TriggerGroup>
+		</TriggerGroup>
+	</TriggerPackage>
+	<TimerPackage />
+	<AliasPackage>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>keneanung</name>
+			<script></script>
+			<command></command>
+			<packageName></packageName>
+			<regex></regex>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>bashing</name>
+				<script></script>
+				<command></command>
+				<packageName></packageName>
+				<regex></regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>toggle enabled</name>
+					<script>keneanung.bashing.toggle("enabled", "Bashing")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing toggle$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>show areas</name>
+					<script>keneanung.bashing.showAreas()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing prios$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>show prios of area</name>
+					<script>keneanung.bashing.managePrios(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing prios (.+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>flee</name>
+					<script>keneanung.bashing.setFlee(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^flee (.+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>set flee threshold</name>
+					<script>keneanung.bashing.setThreshold(matches[2], "fleeing")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing fleeat (\d+[%d]?)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>set warning threshhold</name>
+					<script>keneanung.bashing.setThreshold(matches[2], "warning")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing warnat (\d+[%d]?)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>toggle automatic fleeing</name>
+					<script>keneanung.bashing.toggle("autoflee", "Fleeing")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing autoflee$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>show configuration</name>
+					<script>keneanung.bashing.showConfig()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>set a command</name>
+					<script>keneanung.bashing.setCommand(matches[2],matches[3])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing (razecommand|attackcommand) (.+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>toggle raze</name>
+					<script>keneanung.bashing.toggle("autoraze", "Razing")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing raze$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>set system</name>
+					<script>keneanung.bashing.setSystem(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing system(?: (\w+))?$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>set battlerage strategy</name>
+					<script>keneanung.bashing.setRageStrat(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing ragestrat(?: (\w+))?$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>toggle razing with battlerage</name>
+					<script>keneanung.bashing.toggle('autorageraze', 'Autorazing with rage')</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing rageraze$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>toggle targeting loyals</name>
+					<script>keneanung.bashing.toggle('targetLoyals', 'Falling back to loyal targets')</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing targetloyals$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>show gains</name>
+					<script>keneanung.bashing.printGains(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kshow gains (lifetime|session|trip)</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>start a new hunting trip</name>
+					<script>keneanung.bashing.startHuntingTrip()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^ktrip start$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>stop the current hunting trip</name>
+					<script>keneanung.bashing.stopHuntingTrip()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^ktrip stop$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>import from Guhem</name>
+					<script>keneanung.bashing.guhemImport()
+disableAlias("import from Guhem")</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing guhemimport$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>toggle manual targetting</name>
+					<script>keneanung.bashing.toggle('manualTargetting', 'Manual targetting')</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing manual$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>set wait for target</name>
+					<script>keneanung.bashing.setWaitForTarget(matches[2])</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing waitfortarget (\d+)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>Export Prios to file</name>
+					<script>keneanung.bashing.export()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing export$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>Import Prios from file</name>
+					<script>keneanung.bashing.import()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^kconfig bashing import$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>Check IH</name>
+					<script>if not keneanung.bashing.configuration.enabled then return end
+
+keneanung.bashing.trackih = true</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^ih$</regex>
+				</Alias>
+			</AliasGroup>
+		</AliasGroup>
+	</AliasPackage>
+	<ActionPackage />
+	<ScriptPackage>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>keneanung</name>
+			<packageName></packageName>
+			<script>keneanung = keneanung or {}</script>
+			<eventHandlerList />
+			<ScriptGroup isActive="yes" isFolder="yes">
+				<name>bashing</name>
+				<packageName></packageName>
+				<script>-------------------------------------------------
 --         Put your Lua functions here.        --
 --                                             --
 -- Note that you can also use external Scripts --
@@ -328,27 +406,32 @@ keneanung.bashing = keneanung.bashing or { }
 keneanung.bashing.configuration = keneanung.bashing.configuration or {}
 keneanung.bashing.configuration.priorities = keneanung.bashing.configuration.priorities or {}
 keneanung.bashing.targetList = {}</script>
-                <eventHandlerList/>
-                <Script isActive="yes" isFolder="no">
-                    <name>load the actual script</name>
-                    <packageName></packageName>
-                    <script>local _sep
-if string.char(getMudletHomeDir():byte()) == &quot;/&quot; then 
-	_sep = &quot;/&quot; 
+				<eventHandlerList />
+				<Script isActive="yes" isFolder="no">
+					<name>load the actual script</name>
+					<packageName></packageName>
+					<script>local _sep
+if string.char(getMudletHomeDir():byte()) == "/" then 
+	_sep = "/" 
 else
-	_sep = &quot;\\&quot; 
+	_sep = "\\" 
 end -- if
-local scriptFile = getMudletHomeDir() .. _sep .. &quot;Bashing&quot; .. _sep ..&quot;script.lua&quot;
-local versionFile = getMudletHomeDir() .. _sep .. &quot;Bashing&quot; .. _sep ..&quot;version.lua&quot;
+
+local dir = string.gsub(getModulePath("Bashing"), "Bashing.xml", "")
+
+echo(dir)
+
+local scriptFile = dir .. "script.lua"
+local versionFile = dir .. "version.lua"
 dofile(scriptFile)
 keneanung.bashing.version = dofile(versionFile)
 </script>
-                    <eventHandlerList/>
-                </Script>
-                <Script isActive="yes" isFolder="no">
-                    <name>Help</name>
-                    <packageName></packageName>
-                    <script>-------------------------------------------------
+					<eventHandlerList />
+				</Script>
+				<Script isActive="yes" isFolder="no">
+					<name>Help</name>
+					<packageName></packageName>
+					<script>-------------------------------------------------
 --         Put your Lua functions here.        --
 --                                             --
 -- Note that you can also use external Scripts --
@@ -363,163 +446,163 @@ Whenever you get into a room, it tries to order the things in the room by that p
 
 New possible targets are added by killing them once.
 
-Use &quot;kconfig bashing&quot; to toggle the script on and off.
+Use "kconfig bashing" to toggle the script on and off.
 
-&quot;kconfig bashing prios&quot; shows the list of known areas.
+"kconfig bashing prios" shows the list of known areas.
 
-&quot;kconfig bashing prios &lt;area name&gt;&quot; or click on area in the list shows the target prio list and lets you manage it.
+"kconfig bashing prios &lt;area name&gt;" or click on area in the list shows the target prio list and lets you manage it.
 
 The keybinding F2 starts the automatic attacking, F3 lets you flee into the last room you visited. To change the direction
-use &quot;flee &lt;direction&gt;&quot; to set a new direction.
+use "flee &lt;direction&gt;" to set a new direction.
 
 ]]</script>
-                    <eventHandlerList/>
-                </Script>
-                <ScriptGroup isActive="yes" isFolder="yes">
-                    <name>register callbacks</name>
-                    <packageName></packageName>
-                    <script>-------------------------------------------------
+					<eventHandlerList />
+				</Script>
+				<ScriptGroup isActive="yes" isFolder="yes">
+					<name>register callbacks</name>
+					<packageName></packageName>
+					<script>-------------------------------------------------
 --         Put your Lua functions here.        --
 --                                             --
 -- Note that you can also use external Scripts --
 -------------------------------------------------
 </script>
-                    <eventHandlerList/>
-                    <Script isActive="yes" isFolder="no">
-                        <name>keneanung.bashing.vitalsChangeRecord</name>
-                        <packageName></packageName>
-                        <script>--This registers our Char.Vitals callback. Do not remove!</script>
-                        <eventHandlerList>
-                            <string>gmcp.Char.Vitals</string>
-                        </eventHandlerList>
-                    </Script>
-                    <Script isActive="yes" isFolder="no">
-                        <name>keneanung.bashing.roomMessageCallback</name>
-                        <packageName></packageName>
-                        <script>-- This registers our Room.Info callback. Do not remove!</script>
-                        <eventHandlerList>
-                            <string>gmcp.Room.Info</string>
-                        </eventHandlerList>
-                    </Script>
-                    <Script isActive="yes" isFolder="no">
-                        <name>keneanung.bashing.prioListChangedCallback</name>
-                        <packageName></packageName>
-                        <script>-- This registers our targetlist changed callback functions. Do not remove!</script>
-                        <eventHandlerList>
-                            <string>keneanung.bashing.targetList.changed</string>
-                        </eventHandlerList>
-                    </Script>
-                    <Script isActive="yes" isFolder="no">
-                        <name>keneanung.bashing.roomItemCallback</name>
-                        <packageName></packageName>
-                        <script>-- This registers our Char.Items callback functions. Do not remove!
+					<eventHandlerList />
+					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.vitalsChangeRecord</name>
+						<packageName></packageName>
+						<script>--This registers our Char.Vitals callback. Do not remove!</script>
+						<eventHandlerList>
+							<string>gmcp.Char.Vitals</string>
+						</eventHandlerList>
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.roomMessageCallback</name>
+						<packageName></packageName>
+						<script>-- This registers our Room.Info callback. Do not remove!</script>
+						<eventHandlerList>
+							<string>gmcp.Room.Info</string>
+						</eventHandlerList>
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.prioListChangedCallback</name>
+						<packageName></packageName>
+						<script>-- This registers our targetlist changed callback functions. Do not remove!</script>
+						<eventHandlerList>
+							<string>keneanung.bashing.targetList.changed</string>
+						</eventHandlerList>
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.roomItemCallback</name>
+						<packageName></packageName>
+						<script>-- This registers our Char.Items callback functions. Do not remove!
 </script>
-                        <eventHandlerList>
-                            <string>gmcp.Char.Items.Add</string>
-                            <string>gmcp.Char.Items.List</string>
-                            <string>gmcp.Char.Items.Remove</string>
-                        </eventHandlerList>
-                    </Script>
-                    <Script isActive="yes" isFolder="no">
-                        <name>keneanung.bashing.handleSkillList</name>
-                        <packageName></packageName>
-                        <script>--This registers our Char.Skills.List callback. Do not remove!</script>
-                        <eventHandlerList>
-                            <string>gmcp.Char.Skills.List</string>
-                        </eventHandlerList>
-                    </Script>
-                    <Script isActive="yes" isFolder="no">
-                        <name>keneanung.bashing.handleSkillInfo</name>
-                        <packageName></packageName>
-                        <script>--This registers our Char.Skills.Info callback. Do not remove!</script>
-                        <eventHandlerList>
-                            <string>gmcp.Char.Skills.Info</string>
-                        </eventHandlerList>
-                    </Script>
-                    <Script isActive="yes" isFolder="no">
-                        <name>keneanung.bashing.buttonActionsCallback</name>
-                        <packageName></packageName>
-                        <script>--This registers our IRE.Display.ButtonActions callback. Do not remove!</script>
-                        <eventHandlerList>
-                            <string>gmcp.IRE.Display.ButtonActions</string>
-                        </eventHandlerList>
-                    </Script>
-                    <Script isActive="yes" isFolder="no">
-                        <name>keneanung.bashing.charStatusCallback</name>
-                        <packageName></packageName>
-                        <script>--This registers our Char.Status callback. Do not remove!</script>
-                        <eventHandlerList>
-                            <string>gmcp.Char.Status</string>
-                        </eventHandlerList>
-                    </Script>
-                    <Script isActive="yes" isFolder="no">
-                        <name>keneanung.bashing.save</name>
-                        <packageName></packageName>
-                        <script>--This registers our sysExitEvent callback. Do not remove!</script>
-                        <eventHandlerList>
-                            <string>sysExitEvent</string>
-                        </eventHandlerList>
-                    </Script>
-                    <Script isActive="yes" isFolder="no">
-                        <name>keneanung.bashing.sysDataSendRequestCallback</name>
-                        <packageName></packageName>
-                        <script>--This registers our sysDataSendRequest callback. Do not remove!</script>
-                        <eventHandlerList>
-                            <string>sysDataSendRequest</string>
-                        </eventHandlerList>
-                    </Script>
-                    <Script isActive="yes" isFolder="no">
-                        <name>keneanung.bashing.afflictionCallback</name>
-                        <packageName></packageName>
-                        <script>-------------------------------------------------
+						<eventHandlerList>
+							<string>gmcp.Char.Items.Add</string>
+							<string>gmcp.Char.Items.List</string>
+							<string>gmcp.Char.Items.Remove</string>
+						</eventHandlerList>
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.handleSkillList</name>
+						<packageName></packageName>
+						<script>--This registers our Char.Skills.List callback. Do not remove!</script>
+						<eventHandlerList>
+							<string>gmcp.Char.Skills.List</string>
+						</eventHandlerList>
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.handleSkillInfo</name>
+						<packageName></packageName>
+						<script>--This registers our Char.Skills.Info callback. Do not remove!</script>
+						<eventHandlerList>
+							<string>gmcp.Char.Skills.Info</string>
+						</eventHandlerList>
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.buttonActionsCallback</name>
+						<packageName></packageName>
+						<script>--This registers our IRE.Display.ButtonActions callback. Do not remove!</script>
+						<eventHandlerList>
+							<string>gmcp.IRE.Display.ButtonActions</string>
+						</eventHandlerList>
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.charStatusCallback</name>
+						<packageName></packageName>
+						<script>--This registers our Char.Status callback. Do not remove!</script>
+						<eventHandlerList>
+							<string>gmcp.Char.Status</string>
+						</eventHandlerList>
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.save</name>
+						<packageName></packageName>
+						<script>--This registers our sysExitEvent callback. Do not remove!</script>
+						<eventHandlerList>
+							<string>sysExitEvent</string>
+						</eventHandlerList>
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.sysDataSendRequestCallback</name>
+						<packageName></packageName>
+						<script>--This registers our sysDataSendRequest callback. Do not remove!</script>
+						<eventHandlerList>
+							<string>sysDataSendRequest</string>
+						</eventHandlerList>
+					</Script>
+					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.afflictionCallback</name>
+						<packageName></packageName>
+						<script>-------------------------------------------------
 --         Put your Lua functions here.        --
 --                                             --
 -- Note that you can also use external Scripts --
 -------------------------------------------------
 </script>
-                        <eventHandlerList>
-                            <string>gmcp.Char.Afflictions</string>
-                        </eventHandlerList>
-                    </Script>
-                </ScriptGroup>
-            </ScriptGroup>
-        </ScriptGroup>
-    </ScriptPackage>
-    <KeyPackage>
-        <KeyGroup isActive="yes" isFolder="yes">
-            <name>keneanung</name>
-            <packageName></packageName>
-            <script></script>
-            <command></command>
-            <keyCode>-1</keyCode>
-            <keyModifier>-1</keyModifier>
-            <KeyGroup isActive="yes" isFolder="yes">
-                <name>bashing</name>
-                <packageName></packageName>
-                <script></script>
-                <command></command>
-                <keyCode>-1</keyCode>
-                <keyModifier>-1</keyModifier>
-                <Key isActive="yes" isFolder="no">
-                    <name>Start the killing spree</name>
-                    <packageName></packageName>
-                    <script>keneanung.bashing.attackButton()</script>
-                    <command></command>
-                    <keyCode>16777265</keyCode>
-                    <keyModifier>0</keyModifier>
-                </Key>
-                <Key isActive="yes" isFolder="no">
-                    <name>flee</name>
-                    <packageName></packageName>
-                    <script>keneanung.bashing.flee()</script>
-                    <command></command>
-                    <keyCode>16777266</keyCode>
-                    <keyModifier>0</keyModifier>
-                </Key>
-            </KeyGroup>
-        </KeyGroup>
-    </KeyPackage>
-    <HelpPackage>
-        <helpURL></helpURL>
-    </HelpPackage>
+						<eventHandlerList>
+							<string>gmcp.Char.Afflictions</string>
+						</eventHandlerList>
+					</Script>
+				</ScriptGroup>
+			</ScriptGroup>
+		</ScriptGroup>
+	</ScriptPackage>
+	<KeyPackage>
+		<KeyGroup isActive="yes" isFolder="yes">
+			<name>keneanung</name>
+			<packageName></packageName>
+			<script></script>
+			<command></command>
+			<keyCode>-1</keyCode>
+			<keyModifier>0</keyModifier>
+			<KeyGroup isActive="yes" isFolder="yes">
+				<name>bashing</name>
+				<packageName></packageName>
+				<script></script>
+				<command></command>
+				<keyCode>-1</keyCode>
+				<keyModifier>0</keyModifier>
+				<Key isActive="yes" isFolder="no">
+					<name>Start the killing spree</name>
+					<packageName></packageName>
+					<script>keneanung.bashing.attackButton()</script>
+					<command></command>
+					<keyCode>16777265</keyCode>
+					<keyModifier>0</keyModifier>
+				</Key>
+				<Key isActive="yes" isFolder="no">
+					<name>flee</name>
+					<packageName></packageName>
+					<script>keneanung.bashing.flee()</script>
+					<command></command>
+					<keyCode>16777266</keyCode>
+					<keyModifier>0</keyModifier>
+				</Key>
+			</KeyGroup>
+		</KeyGroup>
+	</KeyPackage>
+	<HelpPackage>
+		<helpURL></helpURL>
+	</HelpPackage>
 </MudletPackage>
