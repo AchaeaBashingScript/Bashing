@@ -176,7 +176,7 @@ end</script>
 						<colorTriggerFgColor>#000000</colorTriggerFgColor>
 						<colorTriggerBgColor>#000000</colorTriggerBgColor>
 						<regexCodeList>
-							<string>^\D+\d+\s+(\D+)$</string>
+							<string>^\D+\d+\s+([^0-9\n]+)$</string>
 						</regexCodeList>
 						<regexCodePropertyList>
 							<integer>1</integer>
