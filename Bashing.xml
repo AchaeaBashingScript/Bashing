@@ -425,8 +425,6 @@ else -- developer way
   dir = string.gsub(mod, "Bashing.xml", "")
 end
 
-echo(dir)
-
 local scriptFile = dir .. "script.lua"
 local versionFile = dir .. "version.lua"
 dofile(scriptFile)
