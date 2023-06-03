@@ -420,7 +420,7 @@ end -- if
 local mod = getModulePath("Bashing")
 local dir
 if not mod or mod:ends('mpackage') then -- either package or installed via mpackage
-  dir = getMudletHomeDir() .. 'Bashing' .. _sep
+  dir = getMudletHomeDir() .. _sep .. 'Bashing' .. _sep
 else -- developer way
   dir = string.gsub(mod, "Bashing.xml", "")
 end
