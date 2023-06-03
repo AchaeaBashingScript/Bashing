@@ -417,14 +417,18 @@ else
 	_sep = "\\" 
 end -- if
 
-local dir = string.gsub(getModulePath("Bashing"), "Bashing.xml", "")
-
-echo(dir)
+local mod = getModulePath("Bashing")
+local dir
+if not mod or mod:ends('mpackage') then -- either package or installed via mpackage
+  dir = getMudletHomeDir() .. _sep .. 'Bashing' .. _sep
+else -- developer way
+  dir = string.gsub(mod, "Bashing.xml", "")
+end
 
 local scriptFile = dir .. "script.lua"
 local versionFile = dir .. "version.lua"
 dofile(scriptFile)
-keneanung.bashing.version = dofile(versionFile)
+keneanung.bashing.version = io.exists(versionFile) and dofile(versionFile) or 'dev' -- version file does not exist for developer installs
 </script>
 					<eventHandlerList />
 				</Script>
