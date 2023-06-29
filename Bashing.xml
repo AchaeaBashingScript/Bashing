@@ -377,7 +377,8 @@ disableAlias("import from Guhem")</script>
 				</Alias>
 				<Alias isActive="yes" isFolder="no">
 					<name>Check IH</name>
-					<script>if not keneanung.bashing.configuration.enabled then return end
+					<script>send("ih")
+if not keneanung.bashing.configuration.enabled then return end
 
 keneanung.bashing.trackih = true</script>
 					<command></command>
