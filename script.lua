@@ -1199,7 +1199,7 @@ keneanung.bashing.sysDataSendRequestCallback = function(_, data)
     sendGMCP('Core.Supports.Add ["IRE.Display 3"]')
   end
 
-  if lowerData:starts("ih") and keneanung.bashing.configuration.enabled then
+  if lowerData == "ih" and keneanung.bashing.configuration.enabled then
     keneanung.bashing.trackih = true
   end
 end
