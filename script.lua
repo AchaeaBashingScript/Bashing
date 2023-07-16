@@ -1199,7 +1199,7 @@ keneanung.bashing.sysDataSendRequestCallback = function(_, data)
     sendGMCP('Core.Supports.Add ["IRE.Display 3"]')
   end
 
-  if lowerData == "ih" and keneanung.bashing.configuration.enabled then
+  if (lowerData == "ih" or lowerData:starts("ih ")) and keneanung.bashing.configuration.enabled then
     keneanung.bashing.trackih = true
   end
 end
@@ -1210,7 +1210,6 @@ keneanung.bashing.emitEventsIfChanged = function( before, after)
     if before[1] ~= after[1] then
       raiseEvent("keneanung.bashing.targetList.firstChanged", after[1])
     end
-
   end
 end
 
