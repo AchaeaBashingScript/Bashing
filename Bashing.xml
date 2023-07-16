@@ -375,19 +375,6 @@ disableAlias("import from Guhem")</script>
 					<packageName></packageName>
 					<regex>^kconfig bashing import$</regex>
 				</Alias>
-				<Alias isActive="yes" isFolder="no">
-					<name>Check IH</name>
-					<script>if not svo then
-  send("ih")
-end
-
-if not keneanung.bashing.configuration.enabled then return end
-
-keneanung.bashing.trackih = true</script>
-					<command></command>
-					<packageName></packageName>
-					<regex>^ih$</regex>
-				</Alias>
 			</AliasGroup>
 		</AliasGroup>
 	</AliasPackage>
