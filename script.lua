@@ -1873,7 +1873,7 @@ keneanung.bashing.handleSkillInfo = function()
       battlerageSkills[skillInfo.skill] = rageObject
       battlerageSkills[#battlerageSkills + 1] = rageObject
       debugMessage("added new battlerage skill complete list is here ", battlerageSkills)
-      if #battlerageSkills == 6 then
+      if #battlerageSkills == 7 then
         sortDepthswalkerBattlerage()
         sortPariahBattlerage()
         sortPsionBattlerage()
