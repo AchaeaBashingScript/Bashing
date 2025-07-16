@@ -79,6 +79,7 @@ local denizenCache = {}
 
 local waitingForManualTargetTimer
 local waitingForManualTarget = false
+local EXPECTED_BATTLERAGE_COUNT = 7
 
 keneanung = keneanung or {}
 keneanung.bashing = {}
@@ -148,8 +149,13 @@ end
 
 local knownBattlerageSkillList = function()
   if #requestSkillDetails == 0 then
-    return battlerageSkills[1].name .. " " .. battlerageSkills[2].name .. " " .. battlerageSkills[3].name .. " ".. battlerageSkills[4].name .. " ".. battlerageSkills[5].name .. " ".. battlerageSkills[6].name
+    local names = {}
+    for i, skill in ipairs(battlerageSkills) do
+      names[#names+1] = skill.name
+    end
+    return table.concat(names, " ")
   end
+
   return("processing... try doing some things!")
 end
 
@@ -163,7 +169,7 @@ local sortDepthswalkerBattlerage = function()
 
   debugMessage("sorting brage for walkers", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Depthswalker" or #battlerageSkills ~= 6 then return end
+  if class ~= "Depthswalker" or #battlerageSkills ~= EXPECTED_BATTLERAGE_COUNT then return end
   battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["curse"], battlerageSkills["nakail"], battlerageSkills["lash"]
 
   battlerageSkills["curse"].affliction = "aeon"
@@ -181,7 +187,7 @@ local sortPariahBattlerage = function()
 
   debugMessage("sorting brage for pariah", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Pariah" or #battlerageSkills ~= 6 then return end
+  if class ~= "Pariah" or #battlerageSkills ~= EXPECTED_BATTLERAGE_COUNT then return end
   battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["symphony"], battlerageSkills["scour"], battlerageSkills["feast"]
 
   battlerageSkills["symphony"].affliction = "fear"
@@ -202,7 +208,7 @@ local sortPsionBattlerage = function()
 
   debugMessage("sorting brage for psion", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Psion" or #battlerageSkills ~= 6 then return end
+  if class ~= "Psion" or #battlerageSkills ~= EXPECTED_BATTLERAGE_COUNT then return end
   battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["regrowth"], battlerageSkills["pulverise"], battlerageSkills["devastate"]
 
   battlerageSkills["terror"].affliction = "fear"
@@ -215,7 +221,7 @@ local sortUnnamableBattlerage = function()
 
   debugMessage("sorting brage for unnamable", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Unnamable" or #battlerageSkills ~= 6 then return end
+  if class ~= "Unnamable" or #battlerageSkills ~= EXPECTED_BATTLERAGE_COUNT then return end
   battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["dread"], battlerageSkills["sunder"], battlerageSkills["destroy"]
 
   battlerageSkills["dread"].affliction = "fear"
@@ -227,6 +233,14 @@ local sortUnnamableBattlerage = function()
   }
 
   debugMessage("sorted brage for unnamable", {battlerageSkills = battlerageSkills})
+end
+
+local sortProvokeBattlerage = function()
+  if battlerageSkills[1] and battlerageSkills[1].name:lower() == "provoke" then
+    local provoke = table.remove(battlerageSkills, 1)
+    table.insert(battlerageSkills, provoke)
+    debugMessage("Moved provoke to end of battlerageSkills", battlerageSkills)
+  end
 end
 
 local requestAllSkillDetails = function()
@@ -1860,13 +1874,14 @@ keneanung.bashing.handleSkillInfo = function()
       battlerageSkills[skillInfo.skill] = rageObject
       battlerageSkills[#battlerageSkills + 1] = rageObject
       debugMessage("added new battlerage skill complete list is here ", battlerageSkills)
-      if #battlerageSkills == 6 then
-        sortDepthswalkerBattlerage()
-        sortPariahBattlerage()
-        sortPsionBattlerage()
-        sortUnnamableBattlerage()
-        kecho("Finished parsing battlerage skills.\n")
-      end
+		 if #battlerageSkills >= EXPECTED_BATTLERAGE_COUNT then
+		  sortProvokeBattlerage() -- Must go first to fix ordering
+		  sortDepthswalkerBattlerage()
+		  sortPariahBattlerage()
+		  sortPsionBattlerage()
+		  sortUnnamableBattlerage()
+		  kecho("Finished parsing battlerage skills.\n")
+		end
     end
   else
     debugMessage("got double battlerage skill")
