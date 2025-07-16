@@ -79,6 +79,7 @@ local denizenCache = {}
 
 local waitingForManualTargetTimer
 local waitingForManualTarget = false
+local EXPECTED_BATTLERAGE_COUNT = 7
 
 keneanung = keneanung or {}
 keneanung.bashing = {}
@@ -186,7 +187,7 @@ local sortPariahBattlerage = function()
 
   debugMessage("sorting brage for pariah", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Pariah" or #battlerageSkills ~= 6 then return end
+  if class ~= "Pariah" or #battlerageSkills ~= EXPECTED_BATTLERAGE_COUNT then return end
   battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["symphony"], battlerageSkills["scour"], battlerageSkills["feast"]
 
   battlerageSkills["symphony"].affliction = "fear"
@@ -207,7 +208,7 @@ local sortPsionBattlerage = function()
 
   debugMessage("sorting brage for psion", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Psion" or #battlerageSkills ~= 6 then return end
+  if class ~= "Psion" or #battlerageSkills ~= EXPECTED_BATTLERAGE_COUNT then return end
   battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["regrowth"], battlerageSkills["pulverise"], battlerageSkills["devastate"]
 
   battlerageSkills["terror"].affliction = "fear"
@@ -220,7 +221,7 @@ local sortUnnamableBattlerage = function()
 
   debugMessage("sorting brage for unnamable", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Unnamable" or #battlerageSkills ~= 6 then return end
+  if class ~= "Unnamable" or #battlerageSkills ~= EXPECTED_BATTLERAGE_COUNT then return end
   battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["dread"], battlerageSkills["sunder"], battlerageSkills["destroy"]
 
   battlerageSkills["dread"].affliction = "fear"
@@ -1873,14 +1874,14 @@ keneanung.bashing.handleSkillInfo = function()
       battlerageSkills[skillInfo.skill] = rageObject
       battlerageSkills[#battlerageSkills + 1] = rageObject
       debugMessage("added new battlerage skill complete list is here ", battlerageSkills)
-      if #battlerageSkills == 7 then
-        sortDepthswalkerBattlerage()
-        sortPariahBattlerage()
-        sortPsionBattlerage()
-        sortUnnamableBattlerage()
-		sortProvokeBattlerage()
-        kecho("Finished parsing battlerage skills.\n")
-      end
+		 if #battlerageSkills >= EXPECTED_BATTLERAGE_COUNT then
+		  sortProvokeBattlerage() -- Must go first to fix ordering
+		  sortDepthswalkerBattlerage()
+		  sortPariahBattlerage()
+		  sortPsionBattlerage()
+		  sortUnnamableBattlerage()
+		  kecho("Finished parsing battlerage skills.\n")
+		end
     end
   else
     debugMessage("got double battlerage skill")
