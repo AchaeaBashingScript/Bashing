@@ -169,7 +169,7 @@ local sortDepthswalkerBattlerage = function()
 
   debugMessage("sorting brage for walkers", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Depthswalker" or #battlerageSkills ~= 6 then return end
+  if class ~= "Depthswalker" or #battlerageSkills ~= EXPECTED_BATTLERAGE_COUNT then return end
   battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["curse"], battlerageSkills["nakail"], battlerageSkills["lash"]
 
   battlerageSkills["curse"].affliction = "aeon"
