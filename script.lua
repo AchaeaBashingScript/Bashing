@@ -148,7 +148,11 @@ end
 
 local knownBattlerageSkillList = function()
   if #requestSkillDetails == 0 then
-    return battlerageSkills[1].name .. " " .. battlerageSkills[2].name .. " " .. battlerageSkills[3].name .. " ".. battlerageSkills[4].name .. " ".. battlerageSkills[5].name .. " ".. battlerageSkills[6].name
+    local names = {}
+    for i, skill in ipairs(battlerageSkills) do
+      names[#names+1] = skill.name
+    end
+    return table.concat(names, " ")
   end
   return("processing... try doing some things!")
 end
@@ -163,8 +167,8 @@ local sortDepthswalkerBattlerage = function()
 
   debugMessage("sorting brage for walkers", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Depthswalker" or #battlerageSkills ~= 6 then return end
-  battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["curse"], battlerageSkills["nakail"], battlerageSkills["lash"]
+  if class ~= "Depthswalker" or #battlerageSkills ~= 7 then return end
+  battlerageSkills[3], battlerageSkills[4], battlerageSkills[5] = battlerageSkills["curse"], battlerageSkills["nakail"], battlerageSkills["lash"]
 
   battlerageSkills["curse"].affliction = "aeon"
   battlerageSkills["boinad"].affliction = "charm"
@@ -181,8 +185,8 @@ local sortPariahBattlerage = function()
 
   debugMessage("sorting brage for pariah", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Pariah" or #battlerageSkills ~= 6 then return end
-  battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["symphony"], battlerageSkills["scour"], battlerageSkills["feast"]
+  if class ~= "Pariah" or #battlerageSkills ~= 7 then return end
+  battlerageSkills[3], battlerageSkills[4], battlerageSkills[5] = battlerageSkills["symphony"], battlerageSkills["scour"], battlerageSkills["feast"]
 
   battlerageSkills["symphony"].affliction = "fear"
   battlerageSkills["wail"].affliction = "clumsiness"
@@ -202,8 +206,8 @@ local sortPsionBattlerage = function()
 
   debugMessage("sorting brage for psion", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Psion" or #battlerageSkills ~= 6 then return end
-  battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["regrowth"], battlerageSkills["pulverise"], battlerageSkills["devastate"]
+  if class ~= "Psion" or #battlerageSkills ~= 7 then return end
+  battlerageSkills[3], battlerageSkills[4], battlerageSkills[5] = battlerageSkills["regrowth"], battlerageSkills["pulverise"], battlerageSkills["devastate"]
 
   battlerageSkills["terror"].affliction = "fear"
 
@@ -215,8 +219,8 @@ local sortUnnamableBattlerage = function()
 
   debugMessage("sorting brage for unnamable", {battlerageSkills = battlerageSkills})
 
-  if class ~= "Unnamable" or #battlerageSkills ~= 6 then return end
-  battlerageSkills[2], battlerageSkills[3], battlerageSkills[4] = battlerageSkills["dread"], battlerageSkills["sunder"], battlerageSkills["destroy"]
+  if class ~= "Unnamable" or #battlerageSkills ~= 7 then return end
+  battlerageSkills[3], battlerageSkills[4], battlerageSkills[5] = battlerageSkills["dread"], battlerageSkills["sunder"], battlerageSkills["destroy"]
 
   battlerageSkills["dread"].affliction = "fear"
   battlerageSkills["entropy"].affliction = "aeon"
@@ -557,8 +561,8 @@ end
 
 local function rageRazeFunction()
   if keneanung.bashing.shield then
-    if keneanung.bashing.configuration[class].autorageraze and keneanung.bashing.rageAvailable(3) then
-      send(battlerageSkills[3].command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
+    if keneanung.bashing.configuration[class].autorageraze and keneanung.bashing.rageAvailable(4) then
+      send(battlerageSkills[4].command:format(keneanung.bashing.targetList[keneanung.bashing.attacking].id), false)
       keneanung.bashing.shield = false
       local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
       if system.brokeShield then
@@ -587,14 +591,14 @@ keneanung.bashing.battlerage.simple = function(rage)
   )
 
   if not rageRazeFunction() then
-    if keneanung.bashing.rageAvailable(4) then
-      sendRageAttack(battlerageSkills[4].command)
+    if keneanung.bashing.rageAvailable(5) then
+      sendRageAttack(battlerageSkills[5].command)
     elseif
-      keneanung.bashing.rageAvailable(1) and
-        ((not battlerageSkills[4].skillKnown) or
-        rage >= (battlerageSkills[1].rage + battlerageSkills[4].rage))
+      keneanung.bashing.rageAvailable(2) and
+        ((not battlerageSkills[5].skillKnown) or
+        rage >= (battlerageSkills[2].rage + battlerageSkills[5].rage))
     then
-      sendRageAttack(battlerageSkills[1].command)
+      sendRageAttack(battlerageSkills[2].command)
     end
   end
 end
@@ -612,10 +616,10 @@ keneanung.bashing.battlerage.simplereverse = function(rage)
   )
 
   if not rageRazeFunction() then
-    if keneanung.bashing.rageAvailable(1) then
-      sendRageAttack(battlerageSkills[1].command)
-    elseif keneanung.bashing.rageAvailable(4) then
-      sendRageAttack(battlerageSkills[4].command)
+    if keneanung.bashing.rageAvailable(2) then
+      sendRageAttack(battlerageSkills[2].command)
+    elseif keneanung.bashing.rageAvailable(5) then
+      sendRageAttack(battlerageSkills[5].command)
     end
   end
 end
