@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Get branch names.
         id: branch-names
-        uses: tj-actions/branch-names@v7.0.7
+        uses: tj-actions/branch-names@v9.0.0
       # check code out
       - uses: actions/checkout@v2
       
