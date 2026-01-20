@@ -81,6 +81,7 @@ local waitingForManualTargetTimer
 local waitingForManualTarget = false
 local EXPECTED_BATTLERAGE_COUNT = 7
 
+---@diagnostic disable-next-line: lowercase-global
 keneanung = keneanung or {}
 keneanung.bashing = {}
 keneanung.bashing.availableTargets = {}
@@ -802,22 +803,27 @@ keneanung.bashing.deleteByName = function(area, name)
 end
 
 keneanung.bashing.save = function()
-  if string.char(getMudletHomeDir():byte()) == "/" then
+  local _sep
+  local mudletHomeDir = getMudletHomeDir()
+  if string.char(mudletHomeDir:byte()) == "/" then
     _sep = "/"
-    else
+  else
     _sep = "\\"
-   end -- if
-  local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
+  end -- if
+  local savePath = mudletHomeDir .. _sep .. "keneanung_bashing.lua"
   table.save(savePath, keneanung.bashing.configuration)
 
 end -- func
 
 keneanung.bashing.load = function()
-  if string.char(getMudletHomeDir():byte()) == "/"
-   then _sep = "/"
-    else _sep = "\\"
-     end -- if
-  local savePath = getMudletHomeDir() .. _sep .. "keneanung_bashing.lua"
+  local _sep
+  local mudletHomeDir = getMudletHomeDir()
+  if string.char(mudletHomeDir:byte()) == "/" then
+    _sep = "/"
+  else
+    _sep = "\\"
+  end -- if
+  local savePath = mudletHomeDir .. _sep .. "keneanung_bashing.lua"
   if (io.exists(savePath)) then
    table.load(savePath, keneanung.bashing.configuration)
   end -- if
@@ -1437,6 +1443,7 @@ keneanung.bashing.vitalsChangeRecord = function()
   for _, stat in ipairs(gmcp.Char.Vitals.charstats) do
     local rageAmount = stat:match("^Rage: (%d+)$")
     if rageAmount then
+---@diagnostic disable-next-line: cast-local-type rageAmount must be an integer due to the pattern above
       rage = tonumber(rageAmount)
       break
     end
@@ -1643,7 +1650,6 @@ keneanung.bashing.login = function()
   sessionGains.gold = 0
   sessionGains.experience = 0
   lastGoldChange = nil
-  lastXpChange = nil
   lastGold = nil
 end
 
@@ -1924,6 +1930,7 @@ keneanung.bashing.printGains = function(which)
   kecho(string.format("You gained <red>%d<reset> levels, <red>%.1f%%<reset> towards the next level and <red>%d<reset> gold during the period '<red>%s<reset>'.", levels, percent, gainsTable.gold, which))
   if gainsTable.stopwatch then
     local time = getStopWatchTime(gainsTable.stopwatch)
+---@diagnostic disable-next-line: undefined-field math.mod does exist
     kecho(string.format("The period was <red>%d<reset>h <red>%d<reset>min and <red>%.3f<reset> sec long.", math.floor(time / 3600), math.floor( math.mod(time, 3600) / 60), math.mod(time, 60)))
   end
 end
@@ -2024,7 +2031,7 @@ keneanung.bashing.export = function()
   local directory = invokeFileDialog(false, "Which file do you want to export your priorities to?")
   if directory ~= "" then -- If a folder was provided
     table.save(directory .. "/Bashing-Export.lua", keneanung.bashing.configuration.priorities) -- Exporting to folder specified
-    kecho("Have exported priorities to <red>" .. path .. "/Bashing-Export.lua<reset>") -- Messaging user
+    kecho("Have exported priorities to <red>" .. directory .. "/Bashing-Export.lua<reset>") -- Messaging user
   end
 end
 
