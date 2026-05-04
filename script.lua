@@ -80,6 +80,7 @@ local denizenCache = {}
 local waitingForManualTargetTimer
 local waitingForManualTarget = false
 local EXPECTED_BATTLERAGE_COUNT = 7
+local BALANCE_ATTACK_RESET_DELAYS = { 0, 0.1, 0.2, 0.5 }
 
 ---@diagnostic disable-next-line: lowercase-global
 keneanung = keneanung or {}
@@ -91,6 +92,7 @@ keneanung.bashing.targetList = {}
 keneanung.bashing.systems = {}
 keneanung.bashing.battlerage = {}
 keneanung.bashing.room = {}
+keneanung.bashing.inventory = {}
 keneanung.bashing.pausingAfflictions = {}
 keneanung.bashing.trackih = false
 
@@ -101,6 +103,15 @@ keneanung.bashing.healing = 0
 keneanung.bashing.lastHealth = 0
 keneanung.bashing.usedRageAttack = false
 keneanung.bashing.usedBalanceAttack = false
+keneanung.bashing.predictedBrokenLeft = false
+keneanung.bashing.predictedBrokenRight = false
+keneanung.bashing.pendingBrokenPredictionLeft = nil
+keneanung.bashing.pendingBrokenPredictionRight = nil
+keneanung.bashing.suppressWieldTrackingLeft = nil
+keneanung.bashing.suppressWieldTrackingRight = nil
+keneanung.bashing.balanceAttackRetryAttempt = 0
+keneanung.bashing.balanceAttackResetTimer = nil
+keneanung.bashing.balanceAttackRetryTimer = nil
 
 keneanung.bashing.configuration.enabled = false
 keneanung.bashing.configuration.warning = 500
@@ -119,6 +130,86 @@ local debugMessage = function(message, content)
   if content then
     display(content)
   end
+end
+
+local wieldDebugMessage = function(message)
+  echo("[wield tracker] " .. message .. "\n")
+end
+
+local cancelBalanceAttackReset
+local cancelBalanceAttackRetry
+local markBalanceAttackUsed
+local noteBalanceAttackRetry
+local clearBrokenPrediction
+local scheduleBrokenPrediction
+local restoreTrackedWieldedItems
+
+cancelBalanceAttackRetry = function()
+  if keneanung.bashing.balanceAttackRetryTimer then
+    killTimer(keneanung.bashing.balanceAttackRetryTimer)
+    keneanung.bashing.balanceAttackRetryTimer = nil
+  end
+end
+
+cancelBalanceAttackReset = function()
+  if keneanung.bashing.balanceAttackResetTimer then
+    killTimer(keneanung.bashing.balanceAttackResetTimer)
+    keneanung.bashing.balanceAttackResetTimer = nil
+  end
+  cancelBalanceAttackRetry()
+  keneanung.bashing.usedBalanceAttack = false
+  keneanung.bashing.balanceAttackRetryAttempt = 0
+end
+
+markBalanceAttackUsed = function()
+  local delayIndex = math.min(keneanung.bashing.balanceAttackRetryAttempt + 1, #BALANCE_ATTACK_RESET_DELAYS)
+  local delay = BALANCE_ATTACK_RESET_DELAYS[delayIndex]
+
+  if keneanung.bashing.balanceAttackResetTimer then
+    killTimer(keneanung.bashing.balanceAttackResetTimer)
+  end
+
+  keneanung.bashing.usedBalanceAttack = true
+  keneanung.bashing.balanceAttackResetTimer = tempTimer(delay, function()
+    keneanung.bashing.balanceAttackResetTimer = nil
+    keneanung.bashing.usedBalanceAttack = false
+    keneanung.bashing.balanceAttackRetryAttempt = 0
+  end)
+end
+
+noteBalanceAttackRetry = function()
+  if not keneanung.bashing.usedBalanceAttack then
+    return false
+  end
+
+  keneanung.bashing.balanceAttackRetryAttempt = math.min(
+    keneanung.bashing.balanceAttackRetryAttempt + 1,
+    #BALANCE_ATTACK_RESET_DELAYS - 1
+  )
+  markBalanceAttackUsed()
+  return true
+end
+
+local scheduleBalanceAttackRetry = function(callback)
+  if not callback then
+    return false
+  end
+
+  local delayIndex = math.min(keneanung.bashing.balanceAttackRetryAttempt + 1, #BALANCE_ATTACK_RESET_DELAYS)
+  local delay = BALANCE_ATTACK_RESET_DELAYS[delayIndex]
+
+  cancelBalanceAttackRetry()
+  keneanung.bashing.balanceAttackRetryTimer = tempTimer(delay, function()
+    keneanung.bashing.balanceAttackRetryTimer = nil
+
+    if keneanung.bashing.attacking == 0 or not keneanung.bashing.configuration.enabled then
+      return
+    end
+
+    callback()
+  end)
+
+  return true
 end
 
 local getTargetPrio = function(name)
@@ -278,6 +369,7 @@ local startAttack = function()
 end
 
 local stopAttack = function()
+  cancelBalanceAttackReset()
   local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
         system.stopAttack()
   gmod.disableModule("keneanung.bashing", "IRE.Display")
@@ -401,6 +493,15 @@ keneanung.bashing.systems.wundersys = {
       [[
       local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
       keneanung.bashing.attacks = keneanung.bashing.attacks + 1
+      -- If GMCP HP is missing (e.g. blackout), add a "neutral" damage
+      -- equal to the previous average so the average remains stable.
+      if not (gmcp and gmcp.Char and gmcp.Char.Vitals and gmcp.Char.Vitals.hp) then
+        local prevAttacks = math.max(keneanung.bashing.attacks - 1, 0)
+        if prevAttacks > 0 then
+          local prevAvg = keneanung.bashing.damage / prevAttacks
+          keneanung.bashing.damage = keneanung.bashing.damage + prevAvg
+        end
+      end
       local avgDmg = keneanung.bashing.damage / keneanung.bashing.attacks
       local avgHeal = keneanung.bashing.healing / keneanung.bashing.attacks
 
@@ -410,19 +511,7 @@ keneanung.bashing.systems.wundersys = {
 
       local warnat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.warning)
 
-      if estimatedDmg > gmcp.Char.Vitals.hp - fleeat and keneanung.bashing.configuration.autoflee then
-
-        system.notifyFlee(estimatedDmg)
-
-        system.flee()
-
-      else
-        if estimatedDmg > gmcp.Char.Vitals.hp - warnat then
-
-          system.warnFlee(estimatedDmg)
-
-        end
-      end
+      local fled = keneanung.bashing.evaluateFlee(estimatedDmg, system)
       ]])
     disableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
     registerAnonymousEventHandler("do action run", "keneanung.bashing.systems.wundersys.doActionRun")
@@ -468,13 +557,17 @@ keneanung.bashing.systems.none = {
     if keneanung.bashing.attacking > 0 then
 
       if keneanung.bashing.usedBalanceAttack and not keneanung.bashing.systems.none.firstAttack then
+        noteBalanceAttackRetry()
+        scheduleBalanceAttackRetry(keneanung.bashing.systems.none.doAttack)
         return true
       end
 
+      cancelBalanceAttackRetry()
       enableTrigger(keneanung.bashing.systems.none.queueTrigger)
-      send("queue add eqbal keneanungki", false)
+      send("queue add freestand keneanungki", false)
 
-      timeframe("keneanung.bashing.usedBalanceAttack", {0, true}, {0.5, false})
+      keneanung.bashing.balanceAttackRetryAttempt = 0
+      markBalanceAttackUsed()
     end
   end,
 
@@ -486,7 +579,7 @@ keneanung.bashing.systems.none = {
   flee = function()
     raiseEvent("keneanung.bashing.fleeing")
     keneanung.bashing.systems.none.stopAttack()
-    send("queue prepend eqbal " .. keneanung.bashing.fleeDirection)
+    send("queue prepend freestand " .. keneanung.bashing.fleeDirection)
   end,
 
   warnFlee = function(avg)
@@ -501,20 +594,28 @@ keneanung.bashing.systems.none = {
     keneanung.bashing.shield = true
     if keneanung.bashing.configuration[class].autoraze then
       local command
-      send("queue prepend eqbal keneanungra", false)
+      send("queue prepend freestand keneanungra", false)
     end
   end,
 
   brokeShield = function()
     send("cq all")
-    send("queue add eqbal keneanungki", false)
+    send("queue add freestand keneanungki", false)
   end,
 
   setup = function()
-    keneanung.bashing.systems.none.queueTrigger = tempRegexTrigger("^\\[System\\]: Running queued eb command: (KENEANUNGKI|KENEANUNGRA)$",
+    keneanung.bashing.systems.none.queueTrigger = tempRegexTrigger("^\\[System\\]: Running queued freestand command: (KENEANUNGKI|KENEANUNGRA)$",
       [[
       local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
       keneanung.bashing.attacks = keneanung.bashing.attacks + 1
+      -- Neutralize attack when HP is unavailable to avoid lowering the average
+      if not (gmcp and gmcp.Char and gmcp.Char.Vitals and gmcp.Char.Vitals.hp) then
+        local prevAttacks = math.max(keneanung.bashing.attacks - 1, 0)
+        if prevAttacks > 0 then
+          local prevAvg = keneanung.bashing.damage / prevAttacks
+          keneanung.bashing.damage = keneanung.bashing.damage + prevAvg
+        end
+      end
       local avgDmg = keneanung.bashing.damage / keneanung.bashing.attacks
       local avgHeal = keneanung.bashing.healing / keneanung.bashing.attacks
 
@@ -523,19 +624,8 @@ keneanung.bashing.systems.none = {
       local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
 
       local warnat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.warning)
-
-      if estimatedDmg > gmcp.Char.Vitals.hp - fleeat and keneanung.bashing.configuration.autoflee then
-
-        system.notifyFlee(estimatedDmg)
-
-        system.flee()
-
-      else
-        if estimatedDmg > gmcp.Char.Vitals.hp - warnat then
-
-          system.warnFlee(estimatedDmg)
-
-        end
+      local fled = keneanung.bashing.evaluateFlee(estimatedDmg, system)
+      if not fled then
         if matches[2] == "KENEANUNGKI" then
           keneanung.bashing.systems.none.doAttack()
         else
@@ -1019,8 +1109,21 @@ keneanung.bashing.attackButton = function(toggle, echoback)
   if echoback == nil then echoback = true end
   if (keneanung.bashing.attacking == 0 and toggle ~= false) or toggle then
     if keneanung.bashing.setTarget() then
-      startAttack()
-      if echoback then kecho("Nothing will stand in our way.\n") end
+      local beginAttack = function()
+        if keneanung.bashing.attacking == 0 then
+          return
+        end
+
+        keneanung.bashing.recordWieldedItems()
+        startAttack()
+        if echoback then kecho("Nothing will stand in our way.\n") end
+      end
+
+      -- Defer the snapshot one tick so any immediately preceding wield GMCP updates
+      -- have time to update the inventory cache before we record the hands.
+      tempTimer(0, function()
+        beginAttack()
+      end)
     else
       if echoback then kecho("Nothing to target, boss.\n") end
     end
@@ -1057,6 +1160,7 @@ keneanung.bashing.nextAttack = function()
   end
 
   if keneanung.bashing.usedBalanceAttack then
+    noteBalanceAttackRetry()
     return true
   end
 
@@ -1067,35 +1171,29 @@ keneanung.bashing.nextAttack = function()
   local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 
   keneanung.bashing.attacks = keneanung.bashing.attacks + 1
+  -- If HP is missing (blackout) make this attack neutral so average doesn't drop.
+  if not (gmcp and gmcp.Char and gmcp.Char.Vitals and gmcp.Char.Vitals.hp) then
+    local prevAttacks = math.max(keneanung.bashing.attacks - 1, 0)
+    if prevAttacks > 0 then
+      local prevAvg = keneanung.bashing.damage / prevAttacks
+      keneanung.bashing.damage = keneanung.bashing.damage + prevAvg
+    end
+  end
 
   if #keneanung.bashing.targetList > 0 then
     local avg = keneanung.bashing.damage / keneanung.bashing.attacks
 
-    local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
-
-    local warnat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.warning)
-
-    if avg > keneanung.bashing.lastHealth - fleeat and keneanung.bashing.configuration.autoflee then
-
-      system.notifyFlee(avg)
-
-      system.flee()
-
-    else
-      if avg > keneanung.bashing.lastHealth - warnat then
-
-        system.warnFlee(avg)
-
-      end
-
-      local attack = (keneanung.bashing.shield and keneanung.bashing.configuration[class].autoraze) and "keneanungra" or "keneanungki"
-      send(attack, false)
-      keneanung.bashing.shield = false
-      keneanung.bashing.usedBalanceAttack = true
-      tempTimer( 0.5, "keneanung.bashing.usedBalanceAttack = false")
-      return true
-
+    if keneanung.bashing.evaluateFlee(avg, system) then
+      return false
     end
+
+    local attack = (keneanung.bashing.shield and keneanung.bashing.configuration[class].autoraze) and "keneanungra" or "keneanungki"
+    send(attack, false)
+    keneanung.bashing.shield = false
+    keneanung.bashing.balanceAttackRetryAttempt = 0
+    markBalanceAttackUsed()
+    return true
+
   end
 
   keneanung.bashing.clearTarget()
@@ -1200,8 +1298,206 @@ local roomItemCallbackWorker = function(event)
   debugMessage("after", { room=keneanung.bashing.room, targetList=keneanung.bashing.targetList })
 end
 
+local inventoryItemCallbackWorker = function(event)
+  local payload = gmcp.Char.Items[event:match("%w+$")]
+  if not payload or payload.location ~= "inv" then
+    return false
+  end
+
+  local findInventoryIndex = function(itemId)
+    for index, item in ipairs(keneanung.bashing.inventory) do
+      if (item.id * 1) == (itemId * 1) then
+        return index
+      end
+    end
+    return nil
+  end
+
+  local itemHasArm = function(item, arm)
+    if not item or not item.attrib then
+      return false
+    end
+    if arm == "left" then
+      return item.attrib:find("l", 1, true) ~= nil
+    end
+    return item.attrib:find("L", 1, true) ~= nil
+  end
+
+  local isArmBlocked = function(arm)
+    if arm == "left" then
+      return keneanung.bashing.brokenLeft or keneanung.bashing.predictedBrokenLeft
+    end
+    return keneanung.bashing.brokenRight or keneanung.bashing.predictedBrokenRight
+  end
+
+  local isArmSuppressed = function(arm)
+    if arm == "left" then
+      return keneanung.bashing.suppressWieldTrackingLeft ~= nil
+    end
+    return keneanung.bashing.suppressWieldTrackingRight ~= nil
+  end
+
+  local isArmPendingPrediction = function(arm)
+    if arm == "left" then
+      return keneanung.bashing.pendingBrokenPredictionLeft ~= nil
+    end
+    return keneanung.bashing.pendingBrokenPredictionRight ~= nil
+  end
+
+  local itemWasRecordedForArm = function(item, arm)
+    local recorded = keneanung.bashing.wieldedAtAttackStart and keneanung.bashing.wieldedAtAttackStart[arm] or {}
+    for _, recordedItem in ipairs(recorded) do
+      if (recordedItem.id * 1) == (item.id * 1) then
+        return true
+      end
+    end
+    return false
+  end
+
+  local countCurrentWielded = function()
+    local leftCount = 0
+    local rightCount = 0
+    for _, inventoryItem in ipairs(keneanung.bashing.inventory) do
+      if itemHasArm(inventoryItem, "left") then
+        leftCount = leftCount + 1
+      end
+      if itemHasArm(inventoryItem, "right") then
+        rightCount = rightCount + 1
+      end
+    end
+    return leftCount, rightCount
+  end
+
+  local logWieldRelevantInventoryEvent = function(eventName, oldItem, newItem)
+    local oldLeft = itemHasArm(oldItem, "left")
+    local oldRight = itemHasArm(oldItem, "right")
+    local newLeft = itemHasArm(newItem, "left")
+    local newRight = itemHasArm(newItem, "right")
+    local relevant = oldLeft ~= newLeft or oldRight ~= newRight
+
+    if not relevant then
+      return
+    end
+
+    local itemName = (newItem and newItem.name) or (oldItem and oldItem.name) or "unknown"
+    local leftCount, rightCount = countCurrentWielded()
+    wieldDebugMessage(string.format(
+      "flags %s for %s: %s%s -> %s%s totals left=%d right=%d",
+      eventName:match("%w+$"),
+      itemName,
+      oldLeft and "l" or "-",
+      oldRight and "L" or "-",
+      newLeft and "l" or "-",
+      newRight and "L" or "-",
+      leftCount,
+      rightCount
+    ))
+  end
+
+  local maybeReWieldItem = function(oldItem, newItem)
+    if keneanung.bashing.attacking == 0 then
+      return
+    end
+
+    for _, arm in ipairs({"left", "right"}) do
+      if itemHasArm(oldItem, arm) and not itemHasArm(newItem, arm) and itemWasRecordedForArm(oldItem, arm) then
+        if isArmSuppressed(arm) then
+          wieldDebugMessage("ignoring tracked unwield from " .. arm .. " arm during rewield")
+        else
+        local armBroken = isArmBlocked(arm)
+        if armBroken then
+          wieldDebugMessage("tracked item unwielded from " .. arm .. " arm while broken; waiting for cure")
+        else
+          scheduleBrokenPrediction(arm)
+        end
+        end
+      elseif not itemHasArm(oldItem, arm) and itemHasArm(newItem, arm) then
+        if isArmSuppressed(arm) then
+          if arm == "left" then
+            keneanung.bashing.suppressWieldTrackingLeft = nil
+          else
+            keneanung.bashing.suppressWieldTrackingRight = nil
+          end
+        end
+        if isArmBlocked(arm) or isArmPendingPrediction(arm) then
+          wieldDebugMessage("tracked item re-wielded in " .. arm .. " arm; clearing predicted break state")
+          clearBrokenPrediction(arm)
+        end
+      end
+    end
+  end
+
+  if event == "gmcp.Char.Items.List" then
+    keneanung.bashing.inventory = {}
+    for _, item in ipairs(payload.items or {}) do
+      keneanung.bashing.inventory[#keneanung.bashing.inventory + 1] = item
+    end
+  elseif event == "gmcp.Char.Items.Add" then
+    local index = findInventoryIndex(payload.item.id)
+    if index then
+      local oldItem = keneanung.bashing.inventory[index]
+      keneanung.bashing.inventory[index] = payload.item
+      logWieldRelevantInventoryEvent(event, oldItem, payload.item)
+      maybeReWieldItem(oldItem, payload.item)
+    else
+      keneanung.bashing.inventory[#keneanung.bashing.inventory + 1] = payload.item
+      logWieldRelevantInventoryEvent(event, nil, payload.item)
+    end
+  elseif event == "gmcp.Char.Items.Update" then
+    local index = findInventoryIndex(payload.item.id)
+    if index then
+      local oldItem = keneanung.bashing.inventory[index]
+      keneanung.bashing.inventory[index] = payload.item
+      logWieldRelevantInventoryEvent(event, oldItem, payload.item)
+      maybeReWieldItem(oldItem, payload.item)
+    else
+      keneanung.bashing.inventory[#keneanung.bashing.inventory + 1] = payload.item
+      logWieldRelevantInventoryEvent(event, nil, payload.item)
+    end
+  elseif event == "gmcp.Char.Items.Remove" then
+    local index = findInventoryIndex(payload.item.id)
+    if index then
+      local oldItem = keneanung.bashing.inventory[index]
+      maybeReWieldItem(oldItem, payload.item)
+      table.remove(keneanung.bashing.inventory, index)
+      logWieldRelevantInventoryEvent(event, oldItem, payload.item)
+    end
+  end
+
+  if event == "gmcp.Char.Items.List" then
+    for _, arm in ipairs({"left", "right"}) do
+      local missingTrackedItem = false
+      for _, recordedItem in ipairs(keneanung.bashing.wieldedAtAttackStart[arm] or {}) do
+        local foundWielded = false
+        for _, inventoryItem in ipairs(keneanung.bashing.inventory) do
+          if (inventoryItem.id * 1) == (recordedItem.id * 1) and itemHasArm(inventoryItem, arm) then
+            foundWielded = true
+            break
+          end
+        end
+        if not foundWielded then
+          missingTrackedItem = true
+          break
+        end
+      end
+      if missingTrackedItem and keneanung.bashing.attacking > 0 then
+        local armBroken = isArmBlocked(arm)
+        if not armBroken then
+          wieldDebugMessage("tracked item missing from " .. arm .. " arm after inventory refresh; rewielding")
+          keneanung.bashing.reWieldForArm(arm)
+        end
+      end
+    end
+  end
+
+  return true
+end
+
 keneanung.bashing.roomItemCallback = function(event)
-  if event == "gmcp.Char.Items.Add" or event == "gmcp.Char.Items.Remove" then
+  if event == "gmcp.Char.Items.Add" or event == "gmcp.Char.Items.Remove" or event == "gmcp.Char.Items.List" or event == "gmcp.Char.Items.Update" then
+    if inventoryItemCallbackWorker(event) then
+      return
+    end
     roomItemCallbackWorker(event)
   end
 end
@@ -1209,6 +1505,7 @@ end
 keneanung.bashing.sysDataSendRequestCallback = function(_, data)
   debugMessage("data gets sent", {data = data})
   local lowerData = data:lower()
+
   if
     lowerData:starts("class switch") or -- class switch
     lowerData:starts("dragonform") or   -- dragon
@@ -1539,48 +1836,164 @@ local proneAfflictions = {
   "aeon",
 }
 
+-- Deprecated: we no longer pause/unpause the bashing system on afflictions.
+-- Keep no-op functions for compatibility with existing event hooks.
 keneanung.bashing.pauseOnAffliction = function(affliction)
-  affliction = affliction:lower()
-  if table.contains(proneAfflictions, affliction) then
-    local pAffs = keneanung.bashing.pausingAfflictions
-    if not table.contains(pAffs, affliction) then
-      pAffs[#pAffs + 1] = affliction
-      local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-      if system.pause then
-        system.pause()
-      end
-    end
-  end
+  -- intentionally left blank
 end
 
 keneanung.bashing.unpauseOnHealing = function(affliction)
-  affliction = affliction:lower()
-  if table.contains(proneAfflictions, affliction) then
-    local pAffs = keneanung.bashing.pausingAfflictions
-    local index = 0
-    for i, aff in ipairs(pAffs) do
-      if aff == affliction then
-        index = i
-        break
+  -- intentionally left blank
+end
+
+-- Track what was wielded when an attack was started so we can re-wield
+-- items to their original arms after arm-afflictions clear.
+keneanung.bashing.wieldedAtAttackStart = { left = {}, right = {} }
+
+keneanung.bashing.recordWieldedItems = function()
+  keneanung.bashing.wieldedAtAttackStart = { left = {}, right = {} }
+  if not keneanung.bashing.inventory then
+    return 0, 0
+  end
+  if #keneanung.bashing.inventory == 0 then
+    wieldDebugMessage("inventory cache empty when attack started")
+    return 0, 0
+  end
+  for _, item in ipairs(keneanung.bashing.inventory) do
+    if item.attrib then
+      local attrib = item.attrib
+      -- 'l' = wielded left, 'L' = wielded right (case-sensitive). An item may have both.
+      if attrib:find("l") then
+        keneanung.bashing.wieldedAtAttackStart.left[#keneanung.bashing.wieldedAtAttackStart.left + 1] = { id = item.id, name = item.name }
+      end
+      if attrib:find("L") then
+        keneanung.bashing.wieldedAtAttackStart.right[#keneanung.bashing.wieldedAtAttackStart.right + 1] = { id = item.id, name = item.name }
       end
     end
-    if index > 0 then
-      table.remove(pAffs, index)
+  end
+  local leftCount = #keneanung.bashing.wieldedAtAttackStart.left
+  local rightCount = #keneanung.bashing.wieldedAtAttackStart.right
+
+  wieldDebugMessage(string.format("recorded wielded items: left=%d, right=%d", leftCount, rightCount))
+  return leftCount, rightCount
+end
+
+clearBrokenPrediction = function(arm)
+  local timerField = arm == "left" and "pendingBrokenPredictionLeft" or "pendingBrokenPredictionRight"
+  local predictedField = arm == "left" and "predictedBrokenLeft" or "predictedBrokenRight"
+  local timerId = keneanung.bashing[timerField]
+  if timerId then
+    killTimer(timerId)
+    keneanung.bashing[timerField] = nil
+  end
+  keneanung.bashing[predictedField] = false
+end
+
+scheduleBrokenPrediction = function(arm)
+  local timerField = arm == "left" and "pendingBrokenPredictionLeft" or "pendingBrokenPredictionRight"
+  local predictedField = arm == "left" and "predictedBrokenLeft" or "predictedBrokenRight"
+  local affliction = arm == "left" and "brokenleftarm" or "brokenrightarm"
+
+  if keneanung.bashing[timerField] or keneanung.bashing[predictedField] then
+    return
+  end
+
+  wieldDebugMessage("tracked item unwielded from " .. arm .. " arm; scheduling prediction for " .. affliction)
+  keneanung.bashing[timerField] = tempTimer(0.25, function()
+    keneanung.bashing[timerField] = nil
+    keneanung.bashing[predictedField] = true
+    wieldDebugMessage("predicting " .. affliction)
+    send("CURING PREDICT " .. affliction, false)
+  end)
+end
+
+restoreTrackedWieldedItems = function(arm)
+  if not keneanung.bashing.wieldedAtAttackStart then
+    return
+  end
+
+  if (arm == nil or arm == "left") and not (keneanung.bashing.brokenLeft or keneanung.bashing.predictedBrokenLeft) then
+    keneanung.bashing.reWieldForArm("left")
+  end
+  if (arm == nil or arm == "right") and not (keneanung.bashing.brokenRight or keneanung.bashing.predictedBrokenRight) then
+    keneanung.bashing.reWieldForArm("right")
+  end
+
+  if keneanung.bashing.attacking > 0 then
+    keneanung.bashing.setTarget()
+  end
+end
+
+keneanung.bashing.reWieldForArm = function(arm)
+  local list = keneanung.bashing.wieldedAtAttackStart and keneanung.bashing.wieldedAtAttackStart[arm]
+  if not list or #list == 0 then
+    wieldDebugMessage("no recorded items to rewield for " .. arm .. " arm")
+    return
+  end
+  local configuredSystemName = keneanung.bashing.configuration.system
+  local system = keneanung.bashing.systems[configuredSystemName]
+  local actualSystemName = configuredSystemName
+  if system == keneanung.bashing.systems.none then
+    actualSystemName = "none"
+  elseif system == keneanung.bashing.systems.wundersys then
+    actualSystemName = "wundersys"
+  elseif system == keneanung.bashing.systems.svo then
+    actualSystemName = "svo"
+  end
+  for _, it in ipairs(list) do
+    local cmd = "wield " .. it.name .. " " .. arm:upper()
+    wieldDebugMessage("queueing rewield via " .. actualSystemName .. ": " .. cmd)
+    if arm == "left" then
+      if keneanung.bashing.suppressWieldTrackingLeft then killTimer(keneanung.bashing.suppressWieldTrackingLeft) end
+      keneanung.bashing.suppressWieldTrackingLeft = tempTimer(0.75, function() keneanung.bashing.suppressWieldTrackingLeft = nil end)
+    else
+      if keneanung.bashing.suppressWieldTrackingRight then killTimer(keneanung.bashing.suppressWieldTrackingRight) end
+      keneanung.bashing.suppressWieldTrackingRight = tempTimer(0.75, function() keneanung.bashing.suppressWieldTrackingRight = nil end)
     end
-    if #pAffs == 0 then
-      local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
-      if system.unpause and keneanung.bashing.attacking > 0 then
-        system.unpause()
-      end
+    if actualSystemName == "none" then
+      send("queue prepend freestand " .. cmd, false)
+    elseif actualSystemName == "wundersys" and wsys and wsys.dofirst then
+      wsys.dofirst(cmd, 1)
+    elseif actualSystemName == "svo" and svo and svo.dofreefirst then
+      svo.dofreefirst(cmd)
+    else
+      -- fallback: just send immediately
+      send(cmd, false)
     end
   end
 end
 
 keneanung.bashing.afflictionCallback = function(_, origMessage)
+  -- We only use affliction events for a simple wield tracker:
+  -- - Record when arms become broken / healed and re-wield recorded items when healed.
   if origMessage == "gmcp.Char.Afflictions.Add" then
-    keneanung.bashing.pauseOnAffliction(gmcp.Char.Afflictions.Add.name)
+    local name = (gmcp.Char.Afflictions.Add and gmcp.Char.Afflictions.Add.name) and gmcp.Char.Afflictions.Add.name:lower() or nil
+    if name == "brokenleftarm" then
+      wieldDebugMessage("detected brokenleftarm")
+      clearBrokenPrediction("left")
+      keneanung.bashing.brokenLeft = true
+    elseif name == "brokenrightarm" then
+      wieldDebugMessage("detected brokenrightarm")
+      clearBrokenPrediction("right")
+      keneanung.bashing.brokenRight = true
+    end
   elseif origMessage == "gmcp.Char.Afflictions.Remove" then
-    keneanung.bashing.unpauseOnHealing(gmcp.Char.Afflictions.Remove[1])
+    local removed = gmcp.Char.Afflictions.Remove
+    local name = removed and (removed.name or removed[1])
+    if name then
+      name = tostring(name):lower()
+      if name == "brokenleftarm" then
+        wieldDebugMessage("processing cured affliction: brokenleftarm")
+        clearBrokenPrediction("left")
+        keneanung.bashing.brokenLeft = false
+        restoreTrackedWieldedItems("left")
+      elseif name == "brokenrightarm" then
+        wieldDebugMessage("processing cured affliction: brokenrightarm")
+        clearBrokenPrediction("right")
+        keneanung.bashing.brokenRight = false
+        restoreTrackedWieldedItems("right")
+      end
+    end
   end
 end
 
@@ -1644,6 +2057,7 @@ end
 keneanung.bashing.login = function()
   gmod.enableModule("keneanung.bashing", "IRE.Target")
   sendGMCP([[Core.Supports.Add ["IRE.Target 1"] ]])   -- register the GMCP module independently from gmod.
+  sendGMCP("Char.Items.Inv")
   sendGMCP([[Char.Skills.Get {"group":"attainment"}]])
   local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
   system.setup()
@@ -1715,11 +2129,37 @@ end
 keneanung.bashing.calcFleeValue = function(configValue)
   local isString = type(configValue) == "string"
   if isString and configValue:ends("%") then
-    return configValue:match("%d+") * gmcp.Char.Vitals.maxhp / 100
+    local pct = tonumber(configValue:match("%d+")) or 0
+    local maxhp = (gmcp and gmcp.Char and gmcp.Char.Vitals and gmcp.Char.Vitals.maxhp) and gmcp.Char.Vitals.maxhp or keneanung.bashing.lastHealth or 100
+    return pct * maxhp / 100
   elseif isString and configValue:ends("d") then
-    return configValue:match("(.-)d") * keneanung.bashing.damage / keneanung.bashing.attacks
+    local d = tonumber(configValue:match("(.-)d")) or 0
+    if keneanung.bashing.attacks == 0 then return 0 end
+    return d * keneanung.bashing.damage / keneanung.bashing.attacks
   else
     return configValue * 1
+  end
+end
+
+
+-- Centralized evaluation for flee/warn decisions.
+-- `estimatedDmg` is the projected damage to compare against thresholds.
+-- Returns true if the system decided to flee (and executed flee), false otherwise.
+keneanung.bashing.evaluateFlee = function(estimatedDmg, system)
+  local fleeat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.fleeing)
+  local warnat = keneanung.bashing.calcFleeValue(keneanung.bashing.configuration.warning)
+
+  local currentHp = (gmcp and gmcp.Char and gmcp.Char.Vitals and gmcp.Char.Vitals.hp) and gmcp.Char.Vitals.hp or keneanung.bashing.lastHealth or 0
+
+  if estimatedDmg > currentHp - fleeat and keneanung.bashing.configuration.autoflee then
+    if system.notifyFlee then system.notifyFlee(estimatedDmg) end
+    if system.flee then system.flee() end
+    return true
+  else
+    if estimatedDmg > currentHp - warnat then
+      if system.warnFlee then system.warnFlee(estimatedDmg) end
+    end
+    return false
   end
 end
 

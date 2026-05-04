@@ -496,6 +496,7 @@ use "flee &lt;direction&gt;" to set a new direction.
 							<string>gmcp.Char.Items.Add</string>
 							<string>gmcp.Char.Items.List</string>
 							<string>gmcp.Char.Items.Remove</string>
+							<string>gmcp.Char.Items.Update</string>
 						</eventHandlerList>
 					</Script>
 					<Script isActive="yes" isFolder="no">
