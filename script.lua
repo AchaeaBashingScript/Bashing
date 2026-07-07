@@ -1,6 +1,7 @@
 local debugEnabled = false
 local send = send
 local directTargetAccess = {}
+local ownAfflictions = {}
 local afflictions = {
   weakness = {
     colour = "pale_green",
@@ -344,6 +345,81 @@ end
 
 local function getAttackStrategyName()
   return keneanung.bashing.configuration[class].attackStrat or "command"
+end
+
+local function normalizeOwnAffliction(affliction)
+  if type(affliction) == "table" then
+    affliction = affliction.name
+  end
+
+  if not affliction then
+    return nil
+  end
+
+  return tostring(affliction):lower()
+end
+
+local function getOwnAfflictionFromPayload(payload)
+  if type(payload) ~= "table" then
+    return normalizeOwnAffliction(payload)
+  end
+
+  return normalizeOwnAffliction(payload.affliction or payload.name or payload.id or payload[1])
+end
+
+local function setOwnAffliction(affliction, active)
+  affliction = normalizeOwnAffliction(affliction)
+  if not affliction or affliction == "" then
+    return false
+  end
+
+  local changed = active and not ownAfflictions[affliction] or not active and ownAfflictions[affliction] ~= nil
+  if not changed then
+    return false
+  end
+
+  ownAfflictions[affliction] = active and true or nil
+  return true
+end
+
+local function updateOwnAfflictionsFromPayload(payload, active)
+  if type(payload) ~= "table" or payload.name then
+    return setOwnAffliction(getOwnAfflictionFromPayload(payload), active)
+  end
+
+  local changed = false
+  for _, affliction in pairs(payload) do
+    changed = setOwnAffliction(affliction, active) or changed
+  end
+
+  return changed
+end
+
+local function replaceOwnAfflictions(afflictionList)
+  local previousAfflictions = ownAfflictions
+  local nextAfflictions = {}
+
+  for key, affliction in pairs(afflictionList or {}) do
+
+    affliction = normalizeOwnAffliction(affliction)
+    if affliction and affliction ~= "" then
+      nextAfflictions[affliction] = true
+    end
+  end
+
+  ownAfflictions = nextAfflictions
+  for affliction, _ in pairs(previousAfflictions) do
+    if not nextAfflictions[affliction] then
+      return true
+    end
+  end
+  for affliction, _ in pairs(nextAfflictions) do
+    if not previousAfflictions[affliction] then
+      return true
+    end
+  end
+
+  return false
 end
 
 local function getAliasCommand(commandName)
@@ -2043,6 +2119,41 @@ keneanung.bashing.hasAffliction = function(denizen, affliction)
   end
 
   return denizenObject.affs[affliction] ~= nil
+end
+
+keneanung.bashing.getOwnAfflictions = function()
+  local ret = {}
+  for affliction, _ in pairs(ownAfflictions) do
+    ret[#ret + 1] = affliction
+  end
+
+  return ret
+end
+
+keneanung.bashing.hasOwnAffliction = function(affliction)
+  affliction = normalizeOwnAffliction(affliction)
+  return affliction and ownAfflictions[affliction] ~= nil or false
+end
+
+keneanung.bashing.ownAfflictionsCallback = function(event)
+  if not (gmcp and gmcp.Char and gmcp.Char.Afflictions) then
+    return false
+  end
+
+  local afflictionsPayload = gmcp.Char.Afflictions[event:match("%w+$")]
+  local changed = false
+
+  if event == "gmcp.Char.Afflictions.List" then
+    changed = replaceOwnAfflictions(afflictionsPayload or {})
+  elseif event == "gmcp.Char.Afflictions.Add" then
+    changed = updateOwnAfflictionsFromPayload(afflictionsPayload, true)
+  elseif event == "gmcp.Char.Afflictions.Remove" then
+    changed = updateOwnAfflictionsFromPayload(afflictionsPayload, false)
+  end
+
+  if changed then
+    keneanung.bashing.refreshAttackAliases()
+  end
 end
 
 keneanung.bashing.handleSkillList = function()

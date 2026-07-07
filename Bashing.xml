@@ -492,6 +492,16 @@ use "flee &lt;direction&gt;" to set a new direction.
 						</eventHandlerList>
 					</Script>
 					<Script isActive="yes" isFolder="no">
+						<name>keneanung.bashing.ownAfflictionsCallback</name>
+						<packageName />
+						<script>--This registers our Char.Afflictions callback. Do not remove!</script>
+						<eventHandlerList>
+							<string>gmcp.Char.Afflictions.List</string>
+							<string>gmcp.Char.Afflictions.Add</string>
+							<string>gmcp.Char.Afflictions.Remove</string>
+						</eventHandlerList>
+					</Script>
+					<Script isActive="yes" isFolder="no">
 						<name>keneanung.bashing.save</name>
 						<packageName />
 						<script>--This registers our sysExitEvent callback. Do not remove!</script>
