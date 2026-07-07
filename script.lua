@@ -817,6 +817,7 @@ local aliases = {
   ["razecommand"]   = "keneanungra",
   ["attackcommand"] = "keneanungki",
 }
+local currentAliasCommands = {}
 
 local getSystem = function(tbl, index)
   local systemName
@@ -1814,7 +1815,12 @@ keneanung.bashing.setAlias = function(command)
   if not attackCommand then
     return false
   end
+  if currentAliasCommands[command] == attackCommand then
+    return false
+  end
+
   send(string.format("setalias %s %s", aliases[command], attackCommand), false)
+  currentAliasCommands[command] = attackCommand
   return true
 end
 
