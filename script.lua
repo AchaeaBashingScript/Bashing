@@ -90,10 +90,9 @@ keneanung.bashing.configuration = {}
 keneanung.bashing.configuration.priorities = {}
 keneanung.bashing.targetList = {}
 keneanung.bashing.systems = {}
+keneanung.bashing.attacksystem = {}
 keneanung.bashing.battlerage = {}
 keneanung.bashing.room = {}
-keneanung.bashing.inventory = {}
-keneanung.bashing.pausingAfflictions = {}
 keneanung.bashing.trackih = false
 
 keneanung.bashing.attacking = 0
@@ -103,12 +102,6 @@ keneanung.bashing.healing = 0
 keneanung.bashing.lastHealth = 0
 keneanung.bashing.usedRageAttack = false
 keneanung.bashing.usedBalanceAttack = false
-keneanung.bashing.predictedBrokenLeft = false
-keneanung.bashing.predictedBrokenRight = false
-keneanung.bashing.pendingBrokenPredictionLeft = nil
-keneanung.bashing.pendingBrokenPredictionRight = nil
-keneanung.bashing.suppressWieldTrackingLeft = nil
-keneanung.bashing.suppressWieldTrackingRight = nil
 keneanung.bashing.balanceAttackRetryAttempt = 0
 keneanung.bashing.balanceAttackResetTimer = nil
 keneanung.bashing.balanceAttackRetryTimer = nil
@@ -132,17 +125,11 @@ local debugMessage = function(message, content)
   end
 end
 
-local wieldDebugMessage = function(message)
-  echo("[wield tracker] " .. message .. "\n")
-end
-
 local cancelBalanceAttackReset
 local cancelBalanceAttackRetry
 local markBalanceAttackUsed
 local noteBalanceAttackRetry
-local clearBrokenPrediction
-local scheduleBrokenPrediction
-local restoreTrackedWieldedItems
+local getAttackCommand
 
 cancelBalanceAttackRetry = function()
   if keneanung.bashing.balanceAttackRetryTimer then
@@ -335,6 +322,75 @@ local sortProvokeBattlerage = function()
   end
 end
 
+local function normalizeAttackCommand(command)
+  if command:find("&tar") then
+    return command
+  end
+
+  return command .. " &tar"
+end
+
+local function getConfiguredAttackCommand(commandName)
+  return normalizeAttackCommand(keneanung.bashing.configuration[class][commandName])
+end
+
+local function formatAttackCommand(command)
+  if keneanung.bashing.attacking > 0 then
+    return command:gsub("&tar", keneanung.bashing.targetList[keneanung.bashing.attacking].id)
+  end
+
+  return command
+end
+
+local function getAttackStrategyName()
+  return keneanung.bashing.configuration[class].attackStrat or "command"
+end
+
+local function getAliasCommand(commandName)
+  if
+    keneanung.bashing.configuration.system == "none" and
+    getAttackStrategyName() ~= "command" and
+    keneanung.bashing.attacking > 0 and
+    keneanung.bashing.targetList[keneanung.bashing.attacking]
+  then
+    return getAttackCommand(commandName)
+  end
+
+  return getConfiguredAttackCommand(commandName)
+end
+
+local function refreshAttackAliases()
+  keneanung.bashing.setAlias("attackcommand")
+  keneanung.bashing.setAlias("razecommand")
+end
+
+keneanung.bashing.refreshAttackAliases = function()
+  if keneanung.bashing.configuration.system ~= "none" then
+    return false
+  end
+
+  refreshAttackAliases()
+  return true
+end
+
+local function migrateAttackStrategyConfig(classConfig)
+  if not classConfig then
+    return
+  end
+
+  if classConfig.attackStrat == nil then
+    classConfig.attackStrat = "command"
+  end
+
+  classConfig.attackStrategies = classConfig.attackStrategies or {}
+
+  if classConfig.attackcommand and classConfig.attackcommand ~= "" then
+    classConfig.attackStrategies.command = classConfig.attackcommand
+  elseif classConfig.attackStrategies.command then
+    classConfig.attackcommand = classConfig.attackStrategies.command
+  end
+end
+
 local requestAllSkillDetails = function()
   while #requestSkillDetails > 0 do
     sendGMCP(string.format([[Char.Skills.Get {"group": "attainment", "name": "%s"}]], requestSkillDetails[1]))
@@ -358,6 +414,12 @@ local migrateTo1Point8 = function()
     keneanung.bashing.configuration.autorageraze = nil
 
     raiseEvent("keneanung.bashing.settings.changed")
+  end
+
+  for _, classConfig in pairs(keneanung.bashing.configuration) do
+    if type(classConfig) == "table" then
+      migrateAttackStrategyConfig(classConfig)
+    end
   end
 end
 
@@ -442,11 +504,9 @@ keneanung.bashing.systems.wundersys = {
   startAttack = function()
     if keneanung.bashing.attacking > 0 then
       enableTrigger(keneanung.bashing.systems.wundersys.queueTrigger)
-      local command
-      if keneanung.bashing.configuration[class].attackcommand:find("&tar") then
-        command = keneanung.bashing.configuration[class].attackcommand
-      else
-        command = keneanung.bashing.configuration[class].attackcommand .. " &tar"
+      local command = getAttackCommand("attackcommand")
+      if not command then
+        return false
       end
       wsys.doradd(command)
     end
@@ -473,13 +533,10 @@ keneanung.bashing.systems.wundersys = {
 
   handleShield = function()
     if keneanung.bashing.configuration[class].autoraze then
-      local command
-      if keneanung.bashing.configuration[class].razecommand:find("&tar") then
-        command = keneanung.bashing.configuration[class].razecommand
-      else
-        command = keneanung.bashing.configuration[class].razecommand .. " &tar"
+      local command = getAttackCommand("razecommand")
+      if command then
+        wsys.dofirst(command, 1)
       end
-      wsys.dofirst(command, 1)
     end
     keneanung.bashing.shield = true
   end,
@@ -524,12 +581,7 @@ keneanung.bashing.systems.wundersys = {
   end,
 
   doActionRun = function(_, command)
-    local razecommand
-    if keneanung.bashing.configuration[class].razecommand:find("&tar") then
-      razecommand = keneanung.bashing.configuration[class].razecommand
-    else
-      razecommand = keneanung.bashing.configuration[class].razecommand .. " &tar"
-    end
+    local razecommand = getAttackCommand("razecommand")
     if command == razecommand then
       keneanung.bashing.shield = false
     end
@@ -564,6 +616,7 @@ keneanung.bashing.systems.none = {
 
       cancelBalanceAttackRetry()
       enableTrigger(keneanung.bashing.systems.none.queueTrigger)
+      refreshAttackAliases()
       send("queue add freestand keneanungki", false)
 
       keneanung.bashing.balanceAttackRetryAttempt = 0
@@ -593,13 +646,14 @@ keneanung.bashing.systems.none = {
   handleShield = function()
     keneanung.bashing.shield = true
     if keneanung.bashing.configuration[class].autoraze then
-      local command
+      refreshAttackAliases()
       send("queue prepend freestand keneanungra", false)
     end
   end,
 
   brokeShield = function()
     send("cq all")
+    refreshAttackAliases()
     send("queue add freestand keneanungki", false)
   end,
 
@@ -723,6 +777,40 @@ keneanung.bashing.battlerage.simplereverse = function(rage)
       sendRageAttack(battlerageSkills[4].command)
     end
   end
+end
+
+keneanung.bashing.attacksystem.none = function(commandName, target)
+  return false
+end
+
+keneanung.bashing.attacksystem.command = function(commandName, target)
+  return formatAttackCommand(getConfiguredAttackCommand(commandName))
+end
+
+getAttackCommand = function(commandName)
+  local classConfig = keneanung.bashing.configuration[class]
+  local strategyName = classConfig.attackStrat or "command"
+  local strategy = keneanung.bashing.attacksystem[strategyName]
+
+  if not strategy then
+    kecho("<orange>Unknown attack strategy '" .. strategyName .. "'. Falling back to command.")
+    classConfig.attackStrat = "command"
+    keneanung.bashing.save()
+    raiseEvent("keneanung.bashing.settings.changed")
+    strategy = keneanung.bashing.attacksystem.command
+  end
+
+  return strategy(commandName, keneanung.bashing.targetList[keneanung.bashing.attacking])
+end
+
+local function performAttack(commandName)
+  local command = getAttackCommand(commandName)
+  if not command then
+    return false
+  end
+
+  send(command, false)
+  return true
 end
 
 local aliases = {
@@ -965,11 +1053,21 @@ keneanung.bashing.showConfig = function()
 
   kecho(
     string.format(
-      "Attack is set to <red>%s<reset>",
-      keneanung.bashing.configuration[class].attackcommand
+      "Attack is set to <red>%s<reset> using strategy <red>%s<reset>",
+      keneanung.bashing.configuration[class].attackcommand,
+      keneanung.bashing.configuration[class].attackStrat
     ),
     "clearCmdLine() appendCmdLine('kconfig bashing attackcommand ')",
     "Set attack."
+  )
+
+  kecho(
+    string.format(
+      "Currently using this attack strategy: <red>%s<reset>",
+      keneanung.bashing.configuration[class].attackStrat
+    ),
+    "clearCmdLine() appendCmdLine('kconfig bashing attackstrat ')",
+    "Set attack strategy to use."
   )
 
   kecho(
@@ -1095,6 +1193,14 @@ keneanung.bashing.shielded = function(what)
   if keneanung.bashing.attacking > 0 and what == keneanung.bashing.targetList[keneanung.bashing.attacking].name then
     local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
     system.handleShield()
+    keneanung.bashing.refreshAttackAliases()
+  end
+end
+
+keneanung.bashing.unshielded = function(what)
+  if keneanung.bashing.attacking > 0 and what == keneanung.bashing.targetList[keneanung.bashing.attacking].name then
+    keneanung.bashing.shield = false
+    keneanung.bashing.refreshAttackAliases()
   end
 end
 
@@ -1109,21 +1215,12 @@ keneanung.bashing.attackButton = function(toggle, echoback)
   if echoback == nil then echoback = true end
   if (keneanung.bashing.attacking == 0 and toggle ~= false) or toggle then
     if keneanung.bashing.setTarget() then
-      local beginAttack = function()
-        if keneanung.bashing.attacking == 0 then
-          return
-        end
-
-        keneanung.bashing.recordWieldedItems()
-        startAttack()
-        if echoback then kecho("Nothing will stand in our way.\n") end
+      if keneanung.bashing.attacking == 0 then
+        return
       end
 
-      -- Defer the snapshot one tick so any immediately preceding wield GMCP updates
-      -- have time to update the inventory cache before we record the hands.
-      tempTimer(0, function()
-        beginAttack()
-      end)
+      startAttack()
+      if echoback then kecho("Nothing will stand in our way.\n") end
     else
       if echoback then kecho("Nothing to target, boss.\n") end
     end
@@ -1164,10 +1261,6 @@ keneanung.bashing.nextAttack = function()
     return true
   end
 
-  if #keneanung.bashing.pausingAfflictions > 0 then
-    return false
-  end
-
   local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
 
   keneanung.bashing.attacks = keneanung.bashing.attacks + 1
@@ -1187,8 +1280,8 @@ keneanung.bashing.nextAttack = function()
       return false
     end
 
-    local attack = (keneanung.bashing.shield and keneanung.bashing.configuration[class].autoraze) and "keneanungra" or "keneanungki"
-    send(attack, false)
+    local attack = (keneanung.bashing.shield and keneanung.bashing.configuration[class].autoraze) and "razecommand" or "attackcommand"
+    performAttack(attack)
     keneanung.bashing.shield = false
     keneanung.bashing.balanceAttackRetryAttempt = 0
     markBalanceAttackUsed()
@@ -1298,204 +1391,10 @@ local roomItemCallbackWorker = function(event)
   debugMessage("after", { room=keneanung.bashing.room, targetList=keneanung.bashing.targetList })
 end
 
-local inventoryItemCallbackWorker = function(event)
-  local payload = gmcp.Char.Items[event:match("%w+$")]
-  if not payload or payload.location ~= "inv" then
-    return false
-  end
-
-  local findInventoryIndex = function(itemId)
-    for index, item in ipairs(keneanung.bashing.inventory) do
-      if (item.id * 1) == (itemId * 1) then
-        return index
-      end
-    end
-    return nil
-  end
-
-  local itemHasArm = function(item, arm)
-    if not item or not item.attrib then
-      return false
-    end
-    if arm == "left" then
-      return item.attrib:find("l", 1, true) ~= nil
-    end
-    return item.attrib:find("L", 1, true) ~= nil
-  end
-
-  local isArmBlocked = function(arm)
-    if arm == "left" then
-      return keneanung.bashing.brokenLeft or keneanung.bashing.predictedBrokenLeft
-    end
-    return keneanung.bashing.brokenRight or keneanung.bashing.predictedBrokenRight
-  end
-
-  local isArmSuppressed = function(arm)
-    if arm == "left" then
-      return keneanung.bashing.suppressWieldTrackingLeft ~= nil
-    end
-    return keneanung.bashing.suppressWieldTrackingRight ~= nil
-  end
-
-  local isArmPendingPrediction = function(arm)
-    if arm == "left" then
-      return keneanung.bashing.pendingBrokenPredictionLeft ~= nil
-    end
-    return keneanung.bashing.pendingBrokenPredictionRight ~= nil
-  end
-
-  local itemWasRecordedForArm = function(item, arm)
-    local recorded = keneanung.bashing.wieldedAtAttackStart and keneanung.bashing.wieldedAtAttackStart[arm] or {}
-    for _, recordedItem in ipairs(recorded) do
-      if (recordedItem.id * 1) == (item.id * 1) then
-        return true
-      end
-    end
-    return false
-  end
-
-  local countCurrentWielded = function()
-    local leftCount = 0
-    local rightCount = 0
-    for _, inventoryItem in ipairs(keneanung.bashing.inventory) do
-      if itemHasArm(inventoryItem, "left") then
-        leftCount = leftCount + 1
-      end
-      if itemHasArm(inventoryItem, "right") then
-        rightCount = rightCount + 1
-      end
-    end
-    return leftCount, rightCount
-  end
-
-  local logWieldRelevantInventoryEvent = function(eventName, oldItem, newItem)
-    local oldLeft = itemHasArm(oldItem, "left")
-    local oldRight = itemHasArm(oldItem, "right")
-    local newLeft = itemHasArm(newItem, "left")
-    local newRight = itemHasArm(newItem, "right")
-    local relevant = oldLeft ~= newLeft or oldRight ~= newRight
-
-    if not relevant then
-      return
-    end
-
-    local itemName = (newItem and newItem.name) or (oldItem and oldItem.name) or "unknown"
-    local leftCount, rightCount = countCurrentWielded()
-    wieldDebugMessage(string.format(
-      "flags %s for %s: %s%s -> %s%s totals left=%d right=%d",
-      eventName:match("%w+$"),
-      itemName,
-      oldLeft and "l" or "-",
-      oldRight and "L" or "-",
-      newLeft and "l" or "-",
-      newRight and "L" or "-",
-      leftCount,
-      rightCount
-    ))
-  end
-
-  local maybeReWieldItem = function(oldItem, newItem)
-    if keneanung.bashing.attacking == 0 then
-      return
-    end
-
-    for _, arm in ipairs({"left", "right"}) do
-      if itemHasArm(oldItem, arm) and not itemHasArm(newItem, arm) and itemWasRecordedForArm(oldItem, arm) then
-        if isArmSuppressed(arm) then
-          wieldDebugMessage("ignoring tracked unwield from " .. arm .. " arm during rewield")
-        else
-        local armBroken = isArmBlocked(arm)
-        if armBroken then
-          wieldDebugMessage("tracked item unwielded from " .. arm .. " arm while broken; waiting for cure")
-        else
-          scheduleBrokenPrediction(arm)
-        end
-        end
-      elseif not itemHasArm(oldItem, arm) and itemHasArm(newItem, arm) then
-        if isArmSuppressed(arm) then
-          if arm == "left" then
-            keneanung.bashing.suppressWieldTrackingLeft = nil
-          else
-            keneanung.bashing.suppressWieldTrackingRight = nil
-          end
-        end
-        if isArmBlocked(arm) or isArmPendingPrediction(arm) then
-          wieldDebugMessage("tracked item re-wielded in " .. arm .. " arm; clearing predicted break state")
-          clearBrokenPrediction(arm)
-        end
-      end
-    end
-  end
-
-  if event == "gmcp.Char.Items.List" then
-    keneanung.bashing.inventory = {}
-    for _, item in ipairs(payload.items or {}) do
-      keneanung.bashing.inventory[#keneanung.bashing.inventory + 1] = item
-    end
-  elseif event == "gmcp.Char.Items.Add" then
-    local index = findInventoryIndex(payload.item.id)
-    if index then
-      local oldItem = keneanung.bashing.inventory[index]
-      keneanung.bashing.inventory[index] = payload.item
-      logWieldRelevantInventoryEvent(event, oldItem, payload.item)
-      maybeReWieldItem(oldItem, payload.item)
-    else
-      keneanung.bashing.inventory[#keneanung.bashing.inventory + 1] = payload.item
-      logWieldRelevantInventoryEvent(event, nil, payload.item)
-    end
-  elseif event == "gmcp.Char.Items.Update" then
-    local index = findInventoryIndex(payload.item.id)
-    if index then
-      local oldItem = keneanung.bashing.inventory[index]
-      keneanung.bashing.inventory[index] = payload.item
-      logWieldRelevantInventoryEvent(event, oldItem, payload.item)
-      maybeReWieldItem(oldItem, payload.item)
-    else
-      keneanung.bashing.inventory[#keneanung.bashing.inventory + 1] = payload.item
-      logWieldRelevantInventoryEvent(event, nil, payload.item)
-    end
-  elseif event == "gmcp.Char.Items.Remove" then
-    local index = findInventoryIndex(payload.item.id)
-    if index then
-      local oldItem = keneanung.bashing.inventory[index]
-      maybeReWieldItem(oldItem, payload.item)
-      table.remove(keneanung.bashing.inventory, index)
-      logWieldRelevantInventoryEvent(event, oldItem, payload.item)
-    end
-  end
-
-  if event == "gmcp.Char.Items.List" then
-    for _, arm in ipairs({"left", "right"}) do
-      local missingTrackedItem = false
-      for _, recordedItem in ipairs(keneanung.bashing.wieldedAtAttackStart[arm] or {}) do
-        local foundWielded = false
-        for _, inventoryItem in ipairs(keneanung.bashing.inventory) do
-          if (inventoryItem.id * 1) == (recordedItem.id * 1) and itemHasArm(inventoryItem, arm) then
-            foundWielded = true
-            break
-          end
-        end
-        if not foundWielded then
-          missingTrackedItem = true
-          break
-        end
-      end
-      if missingTrackedItem and keneanung.bashing.attacking > 0 then
-        local armBroken = isArmBlocked(arm)
-        if not armBroken then
-          wieldDebugMessage("tracked item missing from " .. arm .. " arm after inventory refresh; rewielding")
-          keneanung.bashing.reWieldForArm(arm)
-        end
-      end
-    end
-  end
-
-  return true
-end
-
 keneanung.bashing.roomItemCallback = function(event)
   if event == "gmcp.Char.Items.Add" or event == "gmcp.Char.Items.Remove" or event == "gmcp.Char.Items.List" or event == "gmcp.Char.Items.Update" then
-    if inventoryItemCallbackWorker(event) then
+    local payload = gmcp.Char.Items[event:match("%w+$")]
+    if payload and payload.location == "inv" then
       return
     end
     roomItemCallbackWorker(event)
@@ -1737,6 +1636,10 @@ keneanung.bashing.vitalsChangeRecord = function()
     keneanung.bashing.lastHealth = gmcp.Char.Vitals.hp * 1
   end
 
+  if keneanung.bashing.configuration.system == "none" and keneanung.bashing.attacking > 0 then
+    refreshAttackAliases()
+  end
+
   for _, stat in ipairs(gmcp.Char.Vitals.charstats) do
     local rageAmount = stat:match("^Rage: (%d+)$")
     if rageAmount then
@@ -1751,6 +1654,9 @@ keneanung.bashing.vitalsChangeRecord = function()
 end
 
 keneanung.bashing.buttonActionsCallback = function()
+  if keneanung.bashing.configuration.system == "none" and keneanung.bashing.attacking > 0 then
+    refreshAttackAliases()
+  end
   keneanung.bashing.battlerage[keneanung.bashing.configuration[class].rageStrat](rage, battlerageSkills)
 end
 
@@ -1776,10 +1682,13 @@ keneanung.bashing.charStatusCallback = function()
       newClassConfig.autoraze = false
       newClassConfig.razecommand = "none"
       newClassConfig.attackcommand = "kill"
+      newClassConfig.attackStrategies = { command = "kill" }
+      newClassConfig.attackStrat = "command"
       newClassConfig.rageStrat = "simple"
       keneanung.bashing.configuration[class] = newClassConfig
       kecho("Seen new class " .. class .. ". Default config set.")
     end
+    migrateAttackStrategyConfig(keneanung.bashing.configuration[class])
     keneanung.bashing.setAlias("attackcommand")
     keneanung.bashing.setAlias("razecommand")
     sendGMCP([[Core.Supports.Remove ["IRE.Display"] ]])
@@ -1824,183 +1733,14 @@ keneanung.bashing.charStatusCallback = function()
   lastXp = newXp
 end
 
-local proneAfflictions = {
-  "prone",
-  "stun",
-  "paralysis",
-  "entangled",
-  "webbed",
-  "transfixation",
-  "impaled",
-  "bound",
-  "aeon",
-}
-
--- Deprecated: we no longer pause/unpause the bashing system on afflictions.
--- Keep no-op functions for compatibility with existing event hooks.
-keneanung.bashing.pauseOnAffliction = function(affliction)
-  -- intentionally left blank
-end
-
-keneanung.bashing.unpauseOnHealing = function(affliction)
-  -- intentionally left blank
-end
-
--- Track what was wielded when an attack was started so we can re-wield
--- items to their original arms after arm-afflictions clear.
-keneanung.bashing.wieldedAtAttackStart = { left = {}, right = {} }
-
-keneanung.bashing.recordWieldedItems = function()
-  keneanung.bashing.wieldedAtAttackStart = { left = {}, right = {} }
-  if not keneanung.bashing.inventory then
-    return 0, 0
-  end
-  if #keneanung.bashing.inventory == 0 then
-    wieldDebugMessage("inventory cache empty when attack started")
-    return 0, 0
-  end
-  for _, item in ipairs(keneanung.bashing.inventory) do
-    if item.attrib then
-      local attrib = item.attrib
-      -- 'l' = wielded left, 'L' = wielded right (case-sensitive). An item may have both.
-      if attrib:find("l") then
-        keneanung.bashing.wieldedAtAttackStart.left[#keneanung.bashing.wieldedAtAttackStart.left + 1] = { id = item.id, name = item.name }
-      end
-      if attrib:find("L") then
-        keneanung.bashing.wieldedAtAttackStart.right[#keneanung.bashing.wieldedAtAttackStart.right + 1] = { id = item.id, name = item.name }
-      end
-    end
-  end
-  local leftCount = #keneanung.bashing.wieldedAtAttackStart.left
-  local rightCount = #keneanung.bashing.wieldedAtAttackStart.right
-
-  wieldDebugMessage(string.format("recorded wielded items: left=%d, right=%d", leftCount, rightCount))
-  return leftCount, rightCount
-end
-
-clearBrokenPrediction = function(arm)
-  local timerField = arm == "left" and "pendingBrokenPredictionLeft" or "pendingBrokenPredictionRight"
-  local predictedField = arm == "left" and "predictedBrokenLeft" or "predictedBrokenRight"
-  local timerId = keneanung.bashing[timerField]
-  if timerId then
-    killTimer(timerId)
-    keneanung.bashing[timerField] = nil
-  end
-  keneanung.bashing[predictedField] = false
-end
-
-scheduleBrokenPrediction = function(arm)
-  local timerField = arm == "left" and "pendingBrokenPredictionLeft" or "pendingBrokenPredictionRight"
-  local predictedField = arm == "left" and "predictedBrokenLeft" or "predictedBrokenRight"
-  local affliction = arm == "left" and "brokenleftarm" or "brokenrightarm"
-
-  if keneanung.bashing[timerField] or keneanung.bashing[predictedField] then
-    return
-  end
-
-  wieldDebugMessage("tracked item unwielded from " .. arm .. " arm; scheduling prediction for " .. affliction)
-  keneanung.bashing[timerField] = tempTimer(0.25, function()
-    keneanung.bashing[timerField] = nil
-    keneanung.bashing[predictedField] = true
-    wieldDebugMessage("predicting " .. affliction)
-    send("CURING PREDICT " .. affliction, false)
-  end)
-end
-
-restoreTrackedWieldedItems = function(arm)
-  if not keneanung.bashing.wieldedAtAttackStart then
-    return
-  end
-
-  if (arm == nil or arm == "left") and not (keneanung.bashing.brokenLeft or keneanung.bashing.predictedBrokenLeft) then
-    keneanung.bashing.reWieldForArm("left")
-  end
-  if (arm == nil or arm == "right") and not (keneanung.bashing.brokenRight or keneanung.bashing.predictedBrokenRight) then
-    keneanung.bashing.reWieldForArm("right")
-  end
-
-  if keneanung.bashing.attacking > 0 then
-    keneanung.bashing.setTarget()
-  end
-end
-
-keneanung.bashing.reWieldForArm = function(arm)
-  local list = keneanung.bashing.wieldedAtAttackStart and keneanung.bashing.wieldedAtAttackStart[arm]
-  if not list or #list == 0 then
-    wieldDebugMessage("no recorded items to rewield for " .. arm .. " arm")
-    return
-  end
-  local configuredSystemName = keneanung.bashing.configuration.system
-  local system = keneanung.bashing.systems[configuredSystemName]
-  local actualSystemName = configuredSystemName
-  if system == keneanung.bashing.systems.none then
-    actualSystemName = "none"
-  elseif system == keneanung.bashing.systems.wundersys then
-    actualSystemName = "wundersys"
-  elseif system == keneanung.bashing.systems.svo then
-    actualSystemName = "svo"
-  end
-  for _, it in ipairs(list) do
-    local cmd = "wield " .. it.name .. " " .. arm:upper()
-    wieldDebugMessage("queueing rewield via " .. actualSystemName .. ": " .. cmd)
-    if arm == "left" then
-      if keneanung.bashing.suppressWieldTrackingLeft then killTimer(keneanung.bashing.suppressWieldTrackingLeft) end
-      keneanung.bashing.suppressWieldTrackingLeft = tempTimer(0.75, function() keneanung.bashing.suppressWieldTrackingLeft = nil end)
-    else
-      if keneanung.bashing.suppressWieldTrackingRight then killTimer(keneanung.bashing.suppressWieldTrackingRight) end
-      keneanung.bashing.suppressWieldTrackingRight = tempTimer(0.75, function() keneanung.bashing.suppressWieldTrackingRight = nil end)
-    end
-    if actualSystemName == "none" then
-      send("queue prepend freestand " .. cmd, false)
-    elseif actualSystemName == "wundersys" and wsys and wsys.dofirst then
-      wsys.dofirst(cmd, 1)
-    elseif actualSystemName == "svo" and svo and svo.dofreefirst then
-      svo.dofreefirst(cmd)
-    else
-      -- fallback: just send immediately
-      send(cmd, false)
-    end
-  end
-end
-
-keneanung.bashing.afflictionCallback = function(_, origMessage)
-  -- We only use affliction events for a simple wield tracker:
-  -- - Record when arms become broken / healed and re-wield recorded items when healed.
-  if origMessage == "gmcp.Char.Afflictions.Add" then
-    local name = (gmcp.Char.Afflictions.Add and gmcp.Char.Afflictions.Add.name) and gmcp.Char.Afflictions.Add.name:lower() or nil
-    if name == "brokenleftarm" then
-      wieldDebugMessage("detected brokenleftarm")
-      clearBrokenPrediction("left")
-      keneanung.bashing.brokenLeft = true
-    elseif name == "brokenrightarm" then
-      wieldDebugMessage("detected brokenrightarm")
-      clearBrokenPrediction("right")
-      keneanung.bashing.brokenRight = true
-    end
-  elseif origMessage == "gmcp.Char.Afflictions.Remove" then
-    local removed = gmcp.Char.Afflictions.Remove
-    local name = removed and (removed.name or removed[1])
-    if name then
-      name = tostring(name):lower()
-      if name == "brokenleftarm" then
-        wieldDebugMessage("processing cured affliction: brokenleftarm")
-        clearBrokenPrediction("left")
-        keneanung.bashing.brokenLeft = false
-        restoreTrackedWieldedItems("left")
-      elseif name == "brokenrightarm" then
-        wieldDebugMessage("processing cured affliction: brokenrightarm")
-        clearBrokenPrediction("right")
-        keneanung.bashing.brokenRight = false
-        restoreTrackedWieldedItems("right")
-      end
-    end
-  end
-end
-
 keneanung.bashing.setCommand = function(command, what)
   keneanung.bashing.configuration[class][command] = what
+  if command == "attackcommand" then
+    migrateAttackStrategyConfig(keneanung.bashing.configuration[class])
+    keneanung.bashing.configuration[class].attackStrategies.command = what
+  end
   kecho(command .. " is now <red>" .. keneanung.bashing.configuration[class][command] .. "<reset>\n" )
-  keneanung.bashing.setAlias(command)
+  refreshAttackAliases()
   keneanung.bashing.save()
   raiseEvent("keneanung.bashing.settings.changed")
 end
@@ -2041,6 +1781,7 @@ keneanung.bashing.setTarget = function()
   if keneanung.bashing.attacking == 0 or keneanung.bashing.targetList[keneanung.bashing.attacking].id ~= gmcp.IRE.Target.Info.id then
     keneanung.bashing.attacking = keneanung.bashing.attacking + 1
   end
+  refreshAttackAliases()
   debugMessage("setting target", keneanung.bashing.targetList[keneanung.bashing.attacking])
   sendGMCP('IRE.Target.Set "' .. keneanung.bashing.targetList[keneanung.bashing.attacking].id .. '"')
         return keneanung.bashing.attacking ~= 0
@@ -2052,6 +1793,7 @@ keneanung.bashing.clearTarget = function()
     sendGMCP('IRE.Target.Set "0"')
   end
   keneanung.bashing.attacking = 0
+  refreshAttackAliases()
 end
 
 keneanung.bashing.login = function()
@@ -2068,13 +1810,12 @@ keneanung.bashing.login = function()
 end
 
 keneanung.bashing.setAlias = function(command)
-  local attackCommand
-  if keneanung.bashing.configuration[class][command]:find("&tar") then
-    attackCommand = keneanung.bashing.configuration[class][command]
-  else
-    attackCommand = keneanung.bashing.configuration[class][command] .. " &tar"
+  local attackCommand = getAliasCommand(command)
+  if not attackCommand then
+    return false
   end
   send(string.format("setalias %s %s", aliases[command], attackCommand), false)
+  return true
 end
 
 keneanung.bashing.setSystem = function(systemName)
@@ -2124,6 +1865,29 @@ keneanung.bashing.setRageStrat = function(strategyName)
   keneanung.bashing.save()
   raiseEvent("keneanung.bashing.settings.changed")
   kecho("Using <red>" .. strategyName .. "<reset> as battlerage strategy.\n" )
+end
+
+keneanung.bashing.setAttackStrat = function(strategyName)
+
+  if not strategyName then
+    kecho("The following attack strategies are known:")
+    for name, _ in pairs(keneanung.bashing.attacksystem) do
+      kecho("   " .. name, "keneanung.bashing.setAttackStrat('" .. name .. "')", "Set '" .. name .. "' as attack strategy")
+    end
+    echo("\n")
+    return
+  end
+
+  if not keneanung.bashing.attacksystem[strategyName] then
+    kecho("<orange>Attack strategy not changed as '" .. strategyName .. "' is unknown.")
+    return
+  end
+
+  keneanung.bashing.configuration[class].attackStrat = strategyName
+  refreshAttackAliases()
+  keneanung.bashing.save()
+  raiseEvent("keneanung.bashing.settings.changed")
+  kecho("Using <red>" .. strategyName .. "<reset> as attack strategy.\n" )
 end
 
 keneanung.bashing.calcFleeValue = function(configValue)
@@ -2208,6 +1972,9 @@ keneanung.bashing.addDenizenAffliction = function(denizen, affliction, own)
 
   kecho(string.format("<%s>%s%s<reset> <green>gained<reset> <%s>%s<reset>", isTarget and "OrangeRed" or "yellow",
     denizenObject.name, isTarget and " (your target)" or "", affObject.colour, affliction))
+  if isTarget then
+    keneanung.bashing.refreshAttackAliases()
+  end
   if own then
     raiseEvent("keneanung.bashing.afflictionGained", denizenObject.id, affliction)
   end
@@ -2234,6 +2001,9 @@ keneanung.bashing.removeDenizenAffliction = function(denizen, affliction, own)
   killTimer(denizenObject.affs[affliction])
   kecho(string.format("<%s>%s%s<reset> <red>lost<reset> <%s>%s<reset>",
     isTarget and "OrangeRed" or "yellow", denizenObject.name, isTarget and " (your target)" or "", affObject.colour, affliction))
+  if isTarget then
+    keneanung.bashing.refreshAttackAliases()
+  end
   if own then
     raiseEvent("keneanung.bashing.afflictionLost", denizenObject.id, affliction)
   end

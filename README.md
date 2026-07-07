@@ -71,6 +71,44 @@ The system supports the setting of custom attack command. To do so, use the alia
 `kconfig bashing attackcommand <your command>`. You can use the slash (`/`) to separate multiple commands that should be used
 at once. For example 2 handed knights might want to use `kconfig bashing attackcommand battlefury focus speed/kill`.
 
+Normal attacks can also be selected through attack strategy functions, similar to battlerage strategies. The default
+strategy is `command`, which keeps using `attackcommand` exactly as before. To switch strategies, use
+`kconfig bashing attackstrat <name>`.
+
+Custom attack strategies live in `keneanung.bashing.attacksystem`. They receive the command type (`attackcommand` or
+`razecommand`) and the current target object, and should return the fully formatted command string to execute. For example:
+
+```lua
+keneanung.bashing.attacksystem.example = function(commandName, target)
+  if commandName == "razecommand" then
+    return "smash " .. target.id
+  end
+
+  return "kill " .. target.id
+end
+```
+
+When using stock server-side queueing (`kconfig bashing system none`), attacks are still queued through the aliases
+`keneanungki` and `keneanungra`. The basher refreshes those aliases while the queued command is pending so the final attack
+can still change during the round.
+
+Built-in refreshes already happen when these states change:
+
+- the current target gains an affliction
+- the current target loses an affliction
+- the current target gains shield through `keneanung.bashing.shielded(...)`
+- you gain an affliction through the GMCP affliction callback
+- you lose an affliction through the GMCP affliction callback
+
+If you have additional triggers that can change the correct attack, call:
+
+- `keneanung.bashing.refreshAttackAliases()` to recompute both queued attack aliases immediately
+- `keneanung.bashing.shielded(targetName)` if your trigger detected that the current denizen gained shield
+- `keneanung.bashing.unshielded(targetName)` if your trigger detected that the current denizen lost shield
+
+For server-side queueing, custom attack strategies may return multi-command strings separated by `/`. The aliases are what
+the queue stores; the alias body is what gets refreshed during the round.
+
 Shield handling
 ---------------
 
@@ -197,6 +235,14 @@ left after subtracting the current damage from the current health).
 
 The script comes with three strategies to use battlerage abilities: `none`, `simple` and `simplereverse`. Each one will be
 described here.
+
+### The attack strategies ###
+
+The script comes with one built-in normal attack strategy: `command`. This is the backward-compatible default and uses the
+configured `attackcommand` and `razecommand` values.
+
+Additional attack strategies can be added by defining functions in `keneanung.bashing.attacksystem` and selecting them with
+`kconfig bashing attackstrat <name>`.
 
 #### Battlerage strategy `none` ####
 
