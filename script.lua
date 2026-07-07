@@ -126,6 +126,14 @@ local debugMessage = function(message, content)
   end
 end
 
+local normalizeAreaName = function(area)
+  if area == "" then
+    return "Mnemosyne"
+  end
+
+  return area
+end
+
 local cancelBalanceAttackReset
 local cancelBalanceAttackRetry
 local markBalanceAttackUsed
@@ -201,7 +209,8 @@ local scheduleBalanceAttackRetry = function(callback)
 end
 
 local getTargetPrio = function(name)
-  local prios = keneanung.bashing.configuration.priorities[gmcp.Room.Info.area]
+  local area = normalizeAreaName(gmcp.Room.Info.area)
+  local prios = keneanung.bashing.configuration.priorities[area]
 
         debugMessage("prios for this area", prios)
 
@@ -916,6 +925,7 @@ keneanung.bashing.isPossibleTarget = function(targetName, area)
   if not area then
     area = gmcp.Room.Info.area
   end
+  area = normalizeAreaName(area)
 
   local prios = keneanung.bashing.configuration.priorities[area] or {}
 
@@ -925,7 +935,7 @@ end
 keneanung.bashing.addPossibleTarget = function(targetName)
 
   local prios = keneanung.bashing.configuration.priorities
-  local area = gmcp.Room.Info.area
+  local area = normalizeAreaName(gmcp.Room.Info.area)
 
   if prios[area] == nil then
     prios[area] = {}
@@ -965,6 +975,7 @@ keneanung.bashing.showAreasFiltered = function(filtered)
 end
 
 keneanung.bashing.managePrios = function(area)
+  area = normalizeAreaName(area)
 
   local possibleMatches = {}
   for areaName, _ in pairs(keneanung.bashing.configuration.priorities) do
@@ -1005,6 +1016,7 @@ keneanung.bashing.managePrios = function(area)
 end
 
 keneanung.bashing.shuffleDown = function(area, num)
+  area = normalizeAreaName(area)
 
   local prios = keneanung.bashing.configuration.priorities[area]
 
@@ -1019,6 +1031,7 @@ keneanung.bashing.shuffleDown = function(area, num)
 end
 
 keneanung.bashing.shuffleUp = function(area, num)
+  area = normalizeAreaName(area)
 
   local prios = keneanung.bashing.configuration.priorities[area]
 
@@ -1033,6 +1046,7 @@ keneanung.bashing.shuffleUp = function(area, num)
 end
 
 keneanung.bashing.delete = function(area, num)
+  area = normalizeAreaName(area)
 
   local prios = keneanung.bashing.configuration.priorities[area]
 
@@ -1046,6 +1060,7 @@ keneanung.bashing.delete = function(area, num)
 end
 
 keneanung.bashing.deleteByName = function(area, name)
+  area = normalizeAreaName(area)
 
   local prios = keneanung.bashing.configuration.priorities[area]
 
@@ -1084,6 +1099,31 @@ keneanung.bashing.load = function()
   end -- if
 
 end -- func
+
+keneanung.bashing.migrateEmptyAreaPriorities = function()
+  keneanung.bashing.configuration.priorities = keneanung.bashing.configuration.priorities or {}
+
+  local priorities = keneanung.bashing.configuration.priorities
+  local emptyAreaPriorities = priorities[""]
+  if not emptyAreaPriorities then
+    return false
+  end
+
+  local mnemosyne = normalizeAreaName("")
+  priorities[mnemosyne] = priorities[mnemosyne] or {}
+
+  for _, targetName in ipairs(emptyAreaPriorities) do
+    if not table.contains(priorities[mnemosyne], targetName) then
+      table.insert(priorities[mnemosyne], targetName)
+    end
+  end
+
+  priorities[""] = nil
+  keneanung.bashing.save()
+  raiseEvent("keneanung.bashing.settings.changed")
+
+  return true
+end
 
 keneanung.bashing.showConfig = function()
   kecho(
@@ -2333,13 +2373,14 @@ local doImport = function(importTable)
 
   --do the import
   for area,_ in pairs(importTable) do
+    local normalizedArea = normalizeAreaName(area)
     if #importTable[area] > 0 then
-      keneanung.bashing.configuration.priorities[area] = keneanung.bashing.configuration.priorities[area] or {}
+      keneanung.bashing.configuration.priorities[normalizedArea] = keneanung.bashing.configuration.priorities[normalizedArea] or {}
       somethingChanged = true
     end
     for _, denizenString in pairs(importTable[area]) do
-      if not table.contains(keneanung.bashing.configuration.priorities[area],denizenString) then
-        table.insert(keneanung.bashing.configuration.priorities[area], denizenString)
+      if not table.contains(keneanung.bashing.configuration.priorities[normalizedArea],denizenString) then
+        table.insert(keneanung.bashing.configuration.priorities[normalizedArea], denizenString)
       somethingChanged = true
       end
     end
@@ -2388,6 +2429,7 @@ keneanung.bashing.manuallyTarget = function(what)
 end
 
 keneanung.bashing.load()
+keneanung.bashing.migrateEmptyAreaPriorities()
 for _, file in ipairs(keneanung.bashing.configuration.filesToLoad) do
   dofile(file)
 end
