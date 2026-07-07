@@ -106,6 +106,7 @@ keneanung.bashing.usedBalanceAttack = false
 keneanung.bashing.balanceAttackRetryAttempt = 0
 keneanung.bashing.balanceAttackResetTimer = nil
 keneanung.bashing.balanceAttackRetryTimer = nil
+keneanung.bashing.attackCommandTimes = {}
 
 keneanung.bashing.configuration.enabled = false
 keneanung.bashing.configuration.warning = 500
@@ -139,6 +140,8 @@ local cancelBalanceAttackRetry
 local markBalanceAttackUsed
 local noteBalanceAttackRetry
 local getAttackCommand
+local recordAttackCommand
+local isAttackableRoomItem
 
 cancelBalanceAttackRetry = function()
   if keneanung.bashing.balanceAttackRetryTimer then
@@ -208,6 +211,38 @@ local scheduleBalanceAttackRetry = function(callback)
   return true
 end
 
+local function nowSeconds()
+  if getEpoch then
+    return getEpoch()
+  end
+
+  return os.clock()
+end
+
+recordAttackCommand = function()
+  local now = nowSeconds()
+  local recentAttacks = {}
+
+  for _, attackTime in ipairs(keneanung.bashing.attackCommandTimes or {}) do
+    if now - attackTime < 1 then
+      recentAttacks[#recentAttacks + 1] = attackTime
+    end
+  end
+
+  recentAttacks[#recentAttacks + 1] = now
+  keneanung.bashing.attackCommandTimes = recentAttacks
+
+  if #recentAttacks >= 3 then
+    debugMessage("attack runaway detected", recentAttacks)
+    keneanung.bashing.attackCommandTimes = {}
+    sendGMCP("Char.Items.Room")
+    return true
+  end
+
+  return false
+end
+keneanung.bashing.recordAttackCommand = recordAttackCommand
+
 local getTargetPrio = function(name)
   local area = normalizeAreaName(gmcp.Room.Info.area)
   local prios = keneanung.bashing.configuration.priorities[area]
@@ -223,6 +258,26 @@ local getTargetPrio = function(name)
   local prio = table.index_of(prios, name)
         debugMessage("prio", prio)
         return prio
+end
+
+isAttackableRoomItem = function(item, targetName)
+  if not item or not item.id or not item.name then
+    return false
+  end
+
+  if targetName and item.name ~= targetName then
+    return false
+  end
+
+  if not getTargetPrio(item.name) then
+    return false
+  end
+
+  if item.attrib ~= nil and (not item.attrib:find("m") or item.attrib:find("d")) then
+    return false
+  end
+
+  return true
 end
 
 local kecho = function(what, command, popup)
@@ -476,6 +531,48 @@ local function migrateAttackStrategyConfig(classConfig)
   end
 end
 
+local function isClassConfiguration(configName, config)
+  if type(config) ~= "table" then
+    return false
+  end
+
+  local nonClassConfig = {
+    attackStrategies = true,
+    filesToLoad = true,
+    lifetimeGains = true,
+    priorities = true,
+  }
+
+  return not nonClassConfig[configName]
+end
+
+local function migrateMisplacedAttackStrategyConfig(classConfig)
+  local priorities = keneanung.bashing.configuration.priorities
+  if type(priorities) ~= "table" then
+    return
+  end
+
+  if priorities.attackStrat == nil and priorities.attackStrategies == nil then
+    return
+  end
+
+  if type(classConfig) ~= "table" then
+    return
+  end
+
+  if priorities.attackStrat ~= nil and classConfig.attackStrat == nil then
+    classConfig.attackStrat = priorities.attackStrat
+  end
+
+  if priorities.attackStrategies ~= nil and classConfig.attackStrategies == nil then
+    classConfig.attackStrategies = priorities.attackStrategies
+  end
+
+  priorities.attackStrat = nil
+  priorities.attackStrategies = nil
+  raiseEvent("keneanung.bashing.settings.changed")
+end
+
 local requestAllSkillDetails = function()
   while #requestSkillDetails > 0 do
     sendGMCP(string.format([[Char.Skills.Get {"group": "attainment", "name": "%s"}]], requestSkillDetails[1]))
@@ -501,8 +598,10 @@ local migrateTo1Point8 = function()
     raiseEvent("keneanung.bashing.settings.changed")
   end
 
-  for _, classConfig in pairs(keneanung.bashing.configuration) do
-    if type(classConfig) == "table" then
+  migrateMisplacedAttackStrategyConfig(keneanung.bashing.configuration[class])
+
+  for configName, classConfig in pairs(keneanung.bashing.configuration) do
+    if isClassConfiguration(configName, classConfig) then
       migrateAttackStrategyConfig(classConfig)
     end
   end
@@ -634,6 +733,7 @@ keneanung.bashing.systems.wundersys = {
     keneanung.bashing.systems.wundersys.queueTrigger = tempTrigger("[System]: Running queued eb command: DOR",
       [[
       local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+      keneanung.bashing.recordAttackCommand()
       keneanung.bashing.attacks = keneanung.bashing.attacks + 1
       -- If GMCP HP is missing (e.g. blackout), add a "neutral" damage
       -- equal to the previous average so the average remains stable.
@@ -746,6 +846,9 @@ keneanung.bashing.systems.none = {
     keneanung.bashing.systems.none.queueTrigger = tempRegexTrigger("^\\[System\\]: Running queued freestand command: (KENEANUNGKI|KENEANUNGRA)$",
       [[
       local system = keneanung.bashing.systems[keneanung.bashing.configuration.system]
+      if matches[2] == "KENEANUNGKI" then
+        keneanung.bashing.recordAttackCommand()
+      end
       keneanung.bashing.attacks = keneanung.bashing.attacks + 1
       -- Neutralize attack when HP is unavailable to avoid lowering the average
       if not (gmcp and gmcp.Char and gmcp.Char.Vitals and gmcp.Char.Vitals.hp) then
@@ -894,6 +997,9 @@ local function performAttack(commandName)
     return false
   end
 
+  if commandName == "attackcommand" then
+    recordAttackCommand()
+  end
   send(command, false)
   return true
 end
@@ -978,13 +1084,21 @@ keneanung.bashing.managePrios = function(area)
   area = normalizeAreaName(area)
 
   local possibleMatches = {}
+  local exactMatch
   for areaName, _ in pairs(keneanung.bashing.configuration.priorities) do
     if areaName:lower() == area:lower() then
-      possibleMatches[areaName] = true
+      exactMatch = areaName
       break
     end
-    if areaName:lower():find(area:lower()) then
-      possibleMatches[areaName] = true
+  end
+
+  if exactMatch then
+    possibleMatches[exactMatch] = true
+  else
+    for areaName, _ in pairs(keneanung.bashing.configuration.priorities) do
+      if areaName:lower():find(area:lower(), 1, true) then
+        possibleMatches[areaName] = true
+      end
     end
   end
 
@@ -1427,9 +1541,8 @@ local roomItemCallbackWorker = function(event)
   if(event == "gmcp.Char.Items.Add") then
     local item = gmcp.Char.Items.Add.item
     keneanung.bashing.room[#keneanung.bashing.room + 1] = item
-    if item.attrib and item.attrib:find("m") and not item.attrib:find("d") then
+    if isAttackableRoomItem(item) then
       keneanung.bashing.seenDenizen(item.id, item.name)
-      item = keneanung.bashing.getTargetObject(item.id)
       if not keneanung.bashing.configuration.manualTargetting then
         keneanung.bashing.addTarget(item)
       end
@@ -1454,7 +1567,7 @@ local roomItemCallbackWorker = function(event)
           -- search if that target possibly left the room
           local found = false
           for _, item in ipairs(gmcp.Char.Items.List.items) do
-            if item.id == targ.id then
+            if tostring(item.id) == tostring(targ.id) and isAttackableRoomItem(item, targ.name) then
               found = true
               break
             end
@@ -1471,9 +1584,8 @@ local roomItemCallbackWorker = function(event)
     keneanung.bashing.room = {}
     for _, item in ipairs(gmcp.Char.Items.List.items) do
       keneanung.bashing.room[#keneanung.bashing.room + 1] = item
-      if item.attrib and item.attrib:find("m") and not item.attrib:find("d") then
+      if isAttackableRoomItem(item) then
         keneanung.bashing.seenDenizen(item.id, item.name)
-        item = keneanung.bashing.getTargetObject(item.id)
         if not keneanung.bashing.configuration.manualTargetting then
           keneanung.bashing.addTarget(item)
         end
@@ -1581,13 +1693,18 @@ keneanung.bashing.addTarget = function(item)
 
         debugMessage("addTarget", item)
 
+  if not isAttackableRoomItem(item) then
+    return
+  end
+
   local targetPrio = getTargetPrio(item.name)
 
   if not targetPrio then
     return
   end
 
-  local targetObject = { id = item.id, name = item.name, affs = {} }
+  local itemId = tostring(item.id)
+  local targetObject = { id = itemId, name = item.name, affs = {} }
 
   if #targets == 0 then
     table.insert(targets, targetObject)
@@ -1595,7 +1712,7 @@ keneanung.bashing.addTarget = function(item)
 
     -- Small safeguard against adding something twice
     for _, tar in ipairs(targets) do
-      if tar.id == item.id then
+      if tostring(tar.id) == itemId then
         return
       end
     end
@@ -1629,17 +1746,17 @@ keneanung.bashing.addTarget = function(item)
       insertAt = keneanung.bashing.attacking + 1
     end
 
-    table.insert(targets, insertAt, item)
+    table.insert(targets, insertAt, targetObject)
 
   end
 
-  if directTargetAccess[item.id] then
-    for aff, timer in pairs(directTargetAccess[item.id].affs) do
-      targetObject[aff] = timer
+  if directTargetAccess[itemId] then
+    for aff, timer in pairs(directTargetAccess[itemId].affs) do
+      targetObject.affs[aff] = timer
     end
   end
 
-  directTargetAccess[item.id] = targetObject
+  directTargetAccess[itemId] = targetObject
 
   keneanung.bashing.targetList = targets
 
@@ -1658,15 +1775,18 @@ keneanung.bashing.removeTarget = function(item)
   end
 
   if number then
+    local itemId = tostring(item.id)
     table.remove(targets, number)
     if number <= keneanung.bashing.attacking then
       keneanung.bashing.attacking = keneanung.bashing.attacking - 1
       keneanung.bashing.setTarget()
     end
-    for _, timer in pairs(directTargetAccess[item.id].affs) do
-      killTimer(timer)
+    if directTargetAccess[itemId] then
+      for _, timer in pairs(directTargetAccess[itemId].affs) do
+        killTimer(timer)
+      end
     end
-    directTargetAccess[item.id] = nil
+    directTargetAccess[itemId] = nil
     if keneanung.bashing.attacking == 0 and keneanung.bashing.configuration.manualTargetting then
       waitingForManualTarget = true
       waitingForManualTargetTimer = tempTimer(keneanung.bashing.configuration.waitForManualTarget, function() waitingForManualTarget = false end)
@@ -1805,6 +1925,7 @@ keneanung.bashing.charStatusCallback = function()
       keneanung.bashing.configuration[class] = newClassConfig
       kecho("Seen new class " .. class .. ". Default config set.")
     end
+    migrateMisplacedAttackStrategyConfig(keneanung.bashing.configuration[class])
     migrateAttackStrategyConfig(keneanung.bashing.configuration[class])
     keneanung.bashing.setAlias("attackcommand")
     keneanung.bashing.setAlias("razecommand")
@@ -1878,11 +1999,12 @@ keneanung.bashing.setTarget = function()
     if tar ~= nil then
 
       for _, item in ipairs(keneanung.bashing.room) do
-        if item.attrib and item.attrib:find("m") and not item.attrib:find("d") and item.name:lower():find(tar:lower()) then
-          if keneanung.bashing.configuration.targetLoyals or not item.attrib:find("x") then
+        if isAttackableRoomItem(item) and item.name:lower():find(tar:lower()) then
+          if keneanung.bashing.configuration.targetLoyals or not (item.attrib and item.attrib:find("x")) then
             keneanung.bashing.targetList[#keneanung.bashing.targetList + 1]= {
-              id = item.id,
-              name = item.name
+              id = tostring(item.id),
+              name = item.name,
+              affs = {}
             }
             targetSet = true
           end
